@@ -1,0 +1,366 @@
+[
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_verified.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_verified.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_more.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_more.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_play.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_play.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_pause.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_pause.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_sound_off.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_sound_off.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_other_first.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_other_first.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_activity_chat.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_chat.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_view.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_view.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_me_first.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_me_first.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-mdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-mdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_send.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_send.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_other_last.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_other_last.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bubble_me_only.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bubble_me_only.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_item_image_preview_thumb.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_image_preview_thumb.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_btn_green.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_btn_green.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-xxxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_users.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_users.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_btn_circle.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_btn_circle.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/layout_item_message_me.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/layout/item_message_me.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\raw_click.wav.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\raw\\click.wav"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-xhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\raw_pop.wav.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\raw\\pop.wav"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_activity_patch_notes.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_patch_notes.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bubble_other_first.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bubble_other_first.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_view_audio_player.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\view_audio_player.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-hdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-hdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\anim_slide_in_left.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\anim\\slide_in_left.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_attach.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_attach.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bubble_other_last.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bubble_other_last.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_item_topic.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_topic.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_item_post_card.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_post_card.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-mdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_messenger_banner.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_messenger_banner.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_bottom_sheet_media_picker.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\bottom_sheet_media_picker.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_item_online_member.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_online_member.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_card_pinned.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_card_pinned.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-xxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_comment.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_comment.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bubble_other_only.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bubble_other_only.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-xhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_card_topic.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_card_topic.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_online_dot.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_online_dot.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_pagination_container.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_pagination_container.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-xxxhdpi\\ic_launcher.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_activity_auth.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_auth.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\anim_slide_in_right.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\anim\\slide_in_right.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_activity_post_detail.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_post_detail.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_view_messenger_banner.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\view_messenger_banner.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bubble_me_first.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bubble_me_first.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/layout_item_message_other.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/layout/item_message_other.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_item_patch_card.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_patch_card.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_item_message_other.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_message_other.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_search_box.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_search_box.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_item_comment.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_comment.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bottom_sheet.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bottom_sheet.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_launcher_foreground.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_launcher_foreground.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bubble_other_mid.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bubble_other_mid.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_me_mid.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_me_mid.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_reply.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_reply.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_back.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_back.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\anim_slide_out_right.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\anim\\slide_out_right.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bubble_me_mid.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bubble_me_mid.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_logo.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\logo.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_rotate.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_rotate.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_other_only.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_other_only.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_rec_badge.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_rec_badge.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_dialog_online_members.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\dialog_online_members.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_bubble_me_last.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_bubble_me_last.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_dialog_user_profile.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\dialog_user_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_me_only.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_me_only.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_pagination_active.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_pagination_active.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_segment_active.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_segment_active.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_me_last.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_me_last.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_item_message_me.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_message_me.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_sound_on.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_sound_on.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_thumb_up.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_thumb_up.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-xxhdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_msgs.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_msgs.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\anim_slide_out_left.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\anim\\slide_out_left.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_input_box.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_input_box.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_activity_main.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_other_mid.xml.flat",
+        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_other_mid.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_btn_primary.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_btn_primary.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_bottom_sheet_profile.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\bottom_sheet_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\mipmap-hdpi\\ic_launcher_round.png"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_activity_server_connect.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_server_connect.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_bg_segment.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\bg_segment.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\layout_activity_lightbox.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_lightbox.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-debug-34:\\drawable_ic_thumb_down.xml.flat",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\drawable\\ic_thumb_down.xml"
+    }
+]

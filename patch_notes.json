@@ -1,0 +1,206 @@
+[
+  {
+    "version": "1.4.2",
+    "date": "2026-08-27",
+    "title": "Persistent Account Alignment & True Bottom Scroll Pinning",
+    "items": [
+      "Fixed message bubble alignment swapping to the wrong side on page reload by binding 'Me' identification to persistent account UID and IP instead of ephemeral socket IDs",
+      "Added ResizeObserver to chat messages to keep scrolling pinned to the true bottom as images and media expand",
+      "Eliminated all remaining UI flicker and visual jumps across topic navigation and Explore feed",
+      "Persisted full account identity in local cache for instant 0ms hydration"
+    ]
+  },
+  {
+    "version": "1.4.1",
+    "date": "2026-08-27",
+    "title": "Layout Stability & Zero-Latency Navigation Fix",
+    "items": [
+      "Fixed topic entering visual bounce and flickering by eliminating layout-shifting translateY transitions across view containers",
+      "Persisted topic message history in localStorage for instant 0ms rendering across all visits",
+      "Fixed empty ghost message bubbles with orphan avatars",
+      "Optimized all view switching pipelines to be 100% instant and jitter-free"
+    ]
+  },
+  {
+    "version": "1.4.0",
+    "date": "2026-08-27",
+    "title": "Comprehensive Code Cleanup & Performance Optimization",
+    "items": [
+      "Optimized comment tree rendering with DocumentFragment and replaceChildren for instant comment expansion",
+      "Optimized topic lists rendering with atomic replaceChildren DOM updates",
+      "Cleaned admin CLI commands and multi-MAC authorization display",
+      "Audited all backend and frontend event pipelines for latency bottlenecks, memory leaks, and edge-case exceptions"
+    ]
+  },
+  {
+    "version": "1.3.9",
+    "date": "2026-08-27",
+    "title": "Zero-Flicker Chat History & Instant Explore Navigation",
+    "items": [
+      "Eliminated initial topic chat flicker and scroll jumping by replacing iterative message appending with atomic DocumentFragment batch rendering",
+      "Guarded image load auto-scrolling during history loading to prevent scroll bounces on high ping",
+      "Accelerated Explore feed with direct indexed SQLite sorting instead of full in-memory table scans",
+      "Instant 0ms Explore feed & post detail opening from client cache with seamless background reconciliation"
+    ]
+  },
+  {
+    "version": "1.3.8",
+    "date": "2026-08-27",
+    "title": "Emergency Topic Navigation Fix",
+    "items": [
+      "CRITICAL: Fixed undefined client-side sanitizeTopic call in goTopic that caused topic clicks to throw ReferenceError and freeze",
+      "Streamlined showChat and showLobby view transitions to guarantee clean state switches"
+    ]
+  },
+  {
+    "version": "1.3.7",
+    "date": "2026-08-27",
+    "title": "Zero-Latency Optimistic Navigation & UI Fixes",
+    "items": [
+      "Fixed slow navigation on high-ping servers: topic switching now renders immediately with 0ms optimistic transition and cached history",
+      "Restored header button text to 'Profile' permanently",
+      "Removed loading dimming state from topics list to prevent unresponsive click delay",
+      "Seamless background synchronization for chat messages and topic state"
+    ]
+  },
+  {
+    "version": "1.3.6",
+    "date": "2026-08-27",
+    "title": "Client UI Persistence, Multi-Device MAC & Media Playback Optimization",
+    "items": [
+      "Added multi-device MAC authorization: 1 account can stay logged in across unlimited devices simultaneously without kicking other sessions",
+      "Instant client UI hydration: topics, explore feed, profile, and view modes render immediately on page load from local cache with zero flicker",
+      "Dynamic client-side cache updates whenever topics, feed, or profile change on server",
+      "Added universal media playback coordinator: auto-pauses previous audio/video when a new track plays",
+      "Added IntersectionObserver auto-pause for off-screen media in Explore feeds and chat to save battery and network bandwidth",
+      "Optimized media delivery with async image decoding, lazy loading, metadata preloading, and Escape key lightbox exit"
+    ]
+  },
+  {
+    "version": "1.3.5",
+    "date": "2026-08-27",
+    "title": "Strict MAC-Only Account Identification & Rate Limiting",
+    "items": [
+      "Switched entire account identity and auto-login system to 100% device MAC address binding",
+      "Removed shared-IP auto-login and IP binding to eliminate account overlapping on shared WiFi/cellular networks",
+      "Isolated rate limiting (ACTION_LIMIT) per machine MAC address instead of global shared IP",
+      "Optimized and cleaned authentication handshake and key storage"
+    ]
+  },
+  {
+    "version": "1.3.4",
+    "date": "2026-08-27",
+    "title": "Notification Fallbacks, Smooth Animations & Network Stability",
+    "items": [
+      "Added notification permission status & one-click Enable/Unblock guidance in Profile menu",
+      "Added flashing tab title alert when new messages arrive while tab is inactive/minimized",
+      "Added multi-layer fallback for notifications (OS push -> audio chime -> tab title flash)",
+      "Fixed slow network UI stuttering: eliminated DOM blanking on explore feed and topic reloads via atomic replaceChildren",
+      "Added sleek top connection status banner instead of repeated intrusive error toasts during reconnects",
+      "Smooth hardware-accelerated micro-animations (viewFadeIn, popup scale, button active states) across all views"
+    ]
+  },
+  {
+    "version": "1.3.3",
+    "date": "2026-08-27",
+    "title": "Instant voting & Zero-flicker UI",
+    "items": [
+      "Fixed General chat notifications not triggering when sender and recipient both had default 'Anon' name",
+      "Enhanced browser notification reliability with live permission check, unfocused window support and click-to-open General topic",
+      "Optimistic instant feedback on Explore post Upvote/Downvote (0ms UI latency)",
+      "Added 200ms debounce protection on voting buttons to prevent rapid click cancellations",
+      "Fixed server vote recount response to accurately sync score and active user vote",
+      "Removed artificial fake loader overlay that caused dark screen flashing during navigation",
+      "Removed redundant 4s server topics broadcast and added client DOM diffing to eliminate Lobby flickering",
+      "Cached avatar group signature in topic header to prevent avatar redraw flashes",
+      "Cleaned visualViewport resize listener to prevent layout reflow flashing"
+    ]
+  },
+  {
+    "version": "1.3.2",
+    "date": "2026-08-27",
+    "title": "Security hardening & bug fix audit",
+    "items": [
+      "SECURITY: Blocked HTTP access to sensitive files (server.js, key.json, chat.db, hash.db)",
+      "Fixed Explore tags input missing from post composer (tags were always empty)",
+      "Fixed image/video/audio hash desync when removing files from Explore post preview",
+      "Fixed comment timestamps showing raw dates instead of relative time (just now, 5m ago)",
+      "Fixed pagination count off-by-one for post creator after publishing",
+      "Fixed sort/search filter being ignored when Explore feed was still loading",
+      "Fixed corrupted single-color gradient entries causing avatar rendering issues",
+      "Removed dead legacy explore-like handler and post_likes references",
+      "Removed duplicate CSS rules (.header-right z-index conflict, .bubble redundancy)",
+      "Raised Explore feed query limit from 500 to 10000 posts"
+    ]
+  },
+  {
+    "version": "1.3.1",
+    "date": "2026-08-26",
+    "title": "Media streaming, Zoom & High-speed uploads",
+    "items": [
+      "Smooth 60/120fps scrolling optimization (eliminated stutter/jank via passive rAF & CSS layout containment)",
+      "Numbered pagination bar for Explore posts (10 posts per page) with smart ellipsis",
+      "Dynamic Prev (hidden on page 1) and Next (hidden on last page) navigation controls",
+      "Fixed simultaneous description and media file support in Explore posts and cards",
+      "HTTP Range 206 partial content streaming for video/audio seeking and uninterrupted playback",
+      "Pinch-to-zoom and browser zoom layout fix (no elements cut off or covered)",
+      "High-speed direct binary stream upload pipeline for chat messages, explore posts and comments",
+      "50MB upload limits for both video and audio (MP3/OGG/WAV) in Explore mode",
+      "Removed background media destruction on tab switch to keep playback seamless"
+    ]
+  },
+  {
+    "version": "1.3.0",
+    "date": "2026-08-01",
+    "title": "Explore, presence & moderation",
+    "items": [
+      "Explore mode: posts with title, description, tags, images, likes, comments, share",
+      "Online presence: avatar group + client count in topic header",
+      "Click presence to see who's online; open user profiles from avatars/names",
+      "User profile stats: messages sent, media count, upload disk usage",
+      "Message seen counters (eye icon next to timestamp)",
+      "Unread topic badges on lobby (1 new / N new)",
+      "Moderator topic recommend (!recommendatopic) with blue badge",
+      "Moderator lock can apply to system topics; lock source shown (moderator vs author)",
+      "Lobby Topics / Explore segmented control; collapsible search & create",
+      "Topic list pagination via /p/N with scroll memory",
+      "Auto-load older messages when scrolling up"
+    ]
+  },
+  {
+    "version": "1.2.0",
+    "date": "2026-08-01",
+    "title": "Topics, media & polish",
+    "items": [
+      "System topics: General, Archive, Patch notes",
+      "Up to 5 image attachments per message (GIF supported, including paste)",
+      "Timezone: UTC or Vietnam (GMT+7) segmented control",
+      "Notification sounds (pop.wav / click.wav) with mute toggle",
+      "Topic lock / delete for authors",
+      "Topic list pagination",
+      "Link detection in messages (open in new tab)",
+      "Custom confirm dialogs and toast notifications"
+    ]
+  },
+  {
+    "version": "1.1.0",
+    "date": "2026-07-28",
+    "title": "Profiles & safety",
+    "items": [
+      "Avatar upload (PNG, JPEG, GIF, WebP)",
+      "Name change cooldown (7 days)",
+      "Empty / zalgo / invisible-character names auto-fixed",
+      "Anti-spam rate limits for messages, topics, posts, comments"
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2026-07-20",
+    "title": "Launch",
+    "items": [
+      "Anonymous realtime chat",
+      "Topics with live online count",
+      "Reply to messages"
+    ]
+  }
+]

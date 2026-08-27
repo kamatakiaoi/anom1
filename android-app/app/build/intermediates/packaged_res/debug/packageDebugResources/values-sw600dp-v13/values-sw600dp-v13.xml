@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="app_header_height">60dp</dimen>
+    <dimen name="avatar_size_lg">48dp</dimen>
+    <dimen name="avatar_size_md">40dp</dimen>
+    <dimen name="avatar_size_sm">28dp</dimen>
+    <dimen name="avatar_size_xl">88dp</dimen>
+    <dimen name="button_height">52dp</dimen>
+    <dimen name="card_corner_radius">16dp</dimen>
+    <dimen name="card_padding">20dp</dimen>
+    <dimen name="chat_media_height">240dp</dimen>
+    <dimen name="chat_media_width">300dp</dimen>
+    <dimen name="content_padding">24dp</dimen>
+    <dimen name="post_media_height">280dp</dimen>
+</resources>

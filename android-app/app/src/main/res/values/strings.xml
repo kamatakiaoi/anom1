@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Anonymous Chat</string>
+    <string name="server_ip_hint">snow.pikamc.vn</string>
+    <string name="server_port_hint">25222</string>
+    <string name="btn_connect">Connect to Server</string>
+    <string name="btn_retry">Retry Connection</string>
+    <string name="search_topics_hint">Search topics...</string>
+    <string name="new_topic_hint">New topic name...</string>
+    <string name="create">Create</string>
+    <string name="message_hint">Write a message...</string>
+    <string name="write_comment">Write a comment...</string>
+    <string name="post_title_hint">Post Title (required)</string>
+    <string name="post_body_hint">What\'s on your mind? Supports **bold**, ~~strike~~</string>
+    <string name="post_btn">Post</string>
+    <string name="explore_search_hint">Search posts...</string>
+    <string name="search_posts_hint">Search posts...</string>
+    <string name="name_hint">Your display name</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="cooldown_hint">Name can be changed once every 7 days</string>
+    <string name="timezone_label">Message timezone</string>
+    <string name="tz_vietnam">Vietnam (GMT+7)</string>
+    <string name="tz_utc">UTC</string>
+    <string name="channel_general_name">General Chat Messages</string>
+    <string name="channel_general_desc">Notifications for new messages in General topic</string>
+    <string name="locked_viewing">Locked — only viewing</string>
+</resources>

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_main"
+    android:padding="24dp"
+    android:gravity="center">
+
+    <ImageView
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:src="@drawable/logo"
+        android:scaleType="fitCenter"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Anonymous Chat"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter server IP and Port to connect"
+        android:textColor="@color/text_muted"
+        android:textSize="14sp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="28dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card_topic"
+        android:padding="20dp"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Server IP / Host"
+            android:textColor="@color/text_muted"
+            android:textSize="12.5sp"
+            android:layout_marginBottom="6dp" />
+
+        <EditText
+            android:id="@+id/etServerHost"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_search_box"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_dim"
+            android:hint="@string/server_ip_hint"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:singleLine="true"
+            android:inputType="textUri" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Server Port"
+            android:textColor="@color/text_muted"
+            android:textSize="12.5sp"
+            android:layout_marginTop="14dp"
+            android:layout_marginBottom="6dp" />
+
+        <EditText
+            android:id="@+id/etServerPort"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_search_box"
+            android:textColor="@color/text_primary"
+            android:textColorHint="@color/text_dim"
+            android:hint="@string/server_port_hint"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:singleLine="true"
+            android:inputType="number" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="16dp">
+
+            <View
+                android:id="@+id/dotStatus"
+                android:layout_width="8dp"
+                android:layout_height="8dp"
+                android:background="@drawable/bg_btn_circle"
+                android:backgroundTint="@color/status_red" />
+
+            <TextView
+                android:id="@+id/tvStatusText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Disconnected"
+                android:textColor="@color/text_muted"
+                android:textSize="13sp"
+                android:layout_marginStart="8dp" />
+
+            <TextView
+                android:id="@+id/tvPingText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="— ms"
+                android:textColor="@color/text_muted"
+                android:textSize="12.5sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/btnConnectServer"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:text="@string/btn_connect"
+        android:textColor="@color/accent_black"
+        android:background="@drawable/bg_btn_primary"
+        android:textAllCaps="false"
+        android:textSize="15.5sp"
+        android:textStyle="bold" />
+
+</LinearLayout>

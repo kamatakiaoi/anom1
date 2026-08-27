@@ -1,0 +1,4 @@
+-keep class io.socket.** { *; }
+-keep class okhttp3.** { *; }
+-keep class com.google.gson.** { *; }
+-keep class com.anonymous.chat.models.** { *; }

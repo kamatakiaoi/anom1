@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="start"
+    android:layout_marginTop="2dp"
+    android:layout_marginBottom="2dp"
+    android:paddingStart="10dp"
+    android:paddingEnd="48dp">
+
+    <!-- Avatar (Left) -->
+    <ImageView
+        android:id="@+id/ivMsgAvatar"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_gravity="top"
+        android:scaleType="centerCrop"
+        android:layout_marginEnd="8dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="start">
+
+        <!-- Sender Name -->
+        <TextView
+            android:id="@+id/tvMsgName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_muted"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:layout_marginBottom="2dp" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <!-- Message Bubble -->
+            <LinearLayout
+                android:id="@+id/bubbleLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_bubble_other_only"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp">
+
+                <!-- Reply Box Quote -->
+                <LinearLayout
+                    android:id="@+id/replyQuoteBox"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="140dp"
+                    android:orientation="vertical"
+                    android:background="#141414"
+                    android:padding="6dp"
+                    android:layout_marginBottom="6dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/tvQuoteName"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_quote_name"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:singleLine="true"
+                        android:maxLines="1"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:id="@+id/tvQuoteText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp"
+                        android:maxLines="2"
+                        android:ellipsize="end" />
+                </LinearLayout>
+
+                <!-- Text Body -->
+                <TextView
+                    android:id="@+id/tvMsgBody"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/text_primary"
+                    android:textSize="15sp"
+                    android:lineSpacingMultiplier="1.2"
+                    android:autoLink="web"
+                    android:textColorLink="@color/text_link" />
+
+                <!-- Images Grid / Row -->
+                <LinearLayout
+                    android:id="@+id/mediaContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="4dp"
+                    android:visibility="gone" />
+
+                <!-- Video Container -->
+                <FrameLayout
+                    android:id="@+id/msgVideoFrame"
+                    android:layout_width="220dp"
+                    android:layout_height="160dp"
+                    android:layout_marginTop="4dp"
+                    android:background="#000000"
+                    android:visibility="gone">
+
+                    <ImageView
+                        android:id="@+id/ivMsgVideoThumb"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:scaleType="centerCrop" />
+
+                    <ImageView
+                        android:layout_width="44dp"
+                        android:layout_height="44dp"
+                        android:layout_gravity="center"
+                        android:src="@drawable/ic_play"
+                        android:background="@drawable/bg_btn_circle"
+                        android:padding="10dp" />
+                </FrameLayout>
+
+                <!-- Audio Container -->
+                <include
+                    android:id="@+id/audioPlayerView"
+                    layout="@layout/view_audio_player"
+                    android:visibility="gone" />
+
+            </LinearLayout>
+
+            <!-- Reply Button (Right of bubble) -->
+            <ImageView
+                android:id="@+id/btnReplyMsg"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_reply"
+                android:background="@drawable/bg_btn_circle"
+                android:backgroundTint="#18181B"
+                android:padding="6dp"
+                android:layout_marginStart="6dp"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <!-- Timestamp -->
+        <TextView
+            android:id="@+id/tvMsgTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/text_dim"
+            android:textSize="11sp"
+            android:layout_marginTop="3dp"
+            android:layout_gravity="start" />
+
+    </LinearLayout>
+
+</LinearLayout>

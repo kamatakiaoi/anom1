@@ -1,0 +1,569 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/bg_main">
+
+    <!-- Top App Bar / Header -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="54dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:background="@color/bg_main">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:src="@drawable/logo"
+            android:scaleType="fitCenter"
+            android:layout_marginEnd="10dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Anonymous Chat"
+            android:textColor="@color/text_primary"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/btnMainProfile"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Profile"
+            android:textColor="@color/accent_black"
+            android:background="@drawable/bg_btn_primary"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border_subtle" />
+
+    <!-- Mode Selector Row: Topics / Explore & Toolbar Toggle -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:orientation="horizontal"
+            android:background="@drawable/bg_segment"
+            android:padding="3dp">
+
+            <TextView
+                android:id="@+id/btnTabTopics"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Topics"
+                android:textColor="@color/accent_black"
+                android:background="@drawable/bg_btn_primary"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+
+            <TextView
+                android:id="@+id/btnTabExplore"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="Explore"
+                android:textColor="@color/text_muted"
+                android:background="@android:color/transparent"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/btnToggleToolbar"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@android:drawable/arrow_down_float"
+            android:background="@drawable/bg_search_box"
+            android:padding="10dp"
+            android:layout_marginStart="8dp"
+            android:clickable="true"
+            android:focusable="true" />
+    </LinearLayout>
+
+    <!-- Collapsible Toolbar Container -->
+    <LinearLayout
+        android:id="@+id/layoutCollapsibleToolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="8dp"
+        android:visibility="gone">
+
+        <!-- Topics Toolbar -->
+        <LinearLayout
+            android:id="@+id/toolbarTopics"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/etSearchTopics"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:background="@drawable/bg_search_box"
+                android:hint="@string/search_topics_hint"
+                android:textColor="@color/text_primary"
+                android:textColorHint="@color/text_dim"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:textSize="14sp"
+                android:singleLine="true" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <EditText
+                    android:id="@+id/etNewTopicName"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_search_box"
+                    android:hint="@string/new_topic_hint"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_dim"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textSize="14sp"
+                    android:maxLength="32"
+                    android:singleLine="true" />
+
+                <TextView
+                    android:id="@+id/btnCreateTopic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:text="@string/create"
+                    android:textColor="@color/accent_black"
+                    android:background="@drawable/bg_btn_primary"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:layout_marginStart="8dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Explore Toolbar -->
+        <LinearLayout
+            android:id="@+id/toolbarExplore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Explore Sub-tabs: Search vs Post -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="38dp"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_segment"
+                android:padding="3dp"
+                android:layout_marginBottom="8dp">
+
+                <TextView
+                    android:id="@+id/btnExSubSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Search"
+                    android:textColor="@color/accent_black"
+                    android:background="@drawable/bg_btn_primary"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true" />
+
+                <TextView
+                    android:id="@+id/btnExSubPost"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:text="Post"
+                    android:textColor="@color/text_muted"
+                    android:background="@android:color/transparent"
+                    android:textSize="12.5sp"
+                    android:textStyle="bold"
+                    android:gravity="center"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
+
+            <!-- Search Panel -->
+            <LinearLayout
+                android:id="@+id/panelExSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <EditText
+                    android:id="@+id/etSearchPosts"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_search_box"
+                    android:hint="@string/search_posts_hint"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_dim"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textSize="14sp"
+                    android:singleLine="true" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="40dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sort by:"
+                        android:textColor="@color/text_muted"
+                        android:textSize="12sp"
+                        android:layout_marginEnd="8dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="36dp"
+                        android:layout_weight="1"
+                        android:orientation="horizontal"
+                        android:background="@drawable/bg_segment"
+                        android:padding="2dp">
+
+                        <TextView
+                            android:id="@+id/btnSortHot"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Hot"
+                            android:textColor="@color/text_muted"
+                            android:background="@android:color/transparent"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/btnSortLatest"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Latest"
+                            android:textColor="@color/accent_black"
+                            android:background="@drawable/bg_btn_primary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:clickable="true"
+                            android:focusable="true" />
+
+                        <TextView
+                            android:id="@+id/btnSortOldest"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:text="Oldest"
+                            android:textColor="@color/text_muted"
+                            android:background="@android:color/transparent"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:gravity="center"
+                            android:clickable="true"
+                            android:focusable="true" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Post Creation Panel -->
+            <LinearLayout
+                android:id="@+id/panelExPost"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <EditText
+                    android:id="@+id/etPostTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_search_box"
+                    android:hint="@string/post_title_hint"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_dim"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textSize="14sp"
+                    android:maxLength="100"
+                    android:singleLine="true" />
+
+                <EditText
+                    android:id="@+id/etPostBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="80dp"
+                    android:background="@drawable/bg_search_box"
+                    android:hint="@string/post_body_hint"
+                    android:textColor="@color/text_primary"
+                    android:textColorHint="@color/text_dim"
+                    android:padding="10dp"
+                    android:textSize="13.5sp"
+                    android:gravity="top"
+                    android:layout_marginTop="6dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp">
+
+                    <TextView
+                        android:id="@+id/btnPostFmtBold"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:text="B"
+                        android:textColor="#FFFFFF"
+                        android:background="@drawable/bg_card_topic"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/btnPostFmtStrike"
+                        android:layout_width="36dp"
+                        android:layout_height="36dp"
+                        android:text="S"
+                        android:textColor="#FFFFFF"
+                        android:background="@drawable/bg_card_topic"
+                        android:layout_marginStart="6dp"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/btnPostPickMedia"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="+ Media"
+                        android:textColor="#E5E5E5"
+                        android:background="@drawable/bg_card_topic"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:layout_marginStart="6dp"
+                        android:paddingStart="12dp"
+                        android:paddingEnd="12dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/tvPostMediaStatus"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:textColor="@color/status_green"
+                        android:textSize="11.5sp"
+                        android:layout_marginStart="8dp"
+                        android:singleLine="true"
+                        android:ellipsize="end" />
+
+                    <TextView
+                        android:id="@+id/btnSubmitPost"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Post"
+                        android:textColor="@color/accent_black"
+                        android:background="@drawable/bg_btn_primary"
+                        android:textStyle="bold"
+                        android:textSize="13sp"
+                        android:gravity="center"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+            </LinearLayout>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border_subtle" />
+
+    <!-- Content Area: Topics vs Explore -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <!-- Topics List -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeTopics"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvTopics"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:clipToPadding="false"
+                android:padding="8dp" />
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <!-- Explore Feed with Pagination -->
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipeExplore"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvExploreFeed"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:clipToPadding="false"
+                    android:padding="8dp" />
+
+                <!-- Explore Pagination Bar -->
+                <LinearLayout
+                    android:id="@+id/layoutExplorePagination"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="12dp"
+                    android:background="@color/bg_main"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/btnExPagePrev"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="‹ Prev"
+                        android:textColor="#CCCCCC"
+                        android:background="@drawable/bg_pagination_container"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:layout_marginEnd="8dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <LinearLayout
+                        android:id="@+id/layoutExPageNums"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:orientation="horizontal"
+                        android:gravity="center"
+                        android:background="@drawable/bg_pagination_container"
+                        android:paddingStart="4dp"
+                        android:paddingEnd="4dp" />
+
+                    <TextView
+                        android:id="@+id/btnExPageNext"
+                        android:layout_width="wrap_content"
+                        android:layout_height="36dp"
+                        android:text="Next ›"
+                        android:textColor="#CCCCCC"
+                        android:background="@drawable/bg_pagination_container"
+                        android:textSize="12.5sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:layout_marginStart="8dp"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+    </FrameLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/border_subtle" />
+
+    <!-- Bottom Status / Stats Bar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:background="@color/bg_main">
+
+        <TextView
+            android:id="@+id/tvGlobalOnline"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Global online (0)"
+            android:textColor="@color/text_muted"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvServerUptime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Uptime —"
+            android:textColor="@color/text_dim"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+</LinearLayout>

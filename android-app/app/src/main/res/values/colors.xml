@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Backgrounds matching index.html dark theme -->
+    <color name="bg_main">#0A0A0A</color>
+    <color name="bg_card">#111111</color>
+    <color name="bg_card_hover">#1A1A1A</color>
+    <color name="bg_card_pinned">#0D1929</color>
+    <color name="bg_input">#161616</color>
+    <color name="bg_segment">#141414</color>
+    <color name="bg_segment_active">#242424</color>
+    <color name="bg_bottom_sheet">#121212</color>
+    <color name="bg_rec_badge">#06202A</color>
+    <color name="bg_reply_bar">#141414</color>
+    <color name="bg_locked_banner">#2E2200</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#F5F5F5</color>
+    <color name="text_secondary">#E0E0E0</color>
+    <color name="text_muted">#888888</color>
+    <color name="text_subtle">#666666</color>
+    <color name="text_dim">#444444</color>
+    <color name="text_link">#38BDF8</color>
+    <color name="text_quote_name">#93C5FD</color>
+
+    <!-- Borders -->
+    <color name="border_subtle">#1F1F1F</color>
+    <color name="border_card">#262626</color>
+    <color name="border_pinned">#1E3A5F</color>
+    <color name="border_focus">#555555</color>
+    <color name="border_rec_badge">#0E4E66</color>
+    <color name="border_reply">#38BDF8</color>
+
+    <!-- Accents & Status -->
+    <color name="accent_white">#F0F0F0</color>
+    <color name="accent_pure_white">#FFFFFF</color>
+    <color name="accent_black">#0A0A0A</color>
+    <color name="status_green">#22C55E</color>
+    <color name="status_yellow">#EAB308</color>
+    <color name="status_red">#EF4444</color>
+    <color name="status_blue">#3B82F6</color>
+    <color name="status_rec_cyan">#22D3EE</color>
+
+    <!-- Messenger Chat Bubble Colors -->
+    <color name="bubble_me_bg">#2563EB</color>
+    <color name="bubble_me_border">#1D4ED8</color>
+    <color name="bubble_other_bg">#1E1E24</color>
+    <color name="bubble_other_border">#2E2E36</color>
+
+    <!-- Overlays -->
+    <color name="overlay_black_70">#B3000000</color>
+    <color name="overlay_black_90">#E6000000</color>
+</resources>

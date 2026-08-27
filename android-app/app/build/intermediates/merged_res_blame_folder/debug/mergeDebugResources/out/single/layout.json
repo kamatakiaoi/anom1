@@ -1,0 +1,94 @@
+[
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\item_post_card.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_post_card.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\activity_chat.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_chat.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\item_message_other.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_message_other.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\activity_lightbox.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_lightbox.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\activity_server_connect.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_server_connect.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\dialog_user_profile.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\dialog_user_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\activity_patch_notes.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_patch_notes.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\item_patch_card.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_patch_card.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\bottom_sheet_media_picker.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\bottom_sheet_media_picker.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\item_online_member.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_online_member.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\activity_main.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_main.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\view_messenger_banner.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\view_messenger_banner.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\activity_auth.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_auth.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\view_audio_player.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\view_audio_player.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\item_image_preview_thumb.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_image_preview_thumb.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\bottom_sheet_profile.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\bottom_sheet_profile.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\item_topic.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_topic.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\item_message_me.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_message_me.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\activity_post_detail.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\activity_post_detail.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\item_comment.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\item_comment.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-mergeDebugResources-33:/layout/item_message_other.xml",
+        "source": "com.anonymous.chat.app-main-36:/layout/item_message_other.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-mergeDebugResources-33:/layout/item_message_me.xml",
+        "source": "com.anonymous.chat.app-main-36:/layout/item_message_me.xml"
+    },
+    {
+        "merged": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-mergeDebugResources-33:\\layout\\dialog_online_members.xml",
+        "source": "C:\\Users\\flooxie\\.gradle\\daemon\\8.8\\com.anonymous.chat.app-main-36:\\layout\\dialog_online_members.xml"
+    }
+]
