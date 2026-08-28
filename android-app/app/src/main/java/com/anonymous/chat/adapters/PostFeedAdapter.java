@@ -190,11 +190,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
 
             String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
             if (post.getAvatar() != null && !post.getAvatar().isEmpty()) {
-                Glide.with(itemView.getContext())
-                        .load(ImageUtils.getFullMediaUrl(serverUrl, post.getAvatar()))
-                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
-                        .circleCrop()
-                        .into(ivAvatar);
+                ImageUtils.loadAvatar(itemView.getContext(), post.getAvatar(), ivAvatar);
             }
 
             String tz = PreferenceManager.getInstance(itemView.getContext()).getTimezone();
@@ -232,26 +228,18 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
             if (post.getVideo() != null && !post.getVideo().isEmpty()) {
                 postMediaFrame.setVisibility(View.VISIBLE);
                 ivPlayIcon.setVisibility(View.VISIBLE);
-                String fullVideo = ImageUtils.getFullMediaUrl(serverUrl, post.getVideo());
-                Glide.with(itemView.getContext())
-                        .load(fullVideo)
-                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
-                        .thumbnail(0.25f)
-                        .into(ivPostMedia);
+                String videoUrl = post.getVideo();
+                ImageUtils.loadImage(itemView.getContext(), videoUrl, ivPostMedia, 8);
                 postMediaFrame.setOnClickListener(v -> {
-                    if (listener != null) listener.onMediaClicked(fullVideo, true);
+                    if (listener != null) listener.onMediaClicked(videoUrl, true);
                 });
             } else if (post.getImages() != null && !post.getImages().isEmpty()) {
                 postMediaFrame.setVisibility(View.VISIBLE);
                 ivPlayIcon.setVisibility(View.GONE);
-                String fullImage = ImageUtils.getFullMediaUrl(serverUrl, post.getImages().get(0));
-                Glide.with(itemView.getContext())
-                        .load(fullImage)
-                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
-                        .thumbnail(0.25f)
-                        .into(ivPostMedia);
+                String imgUrl = post.getImages().get(0);
+                ImageUtils.loadImage(itemView.getContext(), imgUrl, ivPostMedia, 8);
                 postMediaFrame.setOnClickListener(v -> {
-                    if (listener != null) listener.onMediaClicked(fullImage, false);
+                    if (listener != null) listener.onMediaClicked(imgUrl, false);
                 });
             } else {
                 postMediaFrame.setVisibility(View.GONE);

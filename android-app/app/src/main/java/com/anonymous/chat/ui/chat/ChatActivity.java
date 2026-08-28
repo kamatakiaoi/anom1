@@ -190,10 +190,8 @@ public class ChatActivity extends AppCompatActivity implements
             }
 
             @Override
-            public void onAvatarClicked(String uid) {
-                if (uid != null && !uid.isEmpty()) {
-                    SocketManager.getInstance().requestUserProfile(uid);
-                }
+            public void onAvatarClicked(String uid, String name, String id) {
+                SocketManager.getInstance().requestUserProfile(uid, name, id);
             }
 
             @Override
@@ -250,8 +248,8 @@ public class ChatActivity extends AppCompatActivity implements
         // Online members presence
         binding.tvChatOnlineCount.setOnClickListener(v -> {
             OnlineMembersDialog dialog = new OnlineMembersDialog(this, currentMembers, member -> {
-                if (member.getUid() != null) {
-                    SocketManager.getInstance().requestUserProfile(member.getUid());
+                if (member != null) {
+                    SocketManager.getInstance().requestUserProfile(member.getUid(), member.getName(), member.getId());
                 }
             });
             dialog.show();

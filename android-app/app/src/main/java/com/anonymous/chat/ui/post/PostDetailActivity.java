@@ -193,10 +193,7 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
 
         String serverUrl = PreferenceManager.getInstance(this).getServerBaseUrl();
         if (post.getAvatar() != null && !post.getAvatar().isEmpty()) {
-            Glide.with(this)
-                    .load(ImageUtils.getFullMediaUrl(serverUrl, post.getAvatar()))
-                    .circleCrop()
-                    .into(binding.ivDetailAvatar);
+            ImageUtils.loadAvatar(this, post.getAvatar(), binding.ivDetailAvatar);
         }
 
         String tz = PreferenceManager.getInstance(this).getTimezone();
@@ -231,32 +228,34 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
 
         // Media images and video
         binding.detailMediaContainer.removeAllViews();
+        float density = getResources().getDisplayMetrics().density;
+        int heightPx = (int) (220 * density);
+
         if (post.getVideo() != null && !post.getVideo().isEmpty()) {
-            String fullVideo = ImageUtils.getFullMediaUrl(serverUrl, post.getVideo());
+            String videoUrl = post.getVideo();
             ImageView videoThumb = new ImageView(this);
             videoThumb.setLayoutParams(new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, 500));
+                    ViewGroup.LayoutParams.MATCH_PARENT, heightPx));
             videoThumb.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            Glide.with(this).load(fullVideo).into(videoThumb);
+            ImageUtils.loadImage(this, videoUrl, videoThumb, 10);
             videoThumb.setOnClickListener(v -> {
                 Intent intent = new Intent(PostDetailActivity.this, LightboxActivity.class);
-                intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, fullVideo);
+                intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, videoUrl);
                 startActivity(intent);
             });
             binding.detailMediaContainer.addView(videoThumb);
         } else if (post.getImages() != null && !post.getImages().isEmpty()) {
             for (String img : post.getImages()) {
-                String fullImg = ImageUtils.getFullMediaUrl(serverUrl, img);
                 ImageView iv = new ImageView(this);
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, 500);
-                lp.setMargins(0, 8, 0, 8);
+                        ViewGroup.LayoutParams.MATCH_PARENT, heightPx);
+                lp.setMargins(0, (int) (4 * density), 0, (int) (4 * density));
                 iv.setLayoutParams(lp);
                 iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                Glide.with(this).load(fullImg).into(iv);
+                ImageUtils.loadImage(this, img, iv, 10);
                 iv.setOnClickListener(v -> {
                     Intent intent = new Intent(PostDetailActivity.this, LightboxActivity.class);
-                    intent.putExtra(LightboxActivity.EXTRA_IMAGE_URL, fullImg);
+                    intent.putExtra(LightboxActivity.EXTRA_IMAGE_URL, img);
                     startActivity(intent);
                 });
                 binding.detailMediaContainer.addView(iv);

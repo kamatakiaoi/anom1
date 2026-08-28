@@ -39,6 +39,7 @@ public class LightboxActivity extends AppCompatActivity {
 
         String imageUrl = getIntent().getStringExtra(EXTRA_IMAGE_URL);
         String videoUrl = getIntent().getStringExtra(EXTRA_VIDEO_URL);
+        int startPositionMs = getIntent().getIntExtra("extra_video_position", 0);
 
         if (videoUrl != null && !videoUrl.isEmpty()) {
             isVideo = true;
@@ -52,12 +53,27 @@ public class LightboxActivity extends AppCompatActivity {
             binding.vvLightboxVideo.setMediaController(mediaController);
 
             try {
-                binding.vvLightboxVideo.setVideoURI(Uri.parse(videoUrl));
+                if (videoUrl.startsWith("data:video/")) {
+                    java.io.File temp = com.anonymous.chat.utils.ImageUtils.saveBase64ToCacheFile(this, videoUrl, "vid_", ".mp4");
+                    if (temp != null) {
+                        binding.vvLightboxVideo.setVideoPath(temp.getAbsolutePath());
+                    } else {
+                        binding.vvLightboxVideo.setVideoURI(Uri.parse(videoUrl));
+                    }
+                } else {
+                    String serverUrl = com.anonymous.chat.utils.PreferenceManager.getInstance(this).getServerBaseUrl();
+                    String full = com.anonymous.chat.utils.ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
+                    binding.vvLightboxVideo.setVideoURI(Uri.parse(full));
+                }
+
                 binding.vvLightboxVideo.setOnPreparedListener(mp -> {
                     binding.pbLightboxLoading.setVisibility(View.GONE);
                     videoWidth = mp.getVideoWidth();
                     videoHeight = mp.getVideoHeight();
                     adjustVideoSize();
+                    if (startPositionMs > 0) {
+                        binding.vvLightboxVideo.seekTo(startPositionMs);
+                    }
                     mp.start();
                     mediaController.show(3000);
                 });
@@ -76,7 +92,7 @@ public class LightboxActivity extends AppCompatActivity {
             binding.ivLightboxImage.setVisibility(View.VISIBLE);
             binding.vvLightboxVideo.setVisibility(View.GONE);
             binding.btnLightboxRotate.setVisibility(View.VISIBLE);
-            Glide.with(this).load(imageUrl).into(binding.ivLightboxImage);
+            com.anonymous.chat.utils.ImageUtils.loadImage(this, imageUrl, binding.ivLightboxImage);
             binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());
         }
 

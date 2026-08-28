@@ -13,6 +13,7 @@ public class AnonymousChatApp extends Application {
         super.onCreate();
         NotificationHelper.createNotificationChannels(this);
         SoundHelper.getInstance(this);
+        com.anonymous.chat.utils.AudioPlayerManager.getInstance().init(this);
         SocketManager.getInstance().init(this);
         ChatBackgroundService.start(this);
     }

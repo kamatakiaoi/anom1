@@ -1353,7 +1353,7 @@ function mapPost(row, ip) {
 
 io.on('connection', (socket) => {
   const clientIp = getClientIP(socket);
-  const clientMac = (socket.handshake.query && socket.handshake.query.mac) || (socket.handshake.auth && socket.handshake.auth.mac) || (socket.handshake.headers && socket.handshake.headers['x-client-mac']) || null;
+  const clientMac = (socket.handshake.query && socket.handshake.query.mac) || null;
   socket.clientMac = clientMac;
   socket.authenticated = false;
   socket.topicId = null;
@@ -1881,18 +1881,21 @@ io.on('connection', (socket) => {
 
   socket.on('user-profile', (payload) => {
     if (!socket.authenticated) return;
-    const uid = payload && payload.uid ? String(payload.uid) : '';
-    if (!uid) return;
-    const u = getUserByUid.get(uid);
+    let uid = payload && payload.uid ? String(payload.uid) : (typeof payload === 'string' ? payload : '');
+    let u = uid ? getUserByUid.get(uid) : null;
+    if (!u && payload && payload.name) {
+      u = db.prepare('SELECT ip, name, color, avatar, uid FROM users WHERE name = ? COLLATE NOCASE LIMIT 1').get(payload.name);
+    }
     if (!u) {
-      socket.emit('user-profile', { uid, name: 'Unknown', color: '#666,#999', avatar: null, messages: 0, media: 0, disk: '0 B' });
+      socket.emit('user-profile', { uid: uid || 'anon', name: (payload && payload.name) || 'Anon', color: '#666,#999', avatar: null, messages: 0, media: 0, disk: '0 B' });
       return;
     }
-    const msgCount = db.prepare('SELECT COUNT(*) c FROM messages WHERE user_uid = ? OR user_ip = ?').get(uid, u.ip).c;
-    const mediaCount = db.prepare("SELECT COUNT(*) c FROM messages WHERE (user_uid = ? OR user_ip = ?) AND image IS NOT NULL AND image != ''").get(uid, u.ip).c;
-    const disk = formatBytes(calcUserDisk(uid, u.ip));
+    const targetUid = u.uid || uid;
+    const msgCount = db.prepare('SELECT COUNT(*) c FROM messages WHERE user_uid = ? OR user_ip = ?').get(targetUid, u.ip).c;
+    const mediaCount = db.prepare("SELECT COUNT(*) c FROM messages WHERE (user_uid = ? OR user_ip = ?) AND image IS NOT NULL AND image != ''").get(targetUid, u.ip).c;
+    const disk = formatBytes(calcUserDisk(targetUid, u.ip));
     socket.emit('user-profile', {
-      uid,
+      uid: targetUid,
       name: u.name || 'Anon',
       color: u.color || '#666,#999',
       avatar: avatarUrl(u.avatar),

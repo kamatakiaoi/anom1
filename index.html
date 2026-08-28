@@ -41,7 +41,7 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:#0
 #confirmOverlay .popup{max-width:320px}
 #confirmOverlay .confirm-msg{font-size:14px;color:#ccc;line-height:1.45;margin-bottom:16px}
 #toasts{position:fixed;bottom:24px;right:24px;z-index:200;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:min(340px,calc(100vw - 32px))}
-.toast{pointer-events:auto;background:#1a1a1a;border:1px solid #333;color:#eee;padding:12px 16px;border-radius:12px;font-size:13.5px;line-height:1.4;box-shadow:0 8px 28px rgba(0,0,0,.45);opacity:0;transform:translateY(10px);transition:opacity .22s cubic-bezier(0.16,1,0.3,1),transform .22s cubic-bezier(0.16,1,0.3,1);word-break:break-word}
+.toast{pointer-events:auto;background:#1a1a1a;border:1px solid #333;color:#eee;padding:12px 16px;border-radius:12px;font-size:13.5px;line-height:1.4;box-shadow:0 8px 28px rgba(0,0,0,.45);opacity:0;transform:translateY(10px);transition:opacity .22s ease,transform .22s ease;word-break:break-word}
 .toast.show{opacity:1;transform:translateY(0)}
 .toast.error{border-color:#5a3030;background:#1a1212}
 .toast.ok{border-color:#2a4a32;background:#121a14}
@@ -50,28 +50,15 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:#0
 .upload-progress .up-pct{color:#4ade80;font-weight:600;min-width:36px;text-align:right}
 .upload-progress.done{border-color:#2a4a32}
 
-/* Smooth micro-animations */
-@keyframes viewFadeIn{
-  from{opacity:0}
-  to{opacity:1}
-}
-
-/* Modal popups smooth scaling */
-.popup{
-  transition:transform .18s cubic-bezier(0.16,1,0.3,1),opacity .18s ease;
-  transform:scale(0.97);
-}
-#overlay.show .popup,
-#onlineOverlay.show .popup,
-#userOverlay.show .popup,
-#confirmOverlay.show .popup{
-  transform:scale(1);
-}
-
-button:active{transform:scale(0.98)}
-
 /* ===== LOBBY ===== */
 #lobby{flex:1;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+
+/* anim */
+#lobby.anim-ready{transition:opacity .25s ease, transform .25s ease}
+#lobby.lobby-enter{opacity:0;transform:translateY(8px)}
+#lobby.lobby-enter-active{opacity:1;transform:translateY(0)}
+#chat{transition:opacity .2s ease}
+
 #lobby.hidden{display:none}
 .lobby-header{padding:28px 24px 8px;text-align:center;flex-shrink:0}
 .lobby-header h1{font-size:26px;font-weight:600;letter-spacing:-0.03em}
@@ -177,9 +164,8 @@ header{height:52px;min-height:52px;padding:0 12px 0 16px;border-bottom:1px solid
   -webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;overflow-anchor:auto;
 }
 
-.group{display:flex;gap:10px;max-width:90%;margin-top:18px;position:relative;contain:layout style}
+.group{display:flex;gap:10px;max-width:90%;margin-top:18px;animation:fadeIn .2s ease-out;position:relative}
 .group.grouped{margin-top:5px}
-.group.new-msg{animation:fadeIn .18s ease-out}
 .group.me{align-self:flex-start}.group.other{align-self:flex-end;flex-direction:row-reverse}
 .avatar{width:32px;height:32px;border-radius:50%;flex-shrink:0}
 .group-body{min-width:0;max-width:100%;display:flex;flex-direction:column}
@@ -229,9 +215,9 @@ header{height:52px;min-height:52px;padding:0 12px 0 16px;border-bottom:1px solid
 .reply-icon svg{width:13px;height:13px}
 .msg-name,.avatar{cursor:pointer}
 .group.highlight .bubble{outline:1px solid #888;background:#222}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-#jumpBtn{position:absolute;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);background:#1a1a1a;border:1px solid #333;color:#eee;font-size:13px;font-weight:500;font-family:inherit;padding:8px 16px;border-radius:20px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;display:flex;align-items:center;gap:6px}
+#jumpBtn{position:absolute;bottom:80px;left:50%;transform:translateX(-50%) translateY(12px);background:#1a1a1a;border:1px solid #333;color:#eee;font-size:13px;font-weight:500;font-family:inherit;padding:8px 16px;border-radius:20px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s cubic-bezier(0.16,1,0.3,1),transform .2s cubic-bezier(0.16,1,0.3,1);z-index:40;display:flex;align-items:center;gap:6px;will-change:transform,opacity}
 #jumpBtn.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(0)}
 #jumpBtn svg{width:14px;height:14px}
 
@@ -409,6 +395,15 @@ header{height:52px;min-height:52px;padding:0 12px 0 16px;border-bottom:1px solid
   border-radius:50%;animation:pageSpin .7s linear infinite;
 }
 @keyframes pageSpin{to{transform:rotate(360deg)}}
+.fake-loader{
+  position:absolute;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+  background:#0a0a0a;opacity:1;transition:opacity .25s ease;
+}
+.fake-loader.fade{opacity:0}
+.fake-loader .spin{
+  width:30px;height:30px;border:3px solid #2a2a2a;border-top-color:#e8e8e8;
+  border-radius:50%;animation:pageSpin .7s linear infinite;
+}
 
 .ex-card-media.multi{display:grid;grid-template-columns:1fr 1fr;gap:4px;border:none;background:transparent}
 .ex-card-media.multi img{border-radius:8px;border:1px solid #2a2a2a;max-height:180px}
@@ -540,7 +535,8 @@ header{height:52px;min-height:52px;padding:0 12px 0 16px;border-bottom:1px solid
 .topics-pager button:disabled{opacity:.35;cursor:not-allowed}
 .topics-pager .pg-info{font-size:12.5px;color:#777;display:flex;align-items:center;gap:6px}
 
-.topics-list-body{display:flex;flex-direction:column;gap:10px}
+.topics-list-body{display:flex;flex-direction:column;gap:10px;transition:opacity .18s ease}
+.topics-list-body.loading{opacity:.35;pointer-events:none}
 #imgPreview{overflow:visible;padding-top:6px}
 #imgPreview .ip-item{position:relative;display:inline-block;margin:4px 6px 0 0}
 #imgPreview .ip-item .ip-x{
@@ -559,8 +555,8 @@ header{height:52px;min-height:52px;padding:0 12px 0 16px;border-bottom:1px solid
 
 
 
-#lobby.anim-in{animation:lobbyIn .15s ease both}
-@keyframes lobbyIn{from{opacity:0}to{opacity:1}}
+#lobby.anim-in{animation:lobbyIn .32s cubic-bezier(0.16,1,0.3,1) both;will-change:transform,opacity}
+@keyframes lobbyIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 #topicMenuBtn{background:none;border:none;color:#ccc;cursor:pointer;padding:6px 8px;border-radius:8px;font-size:18px;line-height:1;font-family:inherit}
 #topicMenuBtn:hover{background:#1a1a1a;color:#fff}
 #topicMenu{display:none;position:absolute;right:0;top:100%;margin-top:4px;background:#141414;border:1px solid #2a2a2a;border-radius:10px;min-width:160px;padding:6px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.5)}
@@ -2219,7 +2215,7 @@ function renderTopics(withAnim){
   if(topicsPage<1) topicsPage=1;
 
   const body = document.createElement('div');
-  body.className = 'topics-list-body';
+  body.className = 'topics-list-body' + (withAnim ? ' loading' : '');
 
   filteredSys.forEach(t=>{
     const card=document.createElement('div');
@@ -2278,7 +2274,20 @@ function renderTopics(withAnim){
   }
 }
 
-function showFakeLoader(){ /* Instant crisp transitions */ }
+function showFakeLoader(container, delay){
+  if(!container) return;
+  const cs=getComputedStyle(container);
+  if(cs.position==='static') container.style.position='relative';
+  const el=document.createElement('div');
+  el.className='fake-loader';
+  el.innerHTML='<div class="spin"></div>';
+  container.appendChild(el);
+  // content underneath is already rendered - this overlay just fades away, it never blocks or delays rendering
+  setTimeout(()=>{
+    el.classList.add('fade');
+    setTimeout(()=>el.remove(), 260);
+  }, delay||420);
+}
 
 let lobbyMode = 'topics';
 const lobbyToolbar = document.getElementById('lobbyToolbar');
@@ -2308,9 +2317,11 @@ document.getElementById('lobbyModeSeg')?.addEventListener('click',e=>{
   if(lobbyMode==='topics'){
     topicsWrap.style.display='';
     if(exploreViewEl) exploreViewEl.classList.remove('show');
+    showFakeLoader(topicsWrap);
   } else {
     topicsWrap.style.display='none';
     if(exploreViewEl) exploreViewEl.classList.add('show');
+    showFakeLoader(exploreViewEl);
     loadExploreFeed(true);
   }
   syncToolbarMode();
@@ -2934,11 +2945,14 @@ function openPostDetail(p, fromRoute){
   exViewingId=p.id;
   if(!fromRoute) history.pushState(null,'','/explore/'+p.id);
 
-  // 1. Instant 0ms view transition
+  // 1. Instant view transition with smooth loader
   lobby.classList.add('hidden');
   chat.classList.remove('show');
   const postView=document.getElementById('postView');
-  if(postView) postView.classList.add('show');
+  if(postView) {
+    postView.classList.add('show');
+    showFakeLoader(postView);
+  }
   document.title=(p.title||'Post')+' · Anonymous Chat';
 
   const scroll=document.getElementById('postScroll');
@@ -3518,6 +3532,12 @@ function showLobby(){
   topicLockedBy=null;
   topicOnlineCount=0;
   updateLockedUI();
+  lobby.classList.remove('anim-in');
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      lobby.classList.add('anim-in');
+    });
+  });
   const path = topicsPage > 1 ? '/p/' + topicsPage : '/';
   history.pushState(null,'',path);
 }
@@ -3528,6 +3548,7 @@ function showChat(){
   hidePatchNotes();
   lobby.classList.add('hidden');
   chat.classList.add('show');
+  showFakeLoader(chat);
 }
 
 document.getElementById('backBtn').onclick=showLobby;

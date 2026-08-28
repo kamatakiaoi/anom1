@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
@@ -12,11 +13,13 @@
     <!-- Avatar (Left) -->
     <ImageView
         android:id="@+id/ivMsgAvatar"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
         android:layout_gravity="top"
         android:scaleType="centerCrop"
-        android:layout_marginEnd="8dp" />
+        android:layout_marginEnd="8dp"
+        android:clickable="true"
+        android:focusable="true" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -32,7 +35,9 @@
             android:textColor="@color/text_muted"
             android:textSize="12sp"
             android:textStyle="bold"
-            android:layout_marginBottom="2dp" />
+            android:layout_marginBottom="2dp"
+            android:clickable="true"
+            android:focusable="true" />
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -55,12 +60,14 @@
                 <!-- Reply Box Quote -->
                 <LinearLayout
                     android:id="@+id/replyQuoteBox"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minWidth="140dp"
                     android:orientation="vertical"
-                    android:background="#141414"
-                    android:padding="6dp"
+                    android:background="@drawable/bg_quote_other"
+                    android:paddingStart="8dp"
+                    android:paddingEnd="8dp"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"
                     android:layout_marginBottom="6dp"
                     android:visibility="gone">
 
@@ -105,29 +112,64 @@
                     android:layout_marginTop="4dp"
                     android:visibility="gone" />
 
-                <!-- Video Container -->
-                <FrameLayout
-                    android:id="@+id/msgVideoFrame"
-                    android:layout_width="220dp"
-                    android:layout_height="160dp"
+                <!-- Video Container (Inline playback + fullscreen trigger) -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardMsgVideo"
+                    android:layout_width="230dp"
+                    android:layout_height="150dp"
                     android:layout_marginTop="4dp"
-                    android:background="#000000"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#000000"
                     android:visibility="gone">
 
-                    <ImageView
-                        android:id="@+id/ivMsgVideoThumb"
+                    <FrameLayout
+                        android:id="@+id/msgVideoFrame"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop" />
+                        android:layout_height="match_parent">
 
-                    <ImageView
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_play"
-                        android:background="@drawable/bg_btn_circle"
-                        android:padding="10dp" />
-                </FrameLayout>
+                        <ImageView
+                            android:id="@+id/ivMsgVideoThumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop" />
+
+                        <VideoView
+                            android:id="@+id/vvMsgVideoInline"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:visibility="gone" />
+
+                        <ProgressBar
+                            android:id="@+id/pbVideoLoading"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:indeterminateTint="@color/accent_pure_white"
+                            android:visibility="gone" />
+
+                        <ImageView
+                            android:id="@+id/btnPlayVideo"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_play"
+                            android:background="@drawable/bg_btn_circle"
+                            android:padding="10dp" />
+
+                        <ImageView
+                            android:id="@+id/btnFullscreenVideo"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="bottom|end"
+                            android:layout_margin="6dp"
+                            android:src="@drawable/ic_fullscreen"
+                            android:background="@drawable/bg_btn_circle"
+                            android:padding="5dp"
+                            android:visibility="gone" />
+                    </FrameLayout>
+                </androidx.cardview.widget.CardView>
 
                 <!-- Audio Container -->
                 <include

@@ -112,4 +112,27 @@ public class PreferenceManager {
     public void setSoundEnabled(boolean enabled) {
         prefs.edit().putBoolean(KEY_SOUND_ENABLED, enabled).apply();
     }
+
+    private static final String KEY_MY_UID = "my_profile_uid";
+    private static final String KEY_MY_NAME = "my_profile_name";
+    private static final String KEY_MY_COLOR = "my_profile_color";
+    private static final String KEY_MY_AVATAR = "my_profile_avatar";
+    private static final String KEY_MY_ID = "my_profile_id";
+
+    public void saveMyProfile(com.anonymous.chat.models.UserProfile profile) {
+        if (profile == null) return;
+        SharedPreferences.Editor ed = prefs.edit();
+        if (profile.getUid() != null) ed.putString(KEY_MY_UID, profile.getUid());
+        if (profile.getName() != null) ed.putString(KEY_MY_NAME, profile.getName());
+        if (profile.getColor() != null) ed.putString(KEY_MY_COLOR, profile.getColor());
+        if (profile.getAvatar() != null) ed.putString(KEY_MY_AVATAR, profile.getAvatar());
+        if (profile.getId() != null) ed.putString(KEY_MY_ID, profile.getId());
+        ed.apply();
+    }
+
+    public String getMyUid() { return prefs.getString(KEY_MY_UID, null); }
+    public String getMyName() { return prefs.getString(KEY_MY_NAME, null); }
+    public String getMyColor() { return prefs.getString(KEY_MY_COLOR, null); }
+    public String getMyAvatar() { return prefs.getString(KEY_MY_AVATAR, null); }
+    public String getMyId() { return prefs.getString(KEY_MY_ID, null); }
 }

@@ -137,6 +137,8 @@ public class SocketManager {
         this.appContext = context.getApplicationContext();
     }
 
+    public Context getAppContext() { return appContext; }
+
     public void addConnectionListener(ConnectionListener l) { connectionListeners.add(l); }
     public void removeConnectionListener(ConnectionListener l) { connectionListeners.remove(l); }
 
@@ -322,6 +324,9 @@ public class SocketManager {
             try {
                 JSONObject obj = (JSONObject) args[0];
                 myProfile = gson.fromJson(obj.toString(), UserProfile.class);
+                if (appContext != null && myProfile != null) {
+                    PreferenceManager.getInstance(appContext).saveMyProfile(myProfile);
+                }
                 mainHandler.post(() -> {
                     for (ProfileListener l : profileListeners) l.onProfileLoaded(myProfile);
                 });
@@ -880,10 +885,16 @@ public class SocketManager {
     }
 
     public void requestUserProfile(String uid) {
-        if (socket == null || !socket.connected() || uid == null) return;
+        requestUserProfile(uid, null, null);
+    }
+
+    public void requestUserProfile(String uid, String name, String id) {
+        if (socket == null || !socket.connected()) return;
         try {
             JSONObject obj = new JSONObject();
-            obj.put("uid", uid);
+            if (uid != null && !uid.isEmpty()) obj.put("uid", uid);
+            if (name != null && !name.isEmpty()) obj.put("name", name);
+            if (id != null && !id.isEmpty()) obj.put("id", id);
             socket.emit("user-profile", obj);
         } catch (Exception e) {
             Log.e(TAG, "requestUserProfile error", e);

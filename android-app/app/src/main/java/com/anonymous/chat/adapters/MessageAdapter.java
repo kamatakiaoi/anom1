@@ -1,17 +1,22 @@
 package com.anonymous.chat.adapters;
 
+import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -24,8 +29,6 @@ import com.anonymous.chat.utils.ColorHelper;
 import com.anonymous.chat.utils.ImageUtils;
 import com.anonymous.chat.utils.PreferenceManager;
 import com.anonymous.chat.utils.TimeUtils;
-import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,7 +40,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     public interface MessageInteractionListener {
         void onReply(Message message);
-        void onAvatarClicked(String uid);
+        void onAvatarClicked(String uid, String name, String id);
         void onMediaClicked(String mediaUrl, boolean isVideo);
         void onAudioClicked(String audioUrl);
         void onJumpToMessage(int messageId);
@@ -83,7 +86,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 Message o = oldList.get(oldItemPosition);
                 Message n = newList.get(newItemPosition);
                 return (o.getText() != null && o.getText().equals(n.getText())) &&
-                       (o.getTime() != null && o.getTime().equals(n.getTime()));
+                       (o.getTime() != null && o.getTime().equals(n.getTime())) &&
+                       (o.getImages() != null && o.getImages().equals(n.getImages()));
             }
         });
 
@@ -121,19 +125,37 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     @Override
     public int getItemViewType(int position) {
         Message msg = messages.get(position);
+        if (msg == null) return VIEW_TYPE_OTHER;
+
         UserProfile myProfile = SocketManager.getInstance().getMyProfile();
-        String myUid = myProfile != null ? myProfile.getUid() : "";
-        String myName = myProfile != null ? myProfile.getName() : "";
-        String myId = myProfile != null ? myProfile.getId() : "";
+        Context ctx = SocketManager.getInstance().getAppContext();
+        PreferenceManager prefs = ctx != null ? PreferenceManager.getInstance(ctx) : null;
 
-        if (myUid != null && !myUid.isEmpty() && msg.getUid() != null && !msg.getUid().isEmpty()) {
-            if (myUid.equals(msg.getUid())) return VIEW_TYPE_ME;
+        String myUid = myProfile != null && myProfile.getUid() != null ? myProfile.getUid() : (prefs != null ? prefs.getMyUid() : null);
+        String myId = myProfile != null && myProfile.getId() != null ? myProfile.getId() : (prefs != null ? prefs.getMyId() : null);
+        String myName = myProfile != null && myProfile.getName() != null ? myProfile.getName() : (prefs != null ? prefs.getMyName() : null);
+
+        String msgUid = msg.getUid();
+        String msgId = msg.getId();
+        String msgName = msg.getName();
+
+        // 1. Primary check: Unique UID
+        if (myUid != null && !myUid.isEmpty() && msgUid != null && !msgUid.isEmpty()) {
+            return myUid.equals(msgUid) ? VIEW_TYPE_ME : VIEW_TYPE_OTHER;
         }
 
-        if ((myId != null && !myId.isEmpty() && myId.equals(msg.getId())) ||
-            (myName != null && !myName.isEmpty() && myName.equalsIgnoreCase(msg.getName()))) {
-            return VIEW_TYPE_ME;
+        // 2. Secondary check: Session Socket ID
+        if (myId != null && !myId.isEmpty() && msgId != null && !msgId.isEmpty()) {
+            return myId.equals(msgId) ? VIEW_TYPE_ME : VIEW_TYPE_OTHER;
         }
+
+        // 3. Fallback check: Custom unique name (never match generic Anon)
+        if (myName != null && !myName.isEmpty() && !"Anon".equalsIgnoreCase(myName) && !"Anonymous".equalsIgnoreCase(myName)) {
+            if (msgName != null && myName.equalsIgnoreCase(msgName)) {
+                return VIEW_TYPE_ME;
+            }
+        }
+
         return VIEW_TYPE_OTHER;
     }
 
@@ -224,8 +246,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         final TextView tvQuoteName;
         final TextView tvQuoteText;
         final LinearLayout mediaContainer;
-        final FrameLayout msgVideoFrame;
+        final CardView cardMsgVideo;
         final ImageView ivMsgVideoThumb;
+        final VideoView vvMsgVideoInline;
+        final ProgressBar pbVideoLoading;
+        final ImageView btnPlayVideo;
+        final ImageView btnFullscreenVideo;
         final View audioPlayerView;
 
         MeViewHolder(@NonNull View itemView) {
@@ -238,8 +264,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             tvQuoteName = itemView.findViewById(R.id.tvQuoteName);
             tvQuoteText = itemView.findViewById(R.id.tvQuoteText);
             mediaContainer = itemView.findViewById(R.id.mediaContainer);
-            msgVideoFrame = itemView.findViewById(R.id.msgVideoFrame);
+            cardMsgVideo = itemView.findViewById(R.id.cardMsgVideo);
             ivMsgVideoThumb = itemView.findViewById(R.id.ivMsgVideoThumb);
+            vvMsgVideoInline = itemView.findViewById(R.id.vvMsgVideoInline);
+            pbVideoLoading = itemView.findViewById(R.id.pbVideoLoading);
+            btnPlayVideo = itemView.findViewById(R.id.btnPlayVideo);
+            btnFullscreenVideo = itemView.findViewById(R.id.btnFullscreenVideo);
             audioPlayerView = itemView.findViewById(R.id.audioPlayerView);
         }
 
@@ -273,22 +303,19 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             List<String> images = msg.getImages();
             if (images != null && !images.isEmpty()) {
                 mediaContainer.setVisibility(View.VISIBLE);
-                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
+                float density = itemView.getContext().getResources().getDisplayMetrics().density;
                 for (String imgUrl : images) {
                     ImageView imgView = new ImageView(itemView.getContext());
+                    int heightPx = (int) (180 * density);
                     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT, 360);
-                    lp.setMargins(0, 4, 0, 4);
+                            ViewGroup.LayoutParams.MATCH_PARENT, heightPx);
+                    lp.setMargins(0, (int) (3 * density), 0, (int) (3 * density));
                     imgView.setLayoutParams(lp);
                     imgView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                    String full = ImageUtils.getFullMediaUrl(serverUrl, imgUrl);
-                    Glide.with(itemView.getContext())
-                            .load(full)
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .thumbnail(0.25f)
-                            .into(imgView);
+
+                    ImageUtils.loadImage(itemView.getContext(), imgUrl, imgView, 8);
                     imgView.setOnClickListener(v -> {
-                        if (listener != null) listener.onMediaClicked(full, false);
+                        if (listener != null) listener.onMediaClicked(imgUrl, false);
                     });
                     mediaContainer.addView(imgView);
                 }
@@ -296,29 +323,83 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 mediaContainer.setVisibility(View.GONE);
             }
 
-            // Video
+            // Video Inline Player
             if (msg.getVideo() != null && !msg.getVideo().isEmpty()) {
-                msgVideoFrame.setVisibility(View.VISIBLE);
-                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
-                String fullVideo = ImageUtils.getFullMediaUrl(serverUrl, msg.getVideo());
-                Glide.with(itemView.getContext())
-                        .load(fullVideo)
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .thumbnail(0.25f)
-                        .into(ivMsgVideoThumb);
-                msgVideoFrame.setOnClickListener(v -> {
-                    if (listener != null) listener.onMediaClicked(fullVideo, true);
+                cardMsgVideo.setVisibility(View.VISIBLE);
+                String videoUrl = msg.getVideo();
+                ImageUtils.loadImage(itemView.getContext(), videoUrl, ivMsgVideoThumb, 10);
+
+                vvMsgVideoInline.setVisibility(View.GONE);
+                ivMsgVideoThumb.setVisibility(View.VISIBLE);
+                btnPlayVideo.setVisibility(View.VISIBLE);
+                btnPlayVideo.setImageResource(R.drawable.ic_play);
+                btnFullscreenVideo.setVisibility(View.GONE);
+                pbVideoLoading.setVisibility(View.GONE);
+
+                View.OnClickListener videoClickListener = v -> {
+                    if (vvMsgVideoInline.isPlaying()) {
+                        // 2nd Click -> Launch Fullscreen
+                        if (listener != null) {
+                            listener.onMediaClicked(videoUrl, true);
+                        }
+                    } else {
+                        // 1st Click -> Play Inline
+                        pbVideoLoading.setVisibility(View.VISIBLE);
+                        btnPlayVideo.setVisibility(View.GONE);
+
+                        try {
+                            if (videoUrl.startsWith("data:video/")) {
+                                java.io.File temp = ImageUtils.saveBase64ToCacheFile(itemView.getContext(), videoUrl, "vid_", ".mp4");
+                                if (temp != null) {
+                                    vvMsgVideoInline.setVideoPath(temp.getAbsolutePath());
+                                } else {
+                                    vvMsgVideoInline.setVideoURI(Uri.parse(videoUrl));
+                                }
+                            } else {
+                                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
+                                String full = ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
+                                vvMsgVideoInline.setVideoURI(Uri.parse(full));
+                            }
+
+                            vvMsgVideoInline.setOnPreparedListener(mp -> {
+                                pbVideoLoading.setVisibility(View.GONE);
+                                ivMsgVideoThumb.setVisibility(View.GONE);
+                                vvMsgVideoInline.setVisibility(View.VISIBLE);
+                                btnFullscreenVideo.setVisibility(View.VISIBLE);
+                                mp.setLooping(true);
+                                mp.start();
+                            });
+
+                            vvMsgVideoInline.setOnErrorListener((mp, what, extra) -> {
+                                pbVideoLoading.setVisibility(View.GONE);
+                                btnPlayVideo.setVisibility(View.VISIBLE);
+                                ivMsgVideoThumb.setVisibility(View.VISIBLE);
+                                vvMsgVideoInline.setVisibility(View.GONE);
+                                if (listener != null) listener.onMediaClicked(videoUrl, true);
+                                return true;
+                            });
+                        } catch (Exception e) {
+                            pbVideoLoading.setVisibility(View.GONE);
+                            btnPlayVideo.setVisibility(View.VISIBLE);
+                        }
+                    }
+                };
+
+                btnPlayVideo.setOnClickListener(videoClickListener);
+                ivMsgVideoThumb.setOnClickListener(videoClickListener);
+                vvMsgVideoInline.setOnClickListener(videoClickListener);
+
+                btnFullscreenVideo.setOnClickListener(v -> {
+                    if (listener != null) listener.onMediaClicked(videoUrl, true);
                 });
             } else {
-                msgVideoFrame.setVisibility(View.GONE);
+                cardMsgVideo.setVisibility(View.GONE);
             }
 
             // Audio
             if (msg.getAudio() != null && !msg.getAudio().isEmpty()) {
                 audioPlayerView.setVisibility(View.VISIBLE);
-                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
-                String fullAudio = ImageUtils.getFullMediaUrl(serverUrl, msg.getAudio());
-                setupAudioPlayer(audioPlayerView, fullAudio, listener);
+                setupAudioPlayer(audioPlayerView, msg.getAudio(), listener);
             } else {
                 audioPlayerView.setVisibility(View.GONE);
             }
@@ -346,8 +427,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         final TextView tvQuoteName;
         final TextView tvQuoteText;
         final LinearLayout mediaContainer;
-        final FrameLayout msgVideoFrame;
+        final CardView cardMsgVideo;
         final ImageView ivMsgVideoThumb;
+        final VideoView vvMsgVideoInline;
+        final ProgressBar pbVideoLoading;
+        final ImageView btnPlayVideo;
+        final ImageView btnFullscreenVideo;
         final View audioPlayerView;
 
         OtherViewHolder(@NonNull View itemView) {
@@ -362,8 +447,12 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             tvQuoteName = itemView.findViewById(R.id.tvQuoteName);
             tvQuoteText = itemView.findViewById(R.id.tvQuoteText);
             mediaContainer = itemView.findViewById(R.id.mediaContainer);
-            msgVideoFrame = itemView.findViewById(R.id.msgVideoFrame);
+            cardMsgVideo = itemView.findViewById(R.id.cardMsgVideo);
             ivMsgVideoThumb = itemView.findViewById(R.id.ivMsgVideoThumb);
+            vvMsgVideoInline = itemView.findViewById(R.id.vvMsgVideoInline);
+            pbVideoLoading = itemView.findViewById(R.id.pbVideoLoading);
+            btnPlayVideo = itemView.findViewById(R.id.btnPlayVideo);
+            btnFullscreenVideo = itemView.findViewById(R.id.btnFullscreenVideo);
             audioPlayerView = itemView.findViewById(R.id.audioPlayerView);
         }
 
@@ -391,17 +480,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             GradientDrawable grad = ColorHelper.getAvatarGradient(msg.getColor());
             ivAvatar.setBackground(grad);
             if (msg.getAvatar() != null && !msg.getAvatar().isEmpty()) {
-                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
-                Glide.with(itemView.getContext())
-                        .load(ImageUtils.getFullMediaUrl(serverUrl, msg.getAvatar()))
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .circleCrop()
-                        .into(ivAvatar);
+                ImageUtils.loadAvatar(itemView.getContext(), msg.getAvatar(), ivAvatar);
             }
 
-            ivAvatar.setOnClickListener(v -> {
-                if (listener != null) listener.onAvatarClicked(msg.getUid());
-            });
+            View.OnClickListener profileClick = v -> {
+                if (listener != null) listener.onAvatarClicked(msg.getUid(), msg.getName(), msg.getId());
+            };
+            ivAvatar.setOnClickListener(profileClick);
+            tvName.setOnClickListener(profileClick);
 
             // Message text
             if (msg.getText() != null && !msg.getText().isEmpty()) {
@@ -430,22 +516,19 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             List<String> images = msg.getImages();
             if (images != null && !images.isEmpty()) {
                 mediaContainer.setVisibility(View.VISIBLE);
-                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
+                float density = itemView.getContext().getResources().getDisplayMetrics().density;
                 for (String imgUrl : images) {
                     ImageView imgView = new ImageView(itemView.getContext());
+                    int heightPx = (int) (180 * density);
                     LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT, 360);
-                    lp.setMargins(0, 4, 0, 4);
+                            ViewGroup.LayoutParams.MATCH_PARENT, heightPx);
+                    lp.setMargins(0, (int) (3 * density), 0, (int) (3 * density));
                     imgView.setLayoutParams(lp);
                     imgView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                    String full = ImageUtils.getFullMediaUrl(serverUrl, imgUrl);
-                    Glide.with(itemView.getContext())
-                            .load(full)
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .thumbnail(0.25f)
-                            .into(imgView);
+
+                    ImageUtils.loadImage(itemView.getContext(), imgUrl, imgView, 8);
                     imgView.setOnClickListener(v -> {
-                        if (listener != null) listener.onMediaClicked(full, false);
+                        if (listener != null) listener.onMediaClicked(imgUrl, false);
                     });
                     mediaContainer.addView(imgView);
                 }
@@ -453,29 +536,83 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 mediaContainer.setVisibility(View.GONE);
             }
 
-            // Video
+            // Video Inline Player
             if (msg.getVideo() != null && !msg.getVideo().isEmpty()) {
-                msgVideoFrame.setVisibility(View.VISIBLE);
-                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
-                String fullVideo = ImageUtils.getFullMediaUrl(serverUrl, msg.getVideo());
-                Glide.with(itemView.getContext())
-                        .load(fullVideo)
-                        .diskCacheStrategy(DiskCacheStrategy.ALL)
-                        .thumbnail(0.25f)
-                        .into(ivMsgVideoThumb);
-                msgVideoFrame.setOnClickListener(v -> {
-                    if (listener != null) listener.onMediaClicked(fullVideo, true);
+                cardMsgVideo.setVisibility(View.VISIBLE);
+                String videoUrl = msg.getVideo();
+                ImageUtils.loadImage(itemView.getContext(), videoUrl, ivMsgVideoThumb, 10);
+
+                vvMsgVideoInline.setVisibility(View.GONE);
+                ivMsgVideoThumb.setVisibility(View.VISIBLE);
+                btnPlayVideo.setVisibility(View.VISIBLE);
+                btnPlayVideo.setImageResource(R.drawable.ic_play);
+                btnFullscreenVideo.setVisibility(View.GONE);
+                pbVideoLoading.setVisibility(View.GONE);
+
+                View.OnClickListener videoClickListener = v -> {
+                    if (vvMsgVideoInline.isPlaying()) {
+                        // 2nd Click -> Launch Fullscreen
+                        if (listener != null) {
+                            listener.onMediaClicked(videoUrl, true);
+                        }
+                    } else {
+                        // 1st Click -> Play Inline
+                        pbVideoLoading.setVisibility(View.VISIBLE);
+                        btnPlayVideo.setVisibility(View.GONE);
+
+                        try {
+                            if (videoUrl.startsWith("data:video/")) {
+                                java.io.File temp = ImageUtils.saveBase64ToCacheFile(itemView.getContext(), videoUrl, "vid_", ".mp4");
+                                if (temp != null) {
+                                    vvMsgVideoInline.setVideoPath(temp.getAbsolutePath());
+                                } else {
+                                    vvMsgVideoInline.setVideoURI(Uri.parse(videoUrl));
+                                }
+                            } else {
+                                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
+                                String full = ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
+                                vvMsgVideoInline.setVideoURI(Uri.parse(full));
+                            }
+
+                            vvMsgVideoInline.setOnPreparedListener(mp -> {
+                                pbVideoLoading.setVisibility(View.GONE);
+                                ivMsgVideoThumb.setVisibility(View.GONE);
+                                vvMsgVideoInline.setVisibility(View.VISIBLE);
+                                btnFullscreenVideo.setVisibility(View.VISIBLE);
+                                mp.setLooping(true);
+                                mp.start();
+                            });
+
+                            vvMsgVideoInline.setOnErrorListener((mp, what, extra) -> {
+                                pbVideoLoading.setVisibility(View.GONE);
+                                btnPlayVideo.setVisibility(View.VISIBLE);
+                                ivMsgVideoThumb.setVisibility(View.VISIBLE);
+                                vvMsgVideoInline.setVisibility(View.GONE);
+                                if (listener != null) listener.onMediaClicked(videoUrl, true);
+                                return true;
+                            });
+                        } catch (Exception e) {
+                            pbVideoLoading.setVisibility(View.GONE);
+                            btnPlayVideo.setVisibility(View.VISIBLE);
+                        }
+                    }
+                };
+
+                btnPlayVideo.setOnClickListener(videoClickListener);
+                ivMsgVideoThumb.setOnClickListener(videoClickListener);
+                vvMsgVideoInline.setOnClickListener(videoClickListener);
+
+                btnFullscreenVideo.setOnClickListener(v -> {
+                    if (listener != null) listener.onMediaClicked(videoUrl, true);
                 });
             } else {
-                msgVideoFrame.setVisibility(View.GONE);
+                cardMsgVideo.setVisibility(View.GONE);
             }
 
             // Audio
             if (msg.getAudio() != null && !msg.getAudio().isEmpty()) {
                 audioPlayerView.setVisibility(View.VISIBLE);
-                String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
-                String fullAudio = ImageUtils.getFullMediaUrl(serverUrl, msg.getAudio());
-                setupAudioPlayer(audioPlayerView, fullAudio, listener);
+                setupAudioPlayer(audioPlayerView, msg.getAudio(), listener);
             } else {
                 audioPlayerView.setVisibility(View.GONE);
             }
@@ -535,17 +672,17 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         AudioPlayerManager.getInstance().setListener(new AudioPlayerManager.OnAudioStateChangeListener() {
             @Override
             public void onPlay(String url) {
-                if (url.equals(audioUrl)) btnPlay.setImageResource(R.drawable.ic_pause);
+                if (url != null && url.equals(audioUrl)) btnPlay.setImageResource(R.drawable.ic_pause);
             }
 
             @Override
             public void onPause(String url) {
-                if (url.equals(audioUrl)) btnPlay.setImageResource(R.drawable.ic_play);
+                if (url != null && url.equals(audioUrl)) btnPlay.setImageResource(R.drawable.ic_play);
             }
 
             @Override
             public void onStop(String url) {
-                if (url.equals(audioUrl)) {
+                if (url != null && url.equals(audioUrl)) {
                     btnPlay.setImageResource(R.drawable.ic_play);
                     seekBar.setProgress(0);
                     tvCurrent.setText("0:00");
@@ -554,7 +691,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             @Override
             public void onProgress(String url, int currentMs, int durationMs) {
-                if (url.equals(audioUrl)) {
+                if (url != null && url.equals(audioUrl)) {
                     if (durationMs > 0) {
                         int progress = (int) (((float) currentMs / durationMs) * 100);
                         seekBar.setProgress(progress);
@@ -566,7 +703,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             @Override
             public void onError(String url, String error) {
-                if (url.equals(audioUrl)) {
+                if (url != null && url.equals(audioUrl)) {
                     btnPlay.setImageResource(R.drawable.ic_play);
                 }
             }

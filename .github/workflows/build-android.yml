@@ -21,17 +21,22 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
-      - name: Build Android App (Release / Debug APK)
+      - name: Build Android App (Debug APK)
         run: |
           if [ -d "android-app" ]; then
             cd android-app
           fi
           gradle assembleDebug --no-daemon --stacktrace
 
-      - name: Upload APK Artifact
+      - name: Prepare Flat Output Directory
+        run: |
+          mkdir -p output
+          find . -name "*debug*.apk" -o -name "*app*.apk" | head -n 1 | xargs -I {} cp {} output/AnonymousChat-v3.6.9-Android.apk
+          cd output
+          zip -9 AnonymousChat-v3.6.9-Android.zip AnonymousChat-v3.6.9-Android.apk
+
+      - name: Upload APK Artifact (Flat in ZIP)
         uses: actions/upload-artifact@v4
         with:
-          name: AnonymousChat-v3.6.9-Android.apk
-          path: |
-            **/app/build/outputs/apk/debug/*.apk
-            **/app/build/outputs/apk/release/*.apk
+          name: AnonymousChat-v3.6.9-Android
+          path: output/AnonymousChat-v3.6.9-Android.apk

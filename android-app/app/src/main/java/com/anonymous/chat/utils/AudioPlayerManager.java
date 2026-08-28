@@ -42,6 +42,14 @@ public class AudioPlayerManager {
         return mediaPlayer != null && mediaPlayer.isPlaying() && url != null && url.equals(currentPlayingUrl);
     }
 
+    private android.content.Context appContext;
+
+    public void init(android.content.Context context) {
+        if (context != null) {
+            this.appContext = context.getApplicationContext();
+        }
+    }
+
     public void playOrPause(String url) {
         if (url == null || url.isEmpty()) return;
 
@@ -67,7 +75,21 @@ public class AudioPlayerManager {
                             .setUsage(AudioAttributes.USAGE_MEDIA)
                             .build()
             );
-            mediaPlayer.setDataSource(url);
+
+            if (url.startsWith("data:audio/")) {
+                if (appContext != null) {
+                    java.io.File temp = ImageUtils.saveBase64ToCacheFile(appContext, url, "audio_", ".mp3");
+                    if (temp != null) {
+                        mediaPlayer.setDataSource(temp.getAbsolutePath());
+                    } else {
+                        throw new java.io.IOException("Cannot decode audio data");
+                    }
+                } else {
+                    throw new java.io.IOException("Context not initialized");
+                }
+            } else {
+                mediaPlayer.setDataSource(url);
+            }
             currentPlayingUrl = url;
 
             mediaPlayer.setOnPreparedListener(mp -> {

@@ -1,5 +1,35 @@
 [
   {
+    "version": "1.4.5",
+    "date": "2026-08-27",
+    "title": "Complete Animation & Logic Synchronization from index36.html",
+    "items": [
+      "Ported 100% of all animation keyframes, transitions, and loaders identically from index36.html",
+      "Restored showFakeLoader on view and tab transitions (chat, postView, explore, topics)",
+      "Restored smooth page transition opacity fading in renderTopics"
+    ]
+  },
+  {
+    "version": "1.4.4",
+    "date": "2026-08-27",
+    "title": "Exact Animation Synchronization from oldindex.html",
+    "items": [
+      "Synchronized 100% of all animation keyframes, transition timing, and easing curves identically from oldindex.html",
+      "Maintained full performance optimizations, memory coordinator, and persistent account alignment"
+    ]
+  },
+  {
+    "version": "1.4.3",
+    "date": "2026-08-27",
+    "title": "Animation Restoration & Hardware-Accelerated Polish",
+    "items": [
+      "Restored smooth entrance and micro-interactions from oldindex.html with modern cubic-bezier(0.16, 1, 0.3, 1) spring easing",
+      "Optimized modal popups with smooth scaling and subtle slide-up animation",
+      "Re-enabled smooth lobbyIn double-RAF entrance transition without scroll coordinate drift",
+      "Enabled hardware acceleration (will-change & GPU layer compositing) for 60fps/120fps fluid motion"
+    ]
+  },
+  {
     "version": "1.4.2",
     "date": "2026-08-27",
     "title": "Persistent Account Alignment & True Bottom Scroll Pinning",

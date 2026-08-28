@@ -20,7 +20,7 @@ Write-Host "ANDROID_HOME: $env:ANDROID_HOME"
 $appDir = "c:\Users\flooxie\Downloads\Compressed\code2\android-app"
 Set-Location $appDir
 
-& "$gradleDir\bin\gradle.bat" assembleDebug --stacktrace
+& "$gradleDir\bin\gradle.bat" assembleDebug --no-daemon --stacktrace
 
 $apkPath = "$appDir\app\build\outputs\apk\debug\app-debug.apk"
 $destApkPath = "c:\Users\flooxie\Downloads\Compressed\code2\AnonymousChat.apk"

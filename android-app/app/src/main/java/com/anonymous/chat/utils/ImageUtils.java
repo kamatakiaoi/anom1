@@ -145,17 +145,102 @@ public class ImageUtils {
     public static String getFullMediaUrl(String serverBaseUrl, String mediaPath) {
         if (mediaPath == null || mediaPath.trim().isEmpty()) return "";
         mediaPath = mediaPath.trim();
-        if (mediaPath.startsWith("http://") || mediaPath.startsWith("https://") || mediaPath.startsWith("data:")) {
+        if (mediaPath.startsWith("http://") || mediaPath.startsWith("https://") || mediaPath.startsWith("data:") || mediaPath.startsWith("file://") || mediaPath.startsWith("/")) {
+            if (mediaPath.startsWith("/") && !mediaPath.startsWith("//")) {
+                if (serverBaseUrl == null || serverBaseUrl.trim().isEmpty()) {
+                    serverBaseUrl = "http://" + PreferenceManager.DEFAULT_SERVER_HOST + ":" + PreferenceManager.DEFAULT_SERVER_PORT;
+                }
+                return serverBaseUrl.replaceAll("/+$", "") + mediaPath;
+            }
             return mediaPath;
         }
         if (serverBaseUrl == null || serverBaseUrl.trim().isEmpty()) {
             serverBaseUrl = "http://" + PreferenceManager.DEFAULT_SERVER_HOST + ":" + PreferenceManager.DEFAULT_SERVER_PORT;
         }
         String cleanBase = serverBaseUrl.replaceAll("/+$", "");
-        String cleanPath = mediaPath.startsWith("/") ? mediaPath : "/" + mediaPath;
-        if (!cleanPath.startsWith("/uploads/") && !cleanPath.startsWith("/api/")) {
-            cleanPath = "/uploads" + cleanPath;
+        return cleanBase + "/uploads/" + mediaPath;
+    }
+
+    public static void loadImage(Context context, String mediaUrl, android.widget.ImageView target) {
+        loadImage(context, mediaUrl, target, 0);
+    }
+
+    public static void loadImage(Context context, String mediaUrl, android.widget.ImageView target, int cornerRadiusDp) {
+        if (context == null || target == null || mediaUrl == null || mediaUrl.isEmpty()) return;
+        try {
+            if (mediaUrl.startsWith("data:image/")) {
+                int comma = mediaUrl.indexOf(",");
+                if (comma != -1) {
+                    byte[] decoded = Base64.decode(mediaUrl.substring(comma + 1), Base64.DEFAULT);
+                    com.bumptech.glide.RequestBuilder<android.graphics.drawable.Drawable> rb = com.bumptech.glide.Glide.with(context)
+                            .load(decoded)
+                            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE);
+                    if (cornerRadiusDp > 0) {
+                        int radiusPx = (int) (cornerRadiusDp * context.getResources().getDisplayMetrics().density);
+                        rb = rb.transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(radiusPx));
+                    }
+                    rb.into(target);
+                    return;
+                }
+            }
+
+            String serverUrl = PreferenceManager.getInstance(context).getServerBaseUrl();
+            String full = getFullMediaUrl(serverUrl, mediaUrl);
+            com.bumptech.glide.RequestBuilder<android.graphics.drawable.Drawable> rb = com.bumptech.glide.Glide.with(context)
+                    .load(full)
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL);
+            if (cornerRadiusDp > 0) {
+                int radiusPx = (int) (cornerRadiusDp * context.getResources().getDisplayMetrics().density);
+                rb = rb.transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(radiusPx));
+            }
+            rb.into(target);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        return cleanBase + cleanPath;
+    }
+
+    public static void loadAvatar(Context context, String avatarUrl, android.widget.ImageView target) {
+        if (context == null || target == null) return;
+        if (avatarUrl == null || avatarUrl.isEmpty()) return;
+        try {
+            if (avatarUrl.startsWith("data:image/")) {
+                int comma = avatarUrl.indexOf(",");
+                if (comma != -1) {
+                    byte[] decoded = Base64.decode(avatarUrl.substring(comma + 1), Base64.DEFAULT);
+                    com.bumptech.glide.Glide.with(context)
+                            .load(decoded)
+                            .circleCrop()
+                            .into(target);
+                    return;
+                }
+            }
+            String serverUrl = PreferenceManager.getInstance(context).getServerBaseUrl();
+            String full = getFullMediaUrl(serverUrl, avatarUrl);
+            com.bumptech.glide.Glide.with(context)
+                    .load(full)
+                    .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
+                    .circleCrop()
+                    .into(target);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static java.io.File saveBase64ToCacheFile(Context context, String dataUri, String prefix, String suffix) {
+        if (context == null || dataUri == null) return null;
+        try {
+            int comma = dataUri.indexOf(",");
+            String base64Data = comma != -1 ? dataUri.substring(comma + 1) : dataUri;
+            byte[] bytes = Base64.decode(base64Data, Base64.DEFAULT);
+            java.io.File file = java.io.File.createTempFile(prefix, suffix, context.getCacheDir());
+            try (java.io.FileOutputStream fos = new java.io.FileOutputStream(file)) {
+                fos.write(bytes);
+                fos.flush();
+            }
+            return file;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }
