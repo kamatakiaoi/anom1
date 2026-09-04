@@ -35,7 +35,9 @@ import com.bumptech.glide.Glide;
 
 import java.util.List;
 
-public class PostDetailActivity extends AppCompatActivity implements SocketManager.ExploreListener {
+public class PostDetailActivity extends AppCompatActivity implements
+        SocketManager.ExploreListener,
+        SocketManager.UserProfileDialogListener {
 
     public static final String EXTRA_POST_ID = "extra_post_id";
 
@@ -179,6 +181,7 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
 
     private void loadPostData() {
         SocketManager.getInstance().addExploreListener(this);
+        SocketManager.getInstance().addUserProfileListener(this);
         SocketManager.getInstance().getExplorePost(postId);
         SocketManager.getInstance().viewExplorePost(postId);
         SocketManager.getInstance().loadExploreComments(postId);
@@ -190,6 +193,14 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
 
         GradientDrawable grad = ColorHelper.getAvatarGradient(post.getColor());
         binding.ivDetailAvatar.setBackground(grad);
+
+        View.OnClickListener authorClick = v -> {
+            if (post != null) {
+                SocketManager.getInstance().requestUserProfile(post.getAuthorUid(), post.getAuthorName(), post.getAuthorId());
+            }
+        };
+        binding.ivDetailAvatar.setOnClickListener(authorClick);
+        binding.tvDetailAuthor.setOnClickListener(authorClick);
 
         String serverUrl = PreferenceManager.getInstance(this).getServerBaseUrl();
         if (post.getAvatar() != null && !post.getAvatar().isEmpty()) {
@@ -419,6 +430,14 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
     }
 
     @Override
+    public void onUserProfileReceived(com.anonymous.chat.models.UserProfile userProfile) {
+        if (!isFinishing() && !isDestroyed() && userProfile != null) {
+            com.anonymous.chat.ui.profile.UserProfileDialog dialog = new com.anonymous.chat.ui.profile.UserProfileDialog(this, userProfile);
+            dialog.show();
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         AudioPlayerManager.getInstance().pause();
@@ -429,5 +448,6 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
         super.onDestroy();
         AudioPlayerManager.getInstance().stop();
         SocketManager.getInstance().removeExploreListener(this);
+        SocketManager.getInstance().removeUserProfileListener(this);
     }
 }

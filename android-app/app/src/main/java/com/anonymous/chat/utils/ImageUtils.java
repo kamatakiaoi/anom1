@@ -144,21 +144,27 @@ public class ImageUtils {
 
     public static String getFullMediaUrl(String serverBaseUrl, String mediaPath) {
         if (mediaPath == null || mediaPath.trim().isEmpty()) return "";
-        mediaPath = mediaPath.trim();
-        if (mediaPath.startsWith("http://") || mediaPath.startsWith("https://") || mediaPath.startsWith("data:") || mediaPath.startsWith("file://") || mediaPath.startsWith("/")) {
-            if (mediaPath.startsWith("/") && !mediaPath.startsWith("//")) {
-                if (serverBaseUrl == null || serverBaseUrl.trim().isEmpty()) {
-                    serverBaseUrl = "http://" + PreferenceManager.DEFAULT_SERVER_HOST + ":" + PreferenceManager.DEFAULT_SERVER_PORT;
-                }
-                return serverBaseUrl.replaceAll("/+$", "") + mediaPath;
-            }
-            return mediaPath;
+        String clean = mediaPath.trim().replaceAll("^[\"'\\[\\]]+|[\"'\\[\\],]+$", "").trim();
+        if (clean.isEmpty()) return "";
+
+        if (clean.startsWith("http://") || clean.startsWith("https://") || clean.startsWith("data:") || clean.startsWith("file://")) {
+            return clean;
         }
+
         if (serverBaseUrl == null || serverBaseUrl.trim().isEmpty()) {
             serverBaseUrl = "http://" + PreferenceManager.DEFAULT_SERVER_HOST + ":" + PreferenceManager.DEFAULT_SERVER_PORT;
         }
         String cleanBase = serverBaseUrl.replaceAll("/+$", "");
-        return cleanBase + "/uploads/" + mediaPath;
+
+        if (clean.startsWith("/uploads/")) {
+            return cleanBase + clean;
+        } else if (clean.startsWith("uploads/")) {
+            return cleanBase + "/" + clean;
+        } else if (clean.startsWith("/")) {
+            return cleanBase + "/uploads" + clean;
+        } else {
+            return cleanBase + "/uploads/" + clean;
+        }
     }
 
     public static void loadImage(Context context, String mediaUrl, android.widget.ImageView target) {

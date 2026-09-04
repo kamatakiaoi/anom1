@@ -5,13 +5,15 @@ import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
 
+import java.util.List;
+
 public class AudioPlayerManager {
     private static AudioPlayerManager instance;
     private MediaPlayer mediaPlayer;
     private String currentPlayingUrl = null;
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
     private Runnable progressRunnable;
-    private OnAudioStateChangeListener listener;
+    private final List<OnAudioStateChangeListener> listeners = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     public interface OnAudioStateChangeListener {
         void onPlay(String url);
@@ -30,8 +32,53 @@ public class AudioPlayerManager {
         return instance;
     }
 
+    public void addListener(OnAudioStateChangeListener listener) {
+        if (listener != null && !listeners.contains(listener)) {
+            listeners.add(listener);
+        }
+    }
+
+    public void removeListener(OnAudioStateChangeListener listener) {
+        if (listener != null) {
+            listeners.remove(listener);
+        }
+    }
+
     public void setListener(OnAudioStateChangeListener listener) {
-        this.listener = listener;
+        listeners.clear();
+        if (listener != null) {
+            listeners.add(listener);
+        }
+    }
+
+    private void dispatchPlay(String url) {
+        for (OnAudioStateChangeListener l : listeners) {
+            try { l.onPlay(url); } catch (Exception ignored) {}
+        }
+    }
+
+    private void dispatchPause(String url) {
+        for (OnAudioStateChangeListener l : listeners) {
+            try { l.onPause(url); } catch (Exception ignored) {}
+        }
+    }
+
+    private void dispatchStop(String url) {
+        for (OnAudioStateChangeListener l : listeners) {
+            try { l.onStop(url); } catch (Exception ignored) {}
+        }
+    }
+
+    private void dispatchProgress(String url, int cur, int dur) {
+        for (OnAudioStateChangeListener l : listeners) {
+            try { l.onProgress(url, cur, dur); } catch (Exception ignored) {}
+        }
+    }
+
+    private void dispatchError(String url, String err) {
+        for (OnAudioStateChangeListener l : listeners) {
+            try { l.onError(url, err); } catch (Exception ignored) {}
+        }
     }
 
     public String getCurrentPlayingUrl() {
@@ -61,7 +108,7 @@ public class AudioPlayerManager {
         if (mediaPlayer != null && url.equals(currentPlayingUrl)) {
             mediaPlayer.start();
             startProgressUpdates();
-            if (listener != null) listener.onPlay(url);
+            dispatchPlay(url);
             return;
         }
 
@@ -88,35 +135,40 @@ public class AudioPlayerManager {
                     throw new java.io.IOException("Context not initialized");
                 }
             } else {
-                mediaPlayer.setDataSource(url);
+                String playUrl = url;
+                if (!playUrl.startsWith("http://") && !playUrl.startsWith("https://") && appContext != null) {
+                    String serverUrl = PreferenceManager.getInstance(appContext).getServerBaseUrl();
+                    playUrl = ImageUtils.getFullMediaUrl(serverUrl, playUrl);
+                }
+                mediaPlayer.setDataSource(playUrl);
             }
             currentPlayingUrl = url;
 
             mediaPlayer.setOnPreparedListener(mp -> {
                 mp.start();
                 startProgressUpdates();
-                if (listener != null) listener.onPlay(url);
+                dispatchPlay(url);
             });
 
             mediaPlayer.setOnCompletionListener(mp -> {
                 stopProgressUpdates();
                 String finishedUrl = currentPlayingUrl;
                 currentPlayingUrl = null;
-                if (listener != null) listener.onStop(finishedUrl);
+                dispatchStop(finishedUrl);
             });
 
             mediaPlayer.setOnErrorListener((mp, what, extra) -> {
                 stopProgressUpdates();
                 String errUrl = currentPlayingUrl;
                 currentPlayingUrl = null;
-                if (listener != null) listener.onError(errUrl, "Playback error: " + what);
+                dispatchError(errUrl, "Playback error: " + what);
                 return true;
             });
 
             mediaPlayer.prepareAsync();
         } catch (Exception e) {
             currentPlayingUrl = null;
-            if (listener != null) listener.onError(url, e.getMessage());
+            dispatchError(url, e.getMessage());
         }
     }
 
@@ -124,8 +176,8 @@ public class AudioPlayerManager {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
             stopProgressUpdates();
-            if (listener != null && currentPlayingUrl != null) {
-                listener.onPause(currentPlayingUrl);
+            if (currentPlayingUrl != null) {
+                dispatchPause(currentPlayingUrl);
             }
         }
     }
@@ -168,8 +220,8 @@ public class AudioPlayerManager {
             } catch (Exception ignored) {}
             mediaPlayer = null;
         }
-        if (listener != null && currentPlayingUrl != null) {
-            listener.onStop(currentPlayingUrl);
+        if (currentPlayingUrl != null) {
+            dispatchStop(currentPlayingUrl);
         }
         currentPlayingUrl = null;
     }
@@ -182,8 +234,8 @@ public class AudioPlayerManager {
                 if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                     int cur = mediaPlayer.getCurrentPosition();
                     int dur = mediaPlayer.getDuration();
-                    if (listener != null && currentPlayingUrl != null) {
-                        listener.onProgress(currentPlayingUrl, cur, dur);
+                    if (currentPlayingUrl != null) {
+                        dispatchProgress(currentPlayingUrl, cur, dur);
                     }
                     progressHandler.postDelayed(this, 300);
                 }

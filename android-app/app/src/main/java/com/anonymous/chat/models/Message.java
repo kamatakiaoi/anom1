@@ -33,10 +33,10 @@ public class Message implements Serializable {
     public int getMsgId() { return msgId; }
     public void setMsgId(int msgId) { this.msgId = msgId; }
 
-    public String getId() { return id != null ? id : (uid != null ? uid : ""); }
+    public String getId() { return id != null ? id : ""; }
     public void setId(String id) { this.id = id; }
 
-    public String getUid() { return uid != null ? uid : (id != null ? id : ""); }
+    public String getUid() { return uid != null ? uid : ""; }
     public void setUid(String uid) { this.uid = uid; }
 
     public String getName() { return name != null ? name : "Anonymous"; }
@@ -61,39 +61,44 @@ public class Message implements Serializable {
         List<String> result = new ArrayList<>();
         if (images != null && !images.isEmpty()) {
             for (String img : images) {
-                if (img != null && !img.trim().isEmpty()) {
-                    String trimmed = img.trim();
-                    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                        try {
-                            JSONArray arr = new JSONArray(trimmed);
-                            for (int i = 0; i < arr.length(); i++) {
-                                result.add(arr.getString(i));
-                            }
-                        } catch (Exception e) {
-                            result.add(trimmed);
-                        }
-                    } else {
-                        result.add(trimmed);
-                    }
-                }
+                parseAndAddImages(result, img);
             }
         }
         if (result.isEmpty() && image != null && !image.trim().isEmpty()) {
-            String trimmed = image.trim();
-            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                try {
-                    JSONArray arr = new JSONArray(trimmed);
-                    for (int i = 0; i < arr.length(); i++) {
-                        result.add(arr.getString(i));
-                    }
-                } catch (Exception e) {
-                    result.add(trimmed);
-                }
-            } else {
-                result.add(trimmed);
-            }
+            parseAndAddImages(result, image);
         }
         return result;
+    }
+
+    private static void parseAndAddImages(List<String> result, String raw) {
+        if (raw == null || raw.trim().isEmpty()) return;
+        String trimmed = raw.trim();
+        // If it starts with [ and ends with ] or contains commas
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            try {
+                JSONArray arr = new JSONArray(trimmed);
+                for (int i = 0; i < arr.length(); i++) {
+                    String item = cleanImgToken(arr.getString(i));
+                    if (!item.isEmpty() && !result.contains(item)) result.add(item);
+                }
+                return;
+            } catch (Exception ignored) {}
+        }
+        // Fallback: strip outer brackets if any and split by comma
+        if (trimmed.startsWith("[")) trimmed = trimmed.substring(1);
+        if (trimmed.endsWith("]")) trimmed = trimmed.substring(0, trimmed.length() - 1);
+        String[] parts = trimmed.split(",");
+        for (String p : parts) {
+            String clean = cleanImgToken(p);
+            if (!clean.isEmpty() && !result.contains(clean)) {
+                result.add(clean);
+            }
+        }
+    }
+
+    private static String cleanImgToken(String token) {
+        if (token == null) return "";
+        return token.trim().replaceAll("^[\"'\\[\\]]+|[\"'\\[\\],]+$", "").trim();
     }
     public void setImages(List<String> images) { this.images = images; }
 

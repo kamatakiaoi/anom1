@@ -193,6 +193,14 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
                 ImageUtils.loadAvatar(itemView.getContext(), post.getAvatar(), ivAvatar);
             }
 
+            View.OnClickListener authorClick = v -> {
+                if (post != null) {
+                    SocketManager.getInstance().requestUserProfile(post.getAuthorUid(), post.getAuthorName(), post.getAuthorId());
+                }
+            };
+            ivAvatar.setOnClickListener(authorClick);
+            tvAuthor.setOnClickListener(authorClick);
+
             String tz = PreferenceManager.getInstance(itemView.getContext()).getTimezone();
             tvTime.setText(TimeUtils.formatMessageTime(post.getCreatedAt(), tz));
 

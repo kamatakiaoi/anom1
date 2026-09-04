@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements
         SocketManager.TopicListener,
         SocketManager.ExploreListener,
         SocketManager.ProfileListener,
+        SocketManager.UserProfileDialogListener,
         SocketManager.GeneralMessageGlobalListener {
 
     private ActivityMainBinding binding;
@@ -594,6 +595,7 @@ public class MainActivity extends AppCompatActivity implements
         sm.addTopicListener(this);
         sm.addExploreListener(this);
         sm.addProfileListener(this);
+        sm.addUserProfileListener(this);
         sm.addGeneralGlobalListener(this);
 
         sm.connect(prefs.getServerBaseUrl());
@@ -685,6 +687,14 @@ public class MainActivity extends AppCompatActivity implements
     @Override public void onNameChanged(String newName) {}
     @Override public void onAvatarChanged(String newAvatarUrl) {}
 
+    @Override
+    public void onUserProfileReceived(UserProfile userProfile) {
+        if (!isFinishing() && !isDestroyed() && userProfile != null) {
+            com.anonymous.chat.ui.profile.UserProfileDialog dialog = new com.anonymous.chat.ui.profile.UserProfileDialog(this, userProfile);
+            dialog.show();
+        }
+    }
+
     public void onError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
@@ -698,6 +708,7 @@ public class MainActivity extends AppCompatActivity implements
         sm.removeTopicListener(this);
         sm.removeExploreListener(this);
         sm.removeProfileListener(this);
+        sm.removeUserProfileListener(this);
         sm.removeGeneralGlobalListener(this);
     }
 }

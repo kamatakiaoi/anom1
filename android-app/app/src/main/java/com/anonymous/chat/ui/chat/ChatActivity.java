@@ -224,9 +224,15 @@ public class ChatActivity extends AppCompatActivity implements
         binding.rvChatMessages.setLayoutManager(layoutManager);
         binding.rvChatMessages.setItemViewCacheSize(30);
         binding.rvChatMessages.setHasFixedSize(false);
-        if (binding.rvChatMessages.getItemAnimator() instanceof androidx.recyclerview.widget.SimpleItemAnimator) {
-            ((androidx.recyclerview.widget.SimpleItemAnimator) binding.rvChatMessages.getItemAnimator()).setSupportsChangeAnimations(false);
-        }
+
+        androidx.recyclerview.widget.DefaultItemAnimator animator = new androidx.recyclerview.widget.DefaultItemAnimator();
+        animator.setAddDuration(200);
+        animator.setRemoveDuration(200);
+        animator.setMoveDuration(200);
+        animator.setChangeDuration(200);
+        animator.setSupportsChangeAnimations(false);
+        binding.rvChatMessages.setItemAnimator(animator);
+
         binding.rvChatMessages.setAdapter(messageAdapter);
 
         binding.rvChatMessages.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -403,8 +409,10 @@ public class ChatActivity extends AppCompatActivity implements
 
     @Override
     public void onUserProfileReceived(UserProfile userProfile) {
-        UserProfileDialog dialog = new UserProfileDialog(this, userProfile);
-        dialog.show();
+        if (!isFinishing() && !isDestroyed() && userProfile != null) {
+            UserProfileDialog dialog = new UserProfileDialog(this, userProfile);
+            dialog.show();
+        }
     }
 
     @Override
