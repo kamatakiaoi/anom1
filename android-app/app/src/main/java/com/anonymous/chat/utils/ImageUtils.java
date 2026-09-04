@@ -205,6 +205,43 @@ public class ImageUtils {
         }
     }
 
+    public static void loadVideoThumbnail(Context context, String videoUrl, android.widget.ImageView target, int cornerRadiusDp) {
+        if (context == null || target == null || videoUrl == null || videoUrl.trim().isEmpty()) return;
+        try {
+            java.io.File cached = VideoCacheManager.getInstance().getCachedFile(context, videoUrl);
+            if (cached != null) {
+                com.bumptech.glide.RequestBuilder<android.graphics.Bitmap> rb = com.bumptech.glide.Glide.with(context)
+                        .asBitmap()
+                        .load(cached)
+                        .frame(1000000)
+                        .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL);
+                if (cornerRadiusDp > 0) {
+                    int radiusPx = (int) (cornerRadiusDp * context.getResources().getDisplayMetrics().density);
+                    rb = rb.transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(radiusPx));
+                }
+                rb.into(target);
+            } else {
+                VideoCacheManager.getInstance().preload(context, videoUrl);
+                String serverUrl = PreferenceManager.getInstance(context).getServerBaseUrl();
+                String full = getFullMediaUrl(serverUrl, videoUrl);
+                if (!full.startsWith("data:")) {
+                    com.bumptech.glide.RequestBuilder<android.graphics.Bitmap> rb = com.bumptech.glide.Glide.with(context)
+                            .asBitmap()
+                            .load(full)
+                            .frame(1000000)
+                            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL);
+                    if (cornerRadiusDp > 0) {
+                        int radiusPx = (int) (cornerRadiusDp * context.getResources().getDisplayMetrics().density);
+                        rb = rb.transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(radiusPx));
+                    }
+                    rb.into(target);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public static void loadAvatar(Context context, String avatarUrl, android.widget.ImageView target) {
         if (context == null || target == null) return;
         if (avatarUrl == null || avatarUrl.isEmpty()) return;

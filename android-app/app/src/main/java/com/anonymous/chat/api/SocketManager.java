@@ -44,11 +44,16 @@ public class SocketManager {
     // Ping tracking
     private long pingStartTime = 0;
     private long lastLatencyMs = 0;
+    private boolean isPingPending = false;
     private final Runnable pingRunnable = new Runnable() {
         @Override
         public void run() {
-            startPingMeasurement();
-            mainHandler.postDelayed(this, 5000);
+            if (socket != null && socket.connected()) {
+                if (!isPingPending || (System.currentTimeMillis() - pingStartTime > 15000)) {
+                    startPingMeasurement();
+                }
+            }
+            mainHandler.postDelayed(this, 10000);
         }
     };
 
@@ -244,6 +249,7 @@ public class SocketManager {
 
         // Ping check
         socket.on("pong-check", args -> {
+            isPingPending = false;
             if (pingStartTime > 0) {
                 lastLatencyMs = System.currentTimeMillis() - pingStartTime;
                 pingStartTime = 0;
@@ -749,6 +755,7 @@ public class SocketManager {
 
     public void startPingMeasurement() {
         if (socket == null || !socket.connected()) return;
+        isPingPending = true;
         pingStartTime = System.currentTimeMillis();
         socket.emit("ping-check", pingStartTime);
     }

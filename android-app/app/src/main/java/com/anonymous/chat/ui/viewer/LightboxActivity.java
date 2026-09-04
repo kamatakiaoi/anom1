@@ -52,52 +52,78 @@ public class LightboxActivity extends AppCompatActivity {
             mediaController.setAnchorView(binding.vvLightboxVideo);
             binding.vvLightboxVideo.setMediaController(mediaController);
 
-            try {
-                if (videoUrl.startsWith("data:video/")) {
-                    java.io.File temp = com.anonymous.chat.utils.ImageUtils.saveBase64ToCacheFile(this, videoUrl, "vid_", ".mp4");
-                    if (temp != null) {
-                        binding.vvLightboxVideo.setVideoPath(temp.getAbsolutePath());
-                    } else {
-                        binding.vvLightboxVideo.setVideoURI(Uri.parse(videoUrl));
+            com.anonymous.chat.utils.VideoCacheManager.getInstance().getVideoFile(this, videoUrl, new com.anonymous.chat.utils.VideoCacheManager.VideoCallback() {
+                @Override
+                public void onReady(java.io.File file) {
+                    if (isFinishing() || isDestroyed()) return;
+                    try {
+                        binding.vvLightboxVideo.setVideoPath(file.getAbsolutePath());
+                        setupPreparedAndPlay(mediaController, startPositionMs);
+                    } catch (Exception e) {
+                        onError(e);
                     }
-                } else {
-                    String serverUrl = com.anonymous.chat.utils.PreferenceManager.getInstance(this).getServerBaseUrl();
-                    String full = com.anonymous.chat.utils.ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
-                    binding.vvLightboxVideo.setVideoURI(Uri.parse(full));
                 }
 
-                binding.vvLightboxVideo.setOnPreparedListener(mp -> {
-                    binding.pbLightboxLoading.setVisibility(View.GONE);
-                    videoWidth = mp.getVideoWidth();
-                    videoHeight = mp.getVideoHeight();
-                    adjustVideoSize();
-                    if (startPositionMs > 0) {
-                        binding.vvLightboxVideo.seekTo(startPositionMs);
+                @Override
+                public void onProgress(int percent) {
+                    // Downloading progress
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    if (isFinishing() || isDestroyed()) return;
+                    try {
+                        String serverUrl = com.anonymous.chat.utils.PreferenceManager.getInstance(LightboxActivity.this).getServerBaseUrl();
+                        String full = com.anonymous.chat.utils.ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
+                        binding.vvLightboxVideo.setVideoURI(Uri.parse(full));
+                        setupPreparedAndPlay(mediaController, startPositionMs);
+                    } catch (Exception ex) {
+                        binding.pbLightboxLoading.setVisibility(View.GONE);
+                        Toast.makeText(LightboxActivity.this, "Cannot play video", Toast.LENGTH_SHORT).show();
                     }
-                    mp.start();
-                    mediaController.show(3000);
-                });
-                binding.vvLightboxVideo.setOnErrorListener((mp, what, extra) -> {
-                    binding.pbLightboxLoading.setVisibility(View.GONE);
-                    Toast.makeText(LightboxActivity.this, "Cannot play video", Toast.LENGTH_SHORT).show();
-                    return true;
-                });
-            } catch (Exception e) {
-                binding.pbLightboxLoading.setVisibility(View.GONE);
-                Toast.makeText(this, "Error loading video: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
+                }
+            });
 
             binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());
         } else if (imageUrl != null && !imageUrl.isEmpty()) {
             binding.ivLightboxImage.setVisibility(View.VISIBLE);
             binding.vvLightboxVideo.setVisibility(View.GONE);
             binding.btnLightboxRotate.setVisibility(View.VISIBLE);
+            binding.pbLightboxLoading.setVisibility(View.GONE);
+
             com.anonymous.chat.utils.ImageUtils.loadImage(this, imageUrl, binding.ivLightboxImage);
+
+            binding.ivLightboxImage.setOnSingleTapListener(v -> toggleControls());
             binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());
         }
 
         binding.btnLightboxClose.setOnClickListener(v -> finish());
         applyOrientationState(getResources().getConfiguration().orientation);
+    }
+
+    private void setupPreparedAndPlay(MediaController mediaController, int startPositionMs) {
+        binding.vvLightboxVideo.setOnPreparedListener(mp -> {
+            binding.pbLightboxLoading.setVisibility(View.GONE);
+            videoWidth = mp.getVideoWidth();
+            videoHeight = mp.getVideoHeight();
+            adjustVideoSize();
+            if (startPositionMs > 0) {
+                binding.vvLightboxVideo.seekTo(startPositionMs);
+            }
+            mp.start();
+            mediaController.show(3000);
+        });
+        binding.vvLightboxVideo.setOnErrorListener((mp, what, extra) -> {
+            binding.pbLightboxLoading.setVisibility(View.GONE);
+            Toast.makeText(LightboxActivity.this, "Cannot play video", Toast.LENGTH_SHORT).show();
+            return true;
+        });
+    }
+
+    private void toggleControls() {
+        int visibility = (binding.btnLightboxClose.getVisibility() == View.VISIBLE) ? View.GONE : View.VISIBLE;
+        binding.btnLightboxClose.setVisibility(visibility);
+        binding.btnLightboxRotate.setVisibility(visibility);
     }
 
     private void adjustVideoSize() {
@@ -143,6 +169,9 @@ public class LightboxActivity extends AppCompatActivity {
         super.onConfigurationChanged(newConfig);
         applyOrientationState(newConfig.orientation);
         adjustVideoSize();
+        if (!isVideo) {
+            binding.ivLightboxImage.resetZoom();
+        }
     }
 
     private void applyOrientationState(int orientation) {

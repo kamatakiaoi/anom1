@@ -237,7 +237,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
                 postMediaFrame.setVisibility(View.VISIBLE);
                 ivPlayIcon.setVisibility(View.VISIBLE);
                 String videoUrl = post.getVideo();
-                ImageUtils.loadImage(itemView.getContext(), videoUrl, ivPostMedia, 8);
+                ImageUtils.loadVideoThumbnail(itemView.getContext(), videoUrl, ivPostMedia, 8);
                 postMediaFrame.setOnClickListener(v -> {
                     if (listener != null) listener.onMediaClicked(videoUrl, true);
                 });

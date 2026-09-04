@@ -4,6 +4,8 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +31,7 @@ import com.anonymous.chat.utils.ColorHelper;
 import com.anonymous.chat.utils.ImageUtils;
 import com.anonymous.chat.utils.PreferenceManager;
 import com.anonymous.chat.utils.TimeUtils;
+import com.anonymous.chat.utils.VideoCacheManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +51,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     private final List<Message> messages = new ArrayList<>();
     private final MessageInteractionListener listener;
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public MessageAdapter(MessageInteractionListener listener) {
         this.listener = listener;
@@ -64,42 +68,50 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         final List<Message> oldList = new ArrayList<>(messages);
         final List<Message> newList = new ArrayList<>(newMessages);
 
-        DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
-            @Override
-            public int getOldListSize() { return oldList.size(); }
+        new Thread(() -> {
+            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+                @Override
+                public int getOldListSize() { return oldList.size(); }
 
-            @Override
-            public int getNewListSize() { return newList.size(); }
+                @Override
+                public int getNewListSize() { return newList.size(); }
 
-            @Override
-            public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
-                Message o = oldList.get(oldItemPosition);
-                Message n = newList.get(newItemPosition);
-                if (o.getMsgId() > 0 && n.getMsgId() > 0) {
-                    return o.getMsgId() == n.getMsgId();
+                @Override
+                public boolean areItemsTheSame(int oldItemPosition, int newItemPosition) {
+                    Message o = oldList.get(oldItemPosition);
+                    Message n = newList.get(newItemPosition);
+                    if (o.getMsgId() > 0 && n.getMsgId() > 0) {
+                        return o.getMsgId() == n.getMsgId();
+                    }
+                    return o.getId() != null && o.getId().equals(n.getId()) && o.getTime() != null && o.getTime().equals(n.getTime());
                 }
-                return o.getId() != null && o.getId().equals(n.getId()) && o.getTime() != null && o.getTime().equals(n.getTime());
-            }
 
-            @Override
-            public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
-                Message o = oldList.get(oldItemPosition);
-                Message n = newList.get(newItemPosition);
-                return (o.getText() != null && o.getText().equals(n.getText())) &&
-                       (o.getTime() != null && o.getTime().equals(n.getTime())) &&
-                       (o.getImages() != null && o.getImages().equals(n.getImages()));
-            }
-        });
+                @Override
+                public boolean areContentsTheSame(int oldItemPosition, int newItemPosition) {
+                    Message o = oldList.get(oldItemPosition);
+                    Message n = newList.get(newItemPosition);
+                    return (o.getText() != null && o.getText().equals(n.getText())) &&
+                           (o.getTime() != null && o.getTime().equals(n.getTime())) &&
+                           (o.getImages() != null && o.getImages().equals(n.getImages()));
+                }
+            });
 
-        messages.clear();
-        messages.addAll(newList);
-        diffResult.dispatchUpdatesTo(this);
+            mainHandler.post(() -> {
+                messages.clear();
+                messages.addAll(newList);
+                diffResult.dispatchUpdatesTo(MessageAdapter.this);
+            });
+        }).start();
     }
 
     public void addMessage(Message message) {
         if (message == null) return;
         messages.add(message);
-        notifyItemInserted(messages.size() - 1);
+        int pos = messages.size() - 1;
+        notifyItemInserted(pos);
+        if (pos > 0) {
+            notifyItemChanged(pos - 1);
+        }
     }
 
     public void prependMessages(List<Message> olderMessages) {
@@ -346,75 +358,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             // Video Inline Player
-            if (msg.getVideo() != null && !msg.getVideo().isEmpty()) {
-                cardMsgVideo.setVisibility(View.VISIBLE);
-                String videoUrl = msg.getVideo();
-                ImageUtils.loadImage(itemView.getContext(), videoUrl, ivMsgVideoThumb, 10);
-
-                vvMsgVideoInline.setVisibility(View.GONE);
-                ivMsgVideoThumb.setVisibility(View.VISIBLE);
-                btnPlayVideo.setVisibility(View.VISIBLE);
-                btnPlayVideo.setImageResource(R.drawable.ic_play);
-                btnFullscreenVideo.setVisibility(View.GONE);
-                pbVideoLoading.setVisibility(View.GONE);
-
-                View.OnClickListener videoClickListener = v -> {
-                    if (vvMsgVideoInline.isPlaying()) {
-                        // 2nd Click -> Launch Fullscreen
-                        try {
-                            vvMsgVideoInline.pause();
-                        } catch (Exception ignored) {}
-                        if (listener != null) {
-                            listener.onMediaClicked(videoUrl, true);
-                        }
-                    } else {
-                        // 1st Click -> Play Inline
-                        if (activePlayingVideo != null && activePlayingVideo != vvMsgVideoInline) {
-                            try {
-                                activePlayingVideo.stopPlayback();
-                                activePlayingVideo.setVisibility(View.GONE);
-                            } catch (Exception ignored) {}
-                            activePlayingVideo = null;
-                        }
-
-                        pbVideoLoading.setVisibility(View.VISIBLE);
-                        btnPlayVideo.setVisibility(View.GONE);
-                        vvMsgVideoInline.setVisibility(View.VISIBLE);
-
-                        if (videoUrl.startsWith("data:video/")) {
-                            new Thread(() -> {
-                                java.io.File temp = ImageUtils.saveBase64ToCacheFile(itemView.getContext(), videoUrl, "vid_", ".mp4");
-                                itemView.post(() -> {
-                                    if (temp != null) {
-                                        vvMsgVideoInline.setVideoPath(temp.getAbsolutePath());
-                                    } else {
-                                        vvMsgVideoInline.setVideoURI(Uri.parse(videoUrl));
-                                    }
-                                    setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
-                                });
-                            }).start();
-                        } else {
-                            String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
-                            String full = ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
-                            vvMsgVideoInline.setVideoURI(Uri.parse(full));
-                            setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
-                        }
-                    }
-                };
-
-                btnPlayVideo.setOnClickListener(videoClickListener);
-                ivMsgVideoThumb.setOnClickListener(videoClickListener);
-                vvMsgVideoInline.setOnClickListener(videoClickListener);
-
-                btnFullscreenVideo.setOnClickListener(v -> {
-                    try {
-                        vvMsgVideoInline.pause();
-                    } catch (Exception ignored) {}
-                    if (listener != null) listener.onMediaClicked(videoUrl, true);
-                });
-            } else {
-                cardMsgVideo.setVisibility(View.GONE);
-            }
+            setupVideoBinding(itemView, cardMsgVideo, ivMsgVideoThumb, vvMsgVideoInline, pbVideoLoading, btnPlayVideo, btnFullscreenVideo, msg.getVideo(), listener);
 
             // Audio
             if (msg.getAudio() != null && !msg.getAudio().isEmpty()) {
@@ -581,75 +525,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             // Video Inline Player
-            if (msg.getVideo() != null && !msg.getVideo().isEmpty()) {
-                cardMsgVideo.setVisibility(View.VISIBLE);
-                String videoUrl = msg.getVideo();
-                ImageUtils.loadImage(itemView.getContext(), videoUrl, ivMsgVideoThumb, 10);
-
-                vvMsgVideoInline.setVisibility(View.GONE);
-                ivMsgVideoThumb.setVisibility(View.VISIBLE);
-                btnPlayVideo.setVisibility(View.VISIBLE);
-                btnPlayVideo.setImageResource(R.drawable.ic_play);
-                btnFullscreenVideo.setVisibility(View.GONE);
-                pbVideoLoading.setVisibility(View.GONE);
-
-                View.OnClickListener videoClickListener = v -> {
-                    if (vvMsgVideoInline.isPlaying()) {
-                        // 2nd Click -> Launch Fullscreen
-                        try {
-                            vvMsgVideoInline.pause();
-                        } catch (Exception ignored) {}
-                        if (listener != null) {
-                            listener.onMediaClicked(videoUrl, true);
-                        }
-                    } else {
-                        // 1st Click -> Play Inline
-                        if (activePlayingVideo != null && activePlayingVideo != vvMsgVideoInline) {
-                            try {
-                                activePlayingVideo.stopPlayback();
-                                activePlayingVideo.setVisibility(View.GONE);
-                            } catch (Exception ignored) {}
-                            activePlayingVideo = null;
-                        }
-
-                        pbVideoLoading.setVisibility(View.VISIBLE);
-                        btnPlayVideo.setVisibility(View.GONE);
-                        vvMsgVideoInline.setVisibility(View.VISIBLE);
-
-                        if (videoUrl.startsWith("data:video/")) {
-                            new Thread(() -> {
-                                java.io.File temp = ImageUtils.saveBase64ToCacheFile(itemView.getContext(), videoUrl, "vid_", ".mp4");
-                                itemView.post(() -> {
-                                    if (temp != null) {
-                                        vvMsgVideoInline.setVideoPath(temp.getAbsolutePath());
-                                    } else {
-                                        vvMsgVideoInline.setVideoURI(Uri.parse(videoUrl));
-                                    }
-                                    setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
-                                });
-                            }).start();
-                        } else {
-                            String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
-                            String full = ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
-                            vvMsgVideoInline.setVideoURI(Uri.parse(full));
-                            setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
-                        }
-                    }
-                };
-
-                btnPlayVideo.setOnClickListener(videoClickListener);
-                ivMsgVideoThumb.setOnClickListener(videoClickListener);
-                vvMsgVideoInline.setOnClickListener(videoClickListener);
-
-                btnFullscreenVideo.setOnClickListener(v -> {
-                    try {
-                        vvMsgVideoInline.pause();
-                    } catch (Exception ignored) {}
-                    if (listener != null) listener.onMediaClicked(videoUrl, true);
-                });
-            } else {
-                cardMsgVideo.setVisibility(View.GONE);
-            }
+            setupVideoBinding(itemView, cardMsgVideo, ivMsgVideoThumb, vvMsgVideoInline, pbVideoLoading, btnPlayVideo, btnFullscreenVideo, msg.getVideo(), listener);
 
             // Audio
             if (msg.getAudio() != null && !msg.getAudio().isEmpty()) {
@@ -692,6 +568,102 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     pbVideoLoading.setVisibility(View.GONE);
                 }
             } catch (Exception ignored) {}
+        }
+    }
+
+    private static void setupVideoBinding(
+            View itemView,
+            CardView cardMsgVideo,
+            ImageView ivMsgVideoThumb,
+            VideoView vvMsgVideoInline,
+            ProgressBar pbVideoLoading,
+            ImageView btnPlayVideo,
+            ImageView btnFullscreenVideo,
+            String videoUrl,
+            MessageInteractionListener listener
+    ) {
+        if (videoUrl != null && !videoUrl.isEmpty()) {
+            cardMsgVideo.setVisibility(View.VISIBLE);
+            ImageUtils.loadVideoThumbnail(itemView.getContext(), videoUrl, ivMsgVideoThumb, 10);
+
+            vvMsgVideoInline.setVisibility(View.GONE);
+            ivMsgVideoThumb.setVisibility(View.VISIBLE);
+            btnPlayVideo.setVisibility(View.VISIBLE);
+            btnPlayVideo.setImageResource(R.drawable.ic_play);
+            btnFullscreenVideo.setVisibility(View.GONE);
+            pbVideoLoading.setVisibility(View.GONE);
+
+            View.OnClickListener videoClickListener = v -> {
+                if (vvMsgVideoInline.isPlaying()) {
+                    // 2nd Click -> Launch Fullscreen
+                    try {
+                        vvMsgVideoInline.pause();
+                    } catch (Exception ignored) {}
+                    if (listener != null) {
+                        listener.onMediaClicked(videoUrl, true);
+                    }
+                } else {
+                    // 1st Click -> Play Inline
+                    if (activePlayingVideo != null && activePlayingVideo != vvMsgVideoInline) {
+                        try {
+                            activePlayingVideo.stopPlayback();
+                            activePlayingVideo.setVisibility(View.GONE);
+                        } catch (Exception ignored) {}
+                        activePlayingVideo = null;
+                    }
+
+                    pbVideoLoading.setVisibility(View.VISIBLE);
+                    btnPlayVideo.setVisibility(View.GONE);
+                    vvMsgVideoInline.setVisibility(View.VISIBLE);
+
+                    VideoCacheManager.getInstance().getVideoFile(itemView.getContext(), videoUrl, new VideoCacheManager.VideoCallback() {
+                        @Override
+                        public void onReady(java.io.File file) {
+                            itemView.post(() -> {
+                                try {
+                                    vvMsgVideoInline.setVideoPath(file.getAbsolutePath());
+                                    setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
+                                } catch (Exception e) {
+                                    onError(e);
+                                }
+                            });
+                        }
+
+                        @Override
+                        public void onProgress(int percent) {}
+
+                        @Override
+                        public void onError(Exception e) {
+                            itemView.post(() -> {
+                                try {
+                                    String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
+                                    String full = ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
+                                    vvMsgVideoInline.setVideoURI(Uri.parse(full));
+                                    setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
+                                } catch (Exception ex) {
+                                    pbVideoLoading.setVisibility(View.GONE);
+                                    btnPlayVideo.setVisibility(View.VISIBLE);
+                                    ivMsgVideoThumb.setVisibility(View.VISIBLE);
+                                    vvMsgVideoInline.setVisibility(View.GONE);
+                                }
+                            });
+                        }
+                    });
+                }
+            };
+
+            btnPlayVideo.setOnClickListener(videoClickListener);
+            ivMsgVideoThumb.setOnClickListener(videoClickListener);
+            vvMsgVideoInline.setOnClickListener(videoClickListener);
+
+            btnFullscreenVideo.setOnClickListener(v -> {
+                try {
+                    vvMsgVideoInline.pause();
+                } catch (Exception ignored) {}
+                if (listener != null) listener.onMediaClicked(videoUrl, true);
+            });
+        } else {
+            cardMsgVideo.setVisibility(View.GONE);
         }
     }
 

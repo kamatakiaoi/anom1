@@ -248,7 +248,7 @@ public class PostDetailActivity extends AppCompatActivity implements
             videoThumb.setLayoutParams(new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, heightPx));
             videoThumb.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            ImageUtils.loadImage(this, videoUrl, videoThumb, 10);
+            ImageUtils.loadVideoThumbnail(this, videoUrl, videoThumb, 10);
             videoThumb.setOnClickListener(v -> {
                 Intent intent = new Intent(PostDetailActivity.this, LightboxActivity.class);
                 intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, videoUrl);
