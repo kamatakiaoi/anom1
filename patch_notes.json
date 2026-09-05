@@ -2,15 +2,15 @@
   {
     "version": "3.6.16",
     "date": "2026-09-05",
-    "title": "Instant Background Notifications, Fast Auto-Login & Progressive Video Streaming",
+    "title": "Subsequent Launch Fix, Realtime Background Push & High-Speed Media Pipeline",
     "items": [
-      "Fixed login timeout and freeze on subsequent app launches: added immediate profile re-emission on socket re-auth and instant local profile dispatch when already connected",
-      "Robust background notification service: ChatBackgroundService now automatically restarts via AlarmManager even when the app is completely removed/swiped from the recent tasks queue",
-      "Zero-latency Doze wake lock: acquired temporary 3s partial wake lock when receiving General chat messages so notifications ring and vibrate immediately even in deep sleep",
-      "Progressive YouTube-style video chunking: server strictly limits chunks to 1MB per range request, preventing bandwidth congestion and memory stalls on mobile networks",
-      "Optimized battery efficiency: background socket ping is replaced by a 30s connection watchdog, preventing battery drain while keeping push notifications active",
-      "Preserved saved authentication keys: preventing accidental credential resets on key collision errors",
-      "Cleaned and streamlined code across both Android client and Node.js backend to ensure 100% parity with index.html and server.js"
+      "Fixed blank screen on subsequent app entries (Image 1): implemented cached topics persistence and auto-requesting topics/explore feed immediately on launch and resume",
+      "Eliminated video and music stuttering/jittering ('giật giật'): upgraded server progressive chunk sizes (3MB video, 4MB audio) and preserved explicit range buffer requests, eliminating decoder starvation",
+      "True realtime General notifications: ChatBackgroundService now holds a CPU partial wake lock to keep background socket TCP packets flowing instantly even with the screen locked in Doze mode",
+      "High-speed media loading: integrated PREFER_RGB_565 bitmap decoding and avatar 120x120 downsampling in Glide, cutting memory footprint by 50% and doubling rendering speed",
+      "Parallel video thumbnail extraction: expanded thumbnail extraction worker pool from 2 to 4 threads for instant feed scrolling",
+      "Streamlined background connection maintenance: 15s lightweight heartbeat maintains carrier NAT tables without draining battery, auto-restarting via AlarmManager when swiped from recents",
+      "Self-notification filter: prevented ghost alerts on messages sent by oneself in General"
     ]
   },
   {

@@ -101,6 +101,13 @@ public class MainActivity extends AppCompatActivity implements
         setupSocket();
         checkNotificationPermission();
         com.anonymous.chat.services.ChatBackgroundService.start(this);
+
+        // Immediate fetch of topics and explore feed
+        SocketManager.getInstance().requestTopics();
+        SocketManager.getInstance().loadExploreFeed(1, currentExploreSort, "");
+        if (SocketManager.getInstance().isConnected()) {
+            SocketManager.getInstance().joinTopic("General");
+        }
     }
 
     private void checkNotificationPermission() {
@@ -672,10 +679,28 @@ public class MainActivity extends AppCompatActivity implements
     @Override public void onPostSharesUpdated(int postId, int shares) {}
     @Override public void onPostDeleted(int postId) {}
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SocketManager sm = SocketManager.getInstance();
+        sm.requestTopics();
+        if (topicAdapter != null && topicAdapter.getItemCount() == 0 && !sm.getCachedTopics().isEmpty()) {
+            topicAdapter.setTopics(sm.getCachedTopics());
+        }
+        if (postAdapter != null && postAdapter.getItemCount() == 0) {
+            sm.loadExploreFeed(1, currentExploreSort, "");
+        }
+    }
+
     // Socket Connection
     @Override
     public void onConnected() {
-        SocketManager.getInstance().joinTopic("General");
+        SocketManager sm = SocketManager.getInstance();
+        sm.joinTopic("General");
+        sm.requestTopics();
+        if (postAdapter != null && postAdapter.getItemCount() == 0) {
+            sm.loadExploreFeed(1, currentExploreSort, "");
+        }
     }
 
     @Override public void onDisconnected() {}

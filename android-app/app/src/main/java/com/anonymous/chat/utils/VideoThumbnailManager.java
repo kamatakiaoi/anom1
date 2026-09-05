@@ -34,7 +34,7 @@ public class VideoThumbnailManager {
     private static volatile VideoThumbnailManager instance;
 
     private final LruCache<String, Bitmap> memoryCache;
-    private final ExecutorService executor = Executors.newFixedThreadPool(2);
+    private final ExecutorService executor = Executors.newFixedThreadPool(4);
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Set<String> activeExtractingUrls = new HashSet<>();
 

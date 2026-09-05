@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
 import android.os.SystemClock;
 
 import androidx.annotation.Nullable;
@@ -24,6 +25,7 @@ public class ChatBackgroundService extends Service {
 
     public static final String CHANNEL_SERVICE = "channel_chat_service";
     private static final int NOTIF_SERVICE_ID = 2001;
+    private PowerManager.WakeLock serviceWakeLock;
 
     public static void start(Context context) {
         if (context == null) return;
@@ -56,6 +58,15 @@ public class ChatBackgroundService extends Service {
         } else {
             startForeground(NOTIF_SERVICE_ID, notif);
         }
+
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null) {
+                serviceWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "anom:bg_service_wake");
+                serviceWakeLock.setReferenceCounted(false);
+                serviceWakeLock.acquire();
+            }
+        } catch (Exception ignored) {}
 
         // Ensure socket is initialized and connected
         SocketManager sm = SocketManager.getInstance();
@@ -106,6 +117,12 @@ public class ChatBackgroundService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if (serviceWakeLock != null && serviceWakeLock.isHeld()) {
+            try {
+                serviceWakeLock.release();
+            } catch (Exception ignored) {}
+            serviceWakeLock = null;
+        }
         PreferenceManager prefs = PreferenceManager.getInstance(this);
         if (prefs.getAuthKey() != null && !prefs.getAuthKey().isEmpty()) {
             try {

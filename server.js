@@ -239,11 +239,15 @@ app.get('/uploads/:filename', (req, res) => {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
 
-      // YouTube-like progressive chunking: cap all ranges to max 1MB for video and 512KB for audio
-      // Watch wherever it loads there, never loading one giant chunk that chokes device network bandwidth!
-      const CHUNK_SIZE = isVideo ? (1024 * 1024) : (isAudio ? (512 * 1024) : (4 * 1024 * 1024));
-      const requestedEnd = parts[1] ? parseInt(parts[1], 10) : (start + CHUNK_SIZE - 1);
-      const end = Math.min(requestedEnd, start + CHUNK_SIZE - 1, fileSize - 1);
+      // Progressive streaming: 3MB for video, 4MB for audio on open-ended requests
+      // If client requests explicit range (seek / buffer probe), respect requestedEnd without truncating
+      let end;
+      if (parts[1]) {
+        end = parseInt(parts[1], 10);
+      } else {
+        const CHUNK_SIZE = isVideo ? (3 * 1024 * 1024) : (isAudio ? (4 * 1024 * 1024) : (4 * 1024 * 1024));
+        end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
+      }
 
       if (isNaN(start) || isNaN(end) || start >= fileSize || end >= fileSize || start > end) {
         res.setHeader('Content-Range', `bytes */${fileSize}`);
@@ -261,7 +265,7 @@ app.get('/uploads/:filename', (req, res) => {
         'Cache-Control': 'public, max-age=2592000, immutable'
       });
 
-      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 64 * 1024 });
+      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 256 * 1024 });
       stream.on('error', () => {
         if (!res.headersSent) res.status(500).end();
         stream.destroy();
@@ -280,7 +284,7 @@ app.get('/uploads/:filename', (req, res) => {
         'Last-Modified': lastModified,
         'Cache-Control': 'public, max-age=2592000, immutable'
       });
-      const stream = fs.createReadStream(filePath, { highWaterMark: 64 * 1024 });
+      const stream = fs.createReadStream(filePath, { highWaterMark: 256 * 1024 });
       stream.on('error', () => {
         if (!res.headersSent) res.status(500).end();
         stream.destroy();

@@ -205,6 +205,7 @@ public class ImageUtils {
             String full = getFullMediaUrl(serverUrl, mediaUrl);
             com.bumptech.glide.RequestBuilder<android.graphics.drawable.Drawable> rb = com.bumptech.glide.Glide.with(context)
                     .load(full)
+                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL);
             if (!fullRes) {
                 rb = rb.override(720, 720);
@@ -238,6 +239,8 @@ public class ImageUtils {
                     byte[] decoded = Base64.decode(avatarUrl.substring(comma + 1), Base64.DEFAULT);
                     com.bumptech.glide.Glide.with(context)
                             .load(decoded)
+                            .override(120, 120)
+                            .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                             .circleCrop()
                             .into(target);
                     return;
@@ -247,6 +250,8 @@ public class ImageUtils {
             String full = getFullMediaUrl(serverUrl, avatarUrl);
             com.bumptech.glide.Glide.with(context)
                     .load(full)
+                    .override(120, 120)
+                    .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                     .circleCrop()
                     .into(target);

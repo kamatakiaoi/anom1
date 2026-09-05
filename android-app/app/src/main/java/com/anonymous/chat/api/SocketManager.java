@@ -52,6 +52,9 @@ public class SocketManager {
     private volatile String pendingAuthData = null;
     private volatile boolean isAuthenticated = false;
 
+    // Cached topics to prevent empty screen on subsequent launches
+    private final List<Topic> cachedTopics = new java.util.concurrent.CopyOnWriteArrayList<>();
+
     // Ping tracking
     private long pingStartTime = 0;
     private long lastLatencyMs = 0;
@@ -61,23 +64,17 @@ public class SocketManager {
     private final Runnable pingRunnable = new Runnable() {
         @Override
         public void run() {
-            if (!isAppForeground) {
-                // Background watchdog: verify connection every 30s to keep notifications alive
-                if (socket == null || !socket.connected()) {
-                    if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
-                        Log.d(TAG, "Background watchdog reconnecting socket to " + currentServerUrl);
-                        connect(currentServerUrl);
-                    }
+            if (socket == null || !socket.connected()) {
+                if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                    Log.d(TAG, "Watchdog reconnecting socket to " + currentServerUrl);
+                    connect(currentServerUrl);
                 }
-                mainHandler.postDelayed(this, 30000);
-                return;
-            }
-            if (socket != null && socket.connected()) {
-                if (!isPingPending || (System.currentTimeMillis() - pingStartTime > 15000)) {
+            } else {
+                if (!isPingPending || (System.currentTimeMillis() - pingStartTime > 12000)) {
                     startPingMeasurement();
                 }
             }
-            mainHandler.postDelayed(this, 10000);
+            mainHandler.postDelayed(this, isAppForeground ? 10000 : 15000);
         }
     };
 
@@ -175,8 +172,28 @@ public class SocketManager {
     public void addAuthListener(AuthListener l) { authListeners.add(l); }
     public void removeAuthListener(AuthListener l) { authListeners.remove(l); }
 
-    public void addTopicListener(TopicListener l) { topicListeners.add(l); }
+    public void addTopicListener(TopicListener l) {
+        topicListeners.add(l);
+        if (!cachedTopics.isEmpty()) {
+            mainHandler.post(() -> l.onTopicsUpdated(new ArrayList<>(cachedTopics)));
+        }
+    }
     public void removeTopicListener(TopicListener l) { topicListeners.remove(l); }
+
+    public List<Topic> getCachedTopics() {
+        return new ArrayList<>(cachedTopics);
+    }
+
+    public void requestTopics() {
+        if (!cachedTopics.isEmpty()) {
+            mainHandler.post(() -> {
+                for (TopicListener l : topicListeners) l.onTopicsUpdated(new ArrayList<>(cachedTopics));
+            });
+        }
+        if (socket != null && socket.connected()) {
+            socket.emit("get-topics");
+        }
+    }
 
     public void addMessageListener(MessageListener l) { messageListeners.add(l); }
     public void removeMessageListener(MessageListener l) { messageListeners.remove(l); }
@@ -238,6 +255,10 @@ public class SocketManager {
         if (socket != null && serverUrl.equals(currentServerUrl)) {
             if (socket.connected()) {
                 Log.d(TAG, "Socket already connected to " + serverUrl);
+                mainHandler.post(() -> {
+                    for (ConnectionListener l : connectionListeners) l.onConnected();
+                });
+                requestTopics();
                 return;
             }
             try {
@@ -485,6 +506,10 @@ public class SocketManager {
             try {
                 JSONArray arr = (JSONArray) args[0];
                 List<Topic> list = gson.fromJson(arr.toString(), new TypeToken<List<Topic>>(){}.getType());
+                if (list != null) {
+                    cachedTopics.clear();
+                    cachedTopics.addAll(list);
+                }
                 mainHandler.post(() -> {
                     for (TopicListener l : topicListeners) l.onTopicsUpdated(list);
                 });
@@ -663,6 +688,17 @@ public class SocketManager {
                                 it.remove();
                             }
                         }
+                    }
+                }
+
+                // Do not notify on messages sent by myself
+                UserProfile me = getMyProfile();
+                if (me != null) {
+                    if (senderUid != null && !senderUid.isEmpty() && senderUid.equals(me.getUid())) {
+                        return;
+                    }
+                    if (senderId != null && !senderId.isEmpty() && senderId.equals(me.getId())) {
+                        return;
                     }
                 }
 
