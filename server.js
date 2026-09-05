@@ -2038,19 +2038,7 @@ io.on('connection', (socket) => {
 
   socket.on('user-profile', (payload) => {
     if (!socket.authenticated) return;
-    let uid = payload && payload.uid ? String(payload.uid).trim() : '';
-    if (!uid && payload && payload.id) {
-      for (const [sid, s] of io.sockets.sockets) {
-        if (s.profile && (s.profile.id === payload.id || sid === payload.id)) {
-          uid = s.profile.uid;
-          break;
-        }
-      }
-    }
-    if (!uid && payload && payload.name) {
-      const uByName = db.prepare('SELECT uid FROM users WHERE name = ? ORDER BY id DESC LIMIT 1').get(payload.name);
-      if (uByName && uByName.uid) uid = uByName.uid;
-    }
+    const uid = payload && payload.uid ? String(payload.uid) : '';
     if (!uid) return;
     const u = getUserByUid.get(uid);
     if (!u) {

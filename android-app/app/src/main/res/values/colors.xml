@@ -31,6 +31,7 @@
     <color name="border_reply">#38BDF8</color>
 
     <!-- Accents & Status -->
+    <color name="accent_primary">#38BDF8</color>
     <color name="accent_white">#F0F0F0</color>
     <color name="accent_pure_white">#FFFFFF</color>
     <color name="accent_black">#0A0A0A</color>

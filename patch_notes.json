@@ -1,22 +1,5 @@
 [
   {
-    "version": "3.6.13",
-    "date": "2026-09-05",
-    "title": "Android v3.6.13 - Real-Time General Notification, Smooth Zoom & Media Pipeline Optimization",
-    "items": [
-      "Fixed slow/dropped General notifications: made socket connection idempotent to prevent connection churn between MainActivity and ChatBackgroundService",
-      "Added bounded message ID deduplication cache (last 200 IDs) to ensure 0-second real-time notification delivery without dropping events",
-      "Fixed ZoomableImageView jump and stutter on finger release by re-anchoring touch coordinates on ACTION_POINTER_UP with zero delta",
-      "Implemented 9-element Matrix linear interpolation animation for pinch zoom bounce-back and double-tap, eliminating matrix drift and extra zoom",
-      "Removed heavy 50MB background video preloading and blocking HTTP MediaMetadataRetriever calls, unblocking 100% of Glide worker threads",
-      "Added instant dark video placeholder with centered play button matching web index.html preload='none'",
-      "Optimized chat and feed image decoding with 720x720 memory-bounded downsampling to eliminate GC stutter and frame drops",
-      "Added fast-path initial message rendering in MessageAdapter to eliminate blank chat delay and ensure instant auto-scroll to bottom",
-      "Made TimeUtils date formatting thread-safe using ThreadLocal formatters and cached TimeZone singletons",
-      "Cached parsed image lists and time milliseconds inside Message model to eliminate redundant allocations during scroll"
-    ]
-  },
-  {
     "version": "1.4.8",
     "date": "2026-09-05",
     "title": "High-Speed Connection Optimization, True Latest Message Auto-Pinning & Zero-Latency Navigation",

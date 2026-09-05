@@ -20,9 +20,9 @@ Write-Host "ANDROID_HOME: $env:ANDROID_HOME"
 $appDir = "c:\Users\flooxie\Downloads\Compressed\code2\android-app"
 Set-Location $appDir
 
+& "$gradleDir\bin\gradle.bat" --stop
 & "$gradleDir\bin\gradle.bat" assembleDebug --stacktrace
-$apkPath = "$appDir\app\build\outputs\apk\debug\app-debug.apk"
-if (-not (Test-Path $apkPath) -and $LASTEXITCODE -ne 0) {
+if ($LASTEXITCODE -ne 0) {
     Write-Host "Gradle build failed with exit code $LASTEXITCODE" -ForegroundColor Red
     exit 1
 }

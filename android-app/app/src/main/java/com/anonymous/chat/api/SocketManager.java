@@ -41,6 +41,16 @@ public class SocketManager {
     private UserProfile myProfile;
     private ServerStats serverStats;
 
+    // Pending auth action queue (prevents drops/freezes when user logs in or registers before connection finishes)
+    public enum PendingAuthAction {
+        NONE,
+        AUTH,
+        CREATE,
+        RECOVER
+    }
+    private volatile PendingAuthAction pendingAuthAction = PendingAuthAction.NONE;
+    private volatile String pendingAuthData = null;
+
     // Ping tracking
     private long pingStartTime = 0;
     private long lastLatencyMs = 0;
@@ -241,7 +251,7 @@ public class SocketManager {
 
             IO.Options options = IO.Options.builder()
                     .setQuery("mac=" + deviceMac)
-                    .setTransports(new String[]{"websocket", "polling"})
+                    .setTransports(new String[]{"polling", "websocket"})
                     .setReconnection(true)
                     .setReconnectionAttempts(Integer.MAX_VALUE)
                     .setReconnectionDelay(300)
@@ -255,6 +265,56 @@ public class SocketManager {
         } catch (Exception e) {
             Log.e(TAG, "Connection error", e);
             notifyConnectionError(e.getMessage());
+        }
+    }
+
+    public void forceReconnect(String serverUrl) {
+        if (socket != null) {
+            try {
+                socket.disconnect();
+                socket.off();
+            } catch (Exception ignored) {}
+            socket = null;
+        }
+        currentServerUrl = null;
+        connect(serverUrl);
+    }
+
+    private void flushPendingAuth() {
+        if (socket == null || !socket.connected()) return;
+
+        if (pendingAuthAction != PendingAuthAction.NONE && pendingAuthData != null) {
+            PendingAuthAction action = pendingAuthAction;
+            String data = pendingAuthData;
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
+
+            switch (action) {
+                case CREATE:
+                    Log.d(TAG, "Flushing pending CREATE action for key");
+                    createKey(data);
+                    return;
+                case RECOVER:
+                    Log.d(TAG, "Flushing pending RECOVER action for recoveryKey");
+                    recoverKey(data);
+                    return;
+                case AUTH:
+                    Log.d(TAG, "Flushing pending AUTH action for key");
+                    authKey(data);
+                    return;
+                case NONE:
+                default:
+                    break;
+            }
+        }
+
+        // Re-authenticate with saved key if user did not request another action
+        if (appContext != null) {
+            PreferenceManager prefs = PreferenceManager.getInstance(appContext);
+            String savedKey = prefs.getAuthKey();
+            if (savedKey != null && !savedKey.isEmpty()) {
+                authKey(savedKey);
+            }
         }
     }
 
@@ -279,13 +339,8 @@ public class SocketManager {
                 }
             });
 
-            // Re-authenticate and join General room on every connect/reconnect
-            if (appContext != null) {
-                PreferenceManager prefs = PreferenceManager.getInstance(appContext);
-                String savedKey = prefs.getAuthKey();
-                if (savedKey != null && !savedKey.isEmpty()) {
-                    authKey(savedKey);
-                }
+            if (pendingAuthAction != PendingAuthAction.NONE) {
+                flushPendingAuth();
             }
         });
 
@@ -329,16 +384,15 @@ public class SocketManager {
         });
 
         socket.on("require-auth", args -> {
-            if (appContext != null) {
-                PreferenceManager prefs = PreferenceManager.getInstance(appContext);
-                String savedKey = prefs.getAuthKey();
-                if (savedKey != null && !savedKey.isEmpty()) {
-                    authKey(savedKey);
-                }
-            }
+            flushPendingAuth();
         });
 
         socket.on("auth-error", args -> {
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
+            if (appContext != null) {
+                PreferenceManager.getInstance(appContext).setAuthKey(null);
+            }
             String msg = (args.length > 0 && args[0] != null) ? args[0].toString() : "Invalid key";
             try {
                 if (args[0] instanceof JSONObject) {
@@ -352,6 +406,8 @@ public class SocketManager {
         });
 
         socket.on("key-created", args -> {
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
             if (args.length > 0 && args[0] != null && appContext != null) {
                 try {
                     JSONObject obj = (JSONObject) args[0];
@@ -367,6 +423,8 @@ public class SocketManager {
         });
 
         socket.on("key-recovered", args -> {
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
             if (args.length > 0 && args[0] != null && appContext != null) {
                 try {
                     JSONObject obj = (JSONObject) args[0];
@@ -382,6 +440,8 @@ public class SocketManager {
         });
 
         socket.on("profile", args -> {
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
             if (args.length == 0 || args[0] == null) return;
             try {
                 JSONObject obj = (JSONObject) args[0];
@@ -851,10 +911,24 @@ public class SocketManager {
     }
 
     public void authKey(String key) {
-        if (socket == null || !socket.connected() || key == null) return;
+        if (key == null || key.trim().isEmpty()) return;
+        String cleanKey = key.trim();
+
+        if (socket == null || !socket.connected()) {
+            Log.d(TAG, "authKey queued (waiting for socket connection)");
+            pendingAuthAction = PendingAuthAction.AUTH;
+            pendingAuthData = cleanKey;
+            if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                connect(currentServerUrl);
+            } else if (appContext != null) {
+                connect(PreferenceManager.getInstance(appContext).getServerBaseUrl());
+            }
+            return;
+        }
+
         try {
             JSONObject obj = new JSONObject();
-            obj.put("key", key);
+            obj.put("key", cleanKey);
             if (appContext != null) {
                 obj.put("mac", PreferenceManager.getInstance(appContext).getDeviceMac());
             }
@@ -865,16 +939,30 @@ public class SocketManager {
     }
 
     public void createKey(String key) {
-        if (socket == null || !socket.connected() || key == null) return;
+        if (key == null || key.trim().isEmpty()) return;
+        String cleanKey = key.trim();
+
+        if (socket == null || !socket.connected()) {
+            Log.d(TAG, "createKey queued (waiting for socket connection)");
+            pendingAuthAction = PendingAuthAction.CREATE;
+            pendingAuthData = cleanKey;
+            if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                connect(currentServerUrl);
+            } else if (appContext != null) {
+                connect(PreferenceManager.getInstance(appContext).getServerBaseUrl());
+            }
+            return;
+        }
+
         try {
             JSONObject obj = new JSONObject();
-            obj.put("key", key);
+            obj.put("key", cleanKey);
             if (appContext != null) {
                 obj.put("mac", PreferenceManager.getInstance(appContext).getDeviceMac());
             }
             socket.emit("create-key", obj);
             if (appContext != null) {
-                PreferenceManager.getInstance(appContext).setAuthKey(key);
+                PreferenceManager.getInstance(appContext).setAuthKey(cleanKey);
             }
         } catch (Exception e) {
             Log.e(TAG, "createKey error", e);
@@ -882,10 +970,24 @@ public class SocketManager {
     }
 
     public void recoverKey(String recoveryKey) {
-        if (socket == null || !socket.connected() || recoveryKey == null) return;
+        if (recoveryKey == null || recoveryKey.trim().isEmpty()) return;
+        String cleanRecovery = recoveryKey.trim();
+
+        if (socket == null || !socket.connected()) {
+            Log.d(TAG, "recoverKey queued (waiting for socket connection)");
+            pendingAuthAction = PendingAuthAction.RECOVER;
+            pendingAuthData = cleanRecovery;
+            if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                connect(currentServerUrl);
+            } else if (appContext != null) {
+                connect(PreferenceManager.getInstance(appContext).getServerBaseUrl());
+            }
+            return;
+        }
+
         try {
             JSONObject obj = new JSONObject();
-            obj.put("recoveryKey", recoveryKey);
+            obj.put("recoveryKey", cleanRecovery);
             socket.emit("recover-key", obj);
         } catch (Exception e) {
             Log.e(TAG, "recoverKey error", e);
@@ -893,11 +995,14 @@ public class SocketManager {
     }
 
     public void logout() {
+        pendingAuthAction = PendingAuthAction.NONE;
+        pendingAuthData = null;
         if (socket != null && socket.connected()) {
             socket.emit("logout");
         }
         if (appContext != null) {
             PreferenceManager.getInstance(appContext).setAuthKey(null);
+            PreferenceManager.getInstance(appContext).saveMyProfile(null);
         }
         myProfile = null;
     }

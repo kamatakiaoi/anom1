@@ -1,4 +1,4 @@
-﻿package com.anonymous.chat.ui.viewer;
+package com.anonymous.chat.ui.viewer;
 
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
