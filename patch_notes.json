@@ -1,16 +1,37 @@
 [
   {
-    "version": "3.6.14",
+    "version": "3.6.16",
     "date": "2026-09-05",
-    "title": "Universal Video Thumbnails, Instant YouTube-Style Chunked Streaming & High-Contrast Video Controls",
+    "title": "Instant Background Notifications, Fast Auto-Login & Progressive Video Streaming",
     "items": [
-      "Added universal 2-tier video thumbnail system (in-memory LRU + disk cache) extracting keyframes over HTTP Range in <100ms for chat messages, feeds, and post details",
-      "Fixed missing video thumbnails across all post feeds, chat items, and post details",
-      "Replaced blocking full-file OkHttp downloads with instant progressive 1MB chunked streaming (YouTube-like playback starting in <200ms)",
-      "Fixed black-on-black play/pause/close buttons with modern high-contrast frosted translucent controls and pure white icons",
-      "Fixed video seeking jumping to inaccurate locations by switching to SEEK_CLOSEST_SYNC keyframe alignment and throttling scrub requests",
-      "Enhanced inline and fullscreen video buffering listeners with responsive progress spinners",
-      "Added centered video play button overlay with rounded corner thumbnails in PostDetailActivity"
+      "Fixed login timeout and freeze on subsequent app launches: added immediate profile re-emission on socket re-auth and instant local profile dispatch when already connected",
+      "Robust background notification service: ChatBackgroundService now automatically restarts via AlarmManager even when the app is completely removed/swiped from the recent tasks queue",
+      "Zero-latency Doze wake lock: acquired temporary 3s partial wake lock when receiving General chat messages so notifications ring and vibrate immediately even in deep sleep",
+      "Progressive YouTube-style video chunking: server strictly limits chunks to 1MB per range request, preventing bandwidth congestion and memory stalls on mobile networks",
+      "Optimized battery efficiency: background socket ping is replaced by a 30s connection watchdog, preventing battery drain while keeping push notifications active",
+      "Preserved saved authentication keys: preventing accidental credential resets on key collision errors",
+      "Cleaned and streamlined code across both Android client and Node.js backend to ensure 100% parity with index.html and server.js"
+    ]
+  },
+  {
+    "version": "1.4.9",
+    "date": "2026-09-05",
+    "title": "Universal Legacy Database Compatibility, Server Crash Prevention & High-Performance Media Pipeline",
+    "items": [
+      "Legacy Database Architecture Support: Re-engineered database initialization sequence so all schema tables and columns migrate safely before index creation, eliminating 'no such column: user_uid' startup errors on older databases",
+      "Safe Indexing Engine: Wrapped all index creations (idx_posts_created, idx_posts_ip_created, idx_posts_user_uid, idx_comments_post, idx_messages_topic_id, idx_messages_user_uid, idx_messages_user_ip, idx_users_uid) in guarded execution, ensuring zero-downtime boots across all historical schema versions",
+      "Automatic Legacy Data Backfill: Seamlessly backfilled author IPs and user UIDs across older posts, comments, and messages for unique named users to preserve disk usage statistics and ownership rights",
+      "Multi-Schema Media Query Support: Enhanced getPostMediaFiles and calcUserDisk to transparently query both modern user_uid/user_ip and legacy ip fields",
+      "Process Crash Protection: Added global uncaughtException and unhandledRejection handlers to completely prevent server process termination from aborted network streams or unexpected socket errors",
+      "Stream Leak & OOM Prevention: Bound res.on('error'), finish, and close listeners to auto-destroy chunked Range file streams on aborted video playback, eliminating EPIPE/ECONNRESET process crashes and orphan descriptors",
+      "Heap Allocation Optimization: Reduced maxHttpBufferSize from 100MB to 10MB to eliminate Node.js heap spikes and memory thrashing",
+      "Pre-compiled SQLite Query Engine: Replaced thousands of dynamic db.prepare compilations per minute in calcUserDisk, user-profile, jump-to-msg, explore-feed, and explore-create with pre-compiled statement descriptors, eliminating statement cache memory bloat",
+      "Memory Leak Cleanup: Capped ACTION_LIMIT rate limiter buckets to 2000 entries with automatic expired timestamp eviction (>60s)",
+      "Log Stream Protection: Added error event listener on log write stream and throttled fs.statSync size checks to once every 25 writes instead of every single log entry",
+      "Cross-Channel Event Loop Optimization: Debounced topics broadcast (2000ms) on message sends in place of synchronous double-broadcasting (io.emit('stats') + io.emit('topics')), dramatically speeding up General notification dispatch",
+      "Network Resilience & Auto-Reconnection: Added explicit 'io server disconnect' recovery handler (300ms) and dynamic transport fallback from WebSocket to HTTP polling after 2 consecutive connection failures to bypass restrictive firewalls/proxies, auto-restoring to WebSocket upon success",
+      "0ms Instant Notification Sound: AudioContext state running check ensures synthesizer chime triggers with zero delay upon message arrival in General",
+      "High-Performance Lazy Media Loading: Added native loading=\"lazy\" and decoding=\"async\" across all chat avatars, message media attachments, Explore cards, and comments to minimize DOM rendering bottlenecks and GPU memory pressure"
     ]
   },
   {

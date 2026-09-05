@@ -1,14 +1,17 @@
 package com.anonymous.chat.services;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemClock;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -73,6 +76,56 @@ public class ChatBackgroundService extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
+    }
+
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        PreferenceManager prefs = PreferenceManager.getInstance(this);
+        if (prefs.getAuthKey() != null && !prefs.getAuthKey().isEmpty()) {
+            try {
+                Intent restartServiceIntent = new Intent(getApplicationContext(), ChatBackgroundService.class);
+                restartServiceIntent.setPackage(getPackageName());
+                int flags = PendingIntent.FLAG_ONE_SHOT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    flags |= PendingIntent.FLAG_IMMUTABLE;
+                }
+                PendingIntent restartPendingIntent = PendingIntent.getService(
+                        getApplicationContext(), 1001, restartServiceIntent, flags);
+                AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                if (alarmManager != null) {
+                    alarmManager.set(
+                            AlarmManager.ELAPSED_REALTIME,
+                            SystemClock.elapsedRealtime() + 1000,
+                            restartPendingIntent);
+                }
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        PreferenceManager prefs = PreferenceManager.getInstance(this);
+        if (prefs.getAuthKey() != null && !prefs.getAuthKey().isEmpty()) {
+            try {
+                Intent restartServiceIntent = new Intent(getApplicationContext(), ChatBackgroundService.class);
+                restartServiceIntent.setPackage(getPackageName());
+                int flags = PendingIntent.FLAG_ONE_SHOT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    flags |= PendingIntent.FLAG_IMMUTABLE;
+                }
+                PendingIntent restartPendingIntent = PendingIntent.getService(
+                        getApplicationContext(), 1002, restartServiceIntent, flags);
+                AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                if (alarmManager != null) {
+                    alarmManager.set(
+                            AlarmManager.ELAPSED_REALTIME,
+                            SystemClock.elapsedRealtime() + 1500,
+                            restartPendingIntent);
+                }
+            } catch (Exception ignored) {}
+        }
     }
 
     private void createServiceNotificationChannel() {

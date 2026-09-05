@@ -191,7 +191,7 @@ public class VideoThumbnailManager {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             Map<String, String> headers = new HashMap<>();
-            headers.put("User-Agent", "AnonymousChat-Android/3.6.14");
+            headers.put("User-Agent", "AnonymousChat-Android/3.6.16");
             headers.put("Accept-Ranges", "bytes");
             retriever.setDataSource(fullUrl, headers);
 

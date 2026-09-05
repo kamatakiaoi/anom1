@@ -7,10 +7,26 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
+// Process-level crash prevention
+process.on('uncaughtException', (err) => {
+  try {
+    const msg = (err && err.stack) ? err.stack : String(err);
+    console.error('[CRITICAL UNCAUGHT EXCEPTION]', msg);
+    if (typeof log === 'function') log('CRITICAL UNCAUGHT EXCEPTION: ' + msg);
+  } catch {}
+});
+process.on('unhandledRejection', (reason, promise) => {
+  try {
+    const msg = (reason && reason.stack) ? reason.stack : String(reason);
+    console.error('[CRITICAL UNHANDLED REJECTION]', msg);
+    if (typeof log === 'function') log('CRITICAL UNHANDLED REJECTION: ' + msg);
+  } catch {}
+});
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  maxHttpBufferSize: 100e6,
+  maxHttpBufferSize: 10e6,
   pingInterval: 15000,
   pingTimeout: 10000,
   connectTimeout: 10000,
@@ -35,14 +51,20 @@ function logTimestamp() {
 
 let _logFile = path.join(LOGS_DIR, logTimestamp() + '.txt');
 let _logStream = fs.createWriteStream(_logFile, { flags: 'a' });
+_logStream.on('error', () => {});
+let _logCount = 0;
 
 function rotateLogIfNeeded() {
   try {
-    const stat = fs.statSync(_logFile);
-    if (stat.size >= LOG_MAX_SIZE) {
-      _logStream.end();
-      _logFile = path.join(LOGS_DIR, logTimestamp() + '.txt');
-      _logStream = fs.createWriteStream(_logFile, { flags: 'a' });
+    _logCount++;
+    if (_logCount % 25 === 0) {
+      const stat = fs.statSync(_logFile);
+      if (stat.size >= LOG_MAX_SIZE) {
+        _logStream.end();
+        _logFile = path.join(LOGS_DIR, logTimestamp() + '.txt');
+        _logStream = fs.createWriteStream(_logFile, { flags: 'a' });
+        _logStream.on('error', () => {});
+      }
     }
   } catch {}
 }
@@ -52,7 +74,7 @@ function log(msg) {
   const line = '[' + ts + '] ' + msg;
   console.log(line);
   rotateLogIfNeeded();
-  _logStream.write(line + '\n');
+  try { _logStream.write(line + '\n'); } catch {}
 }
 
 // --- Key management ---
@@ -217,10 +239,11 @@ app.get('/uploads/:filename', (req, res) => {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
 
-      // YouTube-like progressive chunking: cap open-ended ranges to 1MB for video and 512KB for audio
-      // This loads initial frames in <50ms and streams only as the user watches!
+      // YouTube-like progressive chunking: cap all ranges to max 1MB for video and 512KB for audio
+      // Watch wherever it loads there, never loading one giant chunk that chokes device network bandwidth!
       const CHUNK_SIZE = isVideo ? (1024 * 1024) : (isAudio ? (512 * 1024) : (4 * 1024 * 1024));
-      const end = parts[1] ? Math.min(parseInt(parts[1], 10), fileSize - 1) : Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
+      const requestedEnd = parts[1] ? parseInt(parts[1], 10) : (start + CHUNK_SIZE - 1);
+      const end = Math.min(requestedEnd, start + CHUNK_SIZE - 1, fileSize - 1);
 
       if (isNaN(start) || isNaN(end) || start >= fileSize || end >= fileSize || start > end) {
         res.setHeader('Content-Range', `bytes */${fileSize}`);
@@ -243,6 +266,8 @@ app.get('/uploads/:filename', (req, res) => {
         if (!res.headersSent) res.status(500).end();
         stream.destroy();
       });
+      res.on('error', () => { stream.destroy(); });
+      res.on('finish', () => { stream.destroy(); });
       res.on('close', () => { stream.destroy(); });
       req.on('close', () => { stream.destroy(); });
       stream.pipe(res);
@@ -260,6 +285,8 @@ app.get('/uploads/:filename', (req, res) => {
         if (!res.headersSent) res.status(500).end();
         stream.destroy();
       });
+      res.on('error', () => { stream.destroy(); });
+      res.on('finish', () => { stream.destroy(); });
       res.on('close', () => { stream.destroy(); });
       req.on('close', () => { stream.destroy(); });
       stream.pipe(res);
@@ -465,6 +492,12 @@ function ACTION_LIMIT(ip, type) {
     b.comment.push(now);
     return true;
   }
+  if (_actionBuckets.size > 2000) {
+    for (const [k, v] of _actionBuckets) {
+      if (now - (v.last || 0) > 60000) _actionBuckets.delete(k);
+    }
+  }
+  b.last = now;
   return true;
 }
 // occasional cleanup
@@ -477,7 +510,7 @@ setInterval(() => {
     b.comment = (b.comment || []).filter(t => now - t < 20000);
     if (!b.msg.length && !b.topic.length && !b.post.length && !b.comment.length) _actionBuckets.delete(ip);
   }
-}, 60000);
+}, 30000);
 
 
 const ADJECTIVES = [
@@ -554,31 +587,7 @@ db.exec(`
     user_id TEXT NOT NULL DEFAULT '',
     content TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT ''
-  )
-`);
-
-function addColumnIfMissing(table, column, definition) {
-  const cols = db.prepare('PRAGMA table_info(' + table + ')').all().map(c => c.name);
-  if (!cols.includes(column)) {
-    console.log('Adding column:', table + '.' + column);
-    db.exec('ALTER TABLE ' + table + ' ADD COLUMN ' + column + ' ' + definition);
-  }
-}
-
-addColumnIfMissing('messages', 'user_name', "TEXT NOT NULL DEFAULT 'Anon'");
-addColumnIfMissing('messages', 'user_color', "TEXT NOT NULL DEFAULT '#666,#999'");
-addColumnIfMissing('messages', 'image', 'TEXT');
-addColumnIfMissing('messages', 'reply_name', 'TEXT');
-addColumnIfMissing('messages', 'reply_text', 'TEXT');
-addColumnIfMissing('messages', 'reply_msg_id', 'INTEGER');
-addColumnIfMissing('messages', 'topic_id', 'INTEGER DEFAULT 1');
-addColumnIfMissing('messages', 'avatar', 'TEXT');
-addColumnIfMissing('topics', 'creator_ip', 'TEXT');
-addColumnIfMissing('topics', 'locked', 'INTEGER DEFAULT 0');
-addColumnIfMissing('topics', 'locked_by', 'TEXT'); // user | moderator
-addColumnIfMissing('topics', 'recommended', 'INTEGER DEFAULT 0');
-
-db.exec(`
+  );
   CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT,
@@ -612,39 +621,100 @@ db.exec(`
     ip TEXT,
     created_at TEXT NOT NULL
   );
-  CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(id DESC);
-  CREATE INDEX IF NOT EXISTS idx_comments_post ON post_comments(post_id, id);
-  CREATE INDEX IF NOT EXISTS idx_messages_topic_id ON messages(topic_id, id DESC);
-  CREATE INDEX IF NOT EXISTS idx_messages_user_uid ON messages(user_uid);
-  CREATE INDEX IF NOT EXISTS idx_messages_user_ip ON messages(user_ip);
-`);
-addColumnIfMissing('posts', 'video', 'TEXT');
-addColumnIfMissing('post_comments', 'parent_id', 'INTEGER');
-addColumnIfMissing('post_comments', 'reply_name', 'TEXT');
-addColumnIfMissing('post_comments', 'reply_text', 'TEXT');
-addColumnIfMissing('post_comments', 'image', 'TEXT');
-addColumnIfMissing('posts', 'upvotes', 'INTEGER NOT NULL DEFAULT 0');
-addColumnIfMissing('posts', 'downvotes', 'INTEGER NOT NULL DEFAULT 0');
-addColumnIfMissing('posts', 'views', 'INTEGER NOT NULL DEFAULT 0');
-addColumnIfMissing('posts', 'audio', 'TEXT');
-db.exec(`
   CREATE TABLE IF NOT EXISTS post_votes (
     post_id INTEGER NOT NULL,
     ip TEXT NOT NULL,
-    vote INTEGER NOT NULL,
+    vote INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     PRIMARY KEY (post_id, ip)
   );
 `);
 
+function addColumnIfMissing(table, column, definition) {
+  try {
+    const cols = db.prepare('PRAGMA table_info(' + table + ')').all().map(c => c.name);
+    if (!cols.includes(column)) {
+      console.log('Adding column:', table + '.' + column);
+      db.exec('ALTER TABLE ' + table + ' ADD COLUMN ' + column + ' ' + definition);
+    }
+  } catch (e) {
+    console.warn('[DB] addColumnIfMissing for ' + table + '.' + column + ':', e.message);
+  }
+}
+
+// 1. Ensure all columns exist across all tables first (covers all legacy schema versions)
 addColumnIfMissing('users', 'avatar', 'TEXT');
 addColumnIfMissing('users', 'name_changed_at', 'TEXT');
 addColumnIfMissing('users', 'avatar_changed_at', 'TEXT');
 addColumnIfMissing('users', 'uid', 'TEXT');
+addColumnIfMissing('users', 'discord_id', 'TEXT');
+addColumnIfMissing('users', 'discord_username', 'TEXT');
+addColumnIfMissing('users', 'discord_avatar', 'TEXT');
+
+addColumnIfMissing('topics', 'creator_ip', 'TEXT');
+addColumnIfMissing('topics', 'locked', 'INTEGER DEFAULT 0');
+addColumnIfMissing('topics', 'locked_by', 'TEXT'); // user | moderator
+addColumnIfMissing('topics', 'recommended', 'INTEGER DEFAULT 0');
+
+addColumnIfMissing('messages', 'user_name', "TEXT NOT NULL DEFAULT 'Anon'");
+addColumnIfMissing('messages', 'user_color', "TEXT NOT NULL DEFAULT '#666,#999'");
+addColumnIfMissing('messages', 'image', 'TEXT');
+addColumnIfMissing('messages', 'reply_name', 'TEXT');
+addColumnIfMissing('messages', 'reply_text', 'TEXT');
+addColumnIfMissing('messages', 'reply_msg_id', 'INTEGER');
+addColumnIfMissing('messages', 'topic_id', 'INTEGER DEFAULT 1');
+addColumnIfMissing('messages', 'avatar', 'TEXT');
 addColumnIfMissing('messages', 'user_uid', 'TEXT');
 addColumnIfMissing('messages', 'user_ip', 'TEXT');
 addColumnIfMissing('messages', 'video', 'TEXT');
 addColumnIfMissing('messages', 'audio', 'TEXT');
+
+addColumnIfMissing('posts', 'video', 'TEXT');
+addColumnIfMissing('posts', 'upvotes', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('posts', 'downvotes', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('posts', 'views', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('posts', 'audio', 'TEXT');
+addColumnIfMissing('posts', 'user_uid', 'TEXT');
+addColumnIfMissing('posts', 'user_ip', 'TEXT');
+
+addColumnIfMissing('post_comments', 'parent_id', 'INTEGER');
+addColumnIfMissing('post_comments', 'reply_name', 'TEXT');
+addColumnIfMissing('post_comments', 'reply_text', 'TEXT');
+addColumnIfMissing('post_comments', 'image', 'TEXT');
+addColumnIfMissing('post_comments', 'user_uid', 'TEXT');
+addColumnIfMissing('post_comments', 'user_ip', 'TEXT');
+
+// 2. Safe index creation (executed ONLY after all columns are guaranteed to exist)
+function safeIndex(name, sql) {
+  try {
+    db.exec(sql);
+  } catch (e) {
+    console.warn('[DB] Notice on index ' + name + ':', e.message);
+  }
+}
+
+safeIndex('idx_posts_created', 'CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(id DESC)');
+safeIndex('idx_posts_ip_created', 'CREATE INDEX IF NOT EXISTS idx_posts_ip_created ON posts(ip, created_at)');
+safeIndex('idx_posts_user_uid', 'CREATE INDEX IF NOT EXISTS idx_posts_user_uid ON posts(user_uid)');
+safeIndex('idx_comments_post', 'CREATE INDEX IF NOT EXISTS idx_comments_post ON post_comments(post_id, id)');
+safeIndex('idx_messages_topic_id', 'CREATE INDEX IF NOT EXISTS idx_messages_topic_id ON messages(topic_id, id DESC)');
+safeIndex('idx_messages_user_uid', 'CREATE INDEX IF NOT EXISTS idx_messages_user_uid ON messages(user_uid)');
+safeIndex('idx_messages_user_ip', 'CREATE INDEX IF NOT EXISTS idx_messages_user_ip ON messages(user_ip)');
+safeIndex('idx_users_uid', 'CREATE INDEX IF NOT EXISTS idx_users_uid ON users(uid)');
+
+// 3. Backward-compatibility data backfill for older databases
+try {
+  // Populate posts.user_ip from posts.ip if missing
+  db.exec("UPDATE posts SET user_ip = ip WHERE (user_ip IS NULL OR user_ip = '') AND ip IS NOT NULL");
+  // Populate post_comments.user_ip from post_comments.ip if missing
+  db.exec("UPDATE post_comments SET user_ip = ip WHERE (user_ip IS NULL OR user_ip = '') AND ip IS NOT NULL");
+  // Backfill posts.user_uid from users table where ip matches
+  db.exec("UPDATE posts SET user_uid = (SELECT uid FROM users WHERE users.ip = posts.ip AND users.uid IS NOT NULL AND users.uid != '') WHERE (user_uid IS NULL OR user_uid = '') AND ip IS NOT NULL");
+  // Backfill post_comments.user_uid from users table where ip matches
+  db.exec("UPDATE post_comments SET user_uid = (SELECT uid FROM users WHERE users.ip = post_comments.ip AND users.uid IS NOT NULL AND users.uid != '') WHERE (user_uid IS NULL OR user_uid = '') AND ip IS NOT NULL");
+} catch (e) {
+  console.warn('[DB] Backward-compatibility backfill notice:', e.message);
+}
 
 // Fix empty / blank / zalgo-only names left by older clients (runs every startup)
 (() => {
@@ -756,6 +826,15 @@ function invalidateTopicsCache() {
   _cachedTopicsPayloadAt = 0;
 }
 
+let _topicNotifyDebounce = null;
+function scheduleTopicsBroadcast() {
+  if (_topicNotifyDebounce) return;
+  _topicNotifyDebounce = setTimeout(() => {
+    _topicNotifyDebounce = null;
+    io.emit('topics', getTopicsPayload());
+  }, 2000);
+}
+
 function getTopicsPayload(forceFresh) {
   const now = Date.now();
   if (!forceFresh && _cachedTopicsPayload && (now - _cachedTopicsPayloadAt < 2500)) {
@@ -838,6 +917,19 @@ const getHistoryBefore = db.prepare(`
   FROM messages WHERE topic_id = ? AND id < ? ORDER BY id DESC LIMIT ?
 `);
 const getHistoryAfter = db.prepare(`
+  SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
+  FROM messages WHERE topic_id = ? AND id > ? ORDER BY id ASC LIMIT ?
+`);
+
+const countUserMsgs = db.prepare('SELECT COUNT(*) c FROM messages WHERE user_uid = ? OR user_ip = ?');
+const countUserMedia = db.prepare("SELECT COUNT(*) c FROM messages WHERE (user_uid = ? OR user_ip = ?) AND ((image IS NOT NULL AND image != '') OR (video IS NOT NULL AND video != '') OR (audio IS NOT NULL AND audio != ''))");
+const getUserMediaFiles = db.prepare('SELECT image, video, audio FROM messages WHERE user_uid = ? OR user_ip = ?');
+const getPostMediaFiles = db.prepare('SELECT images, video, audio FROM posts WHERE (user_uid IS NOT NULL AND user_uid = ?) OR (user_ip IS NOT NULL AND user_ip = ?) OR ip = ?');
+const getTargetMsgStmt = db.prepare(`
+  SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
+  FROM messages WHERE topic_id = ? AND id = ?
+`);
+const getMsgsAfterStmt = db.prepare(`
   SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
   FROM messages WHERE topic_id = ? AND id > ? ORDER BY id ASC LIMIT ?
 `);
@@ -959,7 +1051,7 @@ function calcUserDisk(uid, ip) {
     } catch {}
   };
 
-  const rows = db.prepare('SELECT image, video, audio FROM messages WHERE user_uid = ? OR user_ip = ?').all(uid, ip);
+  const rows = getUserMediaFiles.all(uid, ip);
   rows.forEach(r => {
     if (r.image) {
       try {
@@ -971,7 +1063,7 @@ function calcUserDisk(uid, ip) {
     if (r.audio) checkFile(r.audio);
   });
 
-  const postRows = db.prepare('SELECT images, video, audio FROM posts WHERE user_uid = ? OR user_ip = ?').all(uid, ip);
+  const postRows = getPostMediaFiles.all(uid || '', ip || '', ip || '');
   postRows.forEach(r => {
     if (r.images) {
       try {
@@ -1405,6 +1497,20 @@ const bumpComments = db.prepare('UPDATE posts SET comments_count = (SELECT COUNT
 const bumpShares = db.prepare('UPDATE posts SET shares_count = shares_count + 1 WHERE id = ?');
 const bumpViews = db.prepare('UPDATE posts SET views = COALESCE(views,0) + 1 WHERE id = ?');
 
+const countAllPosts = db.prepare('SELECT COUNT(*) c FROM posts');
+const listPostsDesc = db.prepare('SELECT * FROM posts ORDER BY id DESC LIMIT ? OFFSET ?');
+const listPostsAsc = db.prepare('SELECT * FROM posts ORDER BY id ASC LIMIT ? OFFSET ?');
+const listPostsHot = db.prepare('SELECT * FROM posts ORDER BY (COALESCE(upvotes,0) - COALESCE(downvotes,0) + COALESCE(comments_count,0)*2 + COALESCE(views,0)) DESC, id DESC LIMIT ? OFFSET ?');
+
+const countSearchPosts = db.prepare('SELECT COUNT(*) c FROM posts WHERE title LIKE ? OR body LIKE ?');
+const searchPostsDesc = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?');
+const searchPostsAsc = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id ASC LIMIT ? OFFSET ?');
+const searchPostsHot = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY (COALESCE(upvotes,0) - COALESCE(downvotes,0) + COALESCE(comments_count,0)*2 + COALESCE(views,0)) DESC, id DESC LIMIT ? OFFSET ?');
+
+const countPostsTodayStmt = db.prepare('SELECT COUNT(*) c FROM posts WHERE ip = ? AND created_at >= ?');
+const findDuplicatePostStmt = db.prepare('SELECT id FROM posts WHERE ip = ? AND title = ? AND body = ? AND created_at >= ? LIMIT 1');
+const countVideosTodayStmt = db.prepare("SELECT COUNT(*) c FROM posts WHERE ip = ? AND created_at >= ? AND video IS NOT NULL AND video != ''");
+
 
 function parseJsonArr(raw, max) {
   try {
@@ -1554,6 +1660,8 @@ io.on('connection', (socket) => {
     const key = payload.key.trim();
     if (!key) return;
     if (socket.authenticated && socket.authKey === key) {
+      socket.emit('profile', buildProfilePayload(socket));
+      socket.emit('topics', getTopicsPayload());
       finishAuth();
       return;
     }
@@ -1883,10 +1991,7 @@ io.on('connection', (socket) => {
     if (!targetId) return;
     try {
       // Fetch target message directly
-      const targetRow = db.prepare(`
-        SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
-        FROM messages WHERE topic_id = ? AND id = ?
-      `).get(socket.topicId, targetId);
+      const targetRow = getTargetMsgStmt.get(socket.topicId, targetId);
 
       if (!targetRow) {
         socket.emit('error', 'Original message no longer exists');
@@ -1895,10 +2000,7 @@ io.on('connection', (socket) => {
 
       // 20 messages before target (exclusive), 20 after target (exclusive)
       const rowsBefore = getHistoryBefore.all(socket.topicId, targetId, 20).reverse();
-      const rowsAfter = db.prepare(`
-        SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
-        FROM messages WHERE topic_id = ? AND id > ? ORDER BY id ASC LIMIT 20
-      `).all(socket.topicId, targetId);
+      const rowsAfter = getMsgsAfterStmt.all(socket.topicId, targetId, 20);
 
       // Deduplicate and sort chronologically
       const combinedMap = new Map();
@@ -2032,8 +2134,7 @@ io.on('connection', (socket) => {
       });
     }
 
-    io.emit('stats', getStats());
-    io.emit('topics', getTopicsPayload());
+    scheduleTopicsBroadcast();
   });
 
   socket.on('user-profile', (payload) => {
@@ -2045,16 +2146,16 @@ io.on('connection', (socket) => {
       socket.emit('user-profile', { uid, name: 'Unknown', color: '#666,#999', avatar: null, messages: 0, media: 0, disk: '0 B' });
       return;
     }
-    const msgCount = db.prepare('SELECT COUNT(*) c FROM messages WHERE user_uid = ? OR user_ip = ?').get(uid, u.ip).c;
-    const mediaCount = db.prepare("SELECT COUNT(*) c FROM messages WHERE (user_uid = ? OR user_ip = ?) AND ((image IS NOT NULL AND image != '') OR (video IS NOT NULL AND video != '') OR (audio IS NOT NULL AND audio != ''))").get(uid, u.ip).c;
+    const msgCount = countUserMsgs.get(uid, u.ip)?.c || 0;
+    const mediaCount = countUserMedia.get(uid, u.ip)?.c || 0;
     const disk = formatBytes(calcUserDisk(uid, u.ip));
     socket.emit('user-profile', {
       uid,
       name: u.name || 'Anon',
       color: u.color || '#666,#999',
       avatar: avatarUrl(u.avatar),
-      messages: msgCount || 0,
-      media: mediaCount || 0,
+      messages: msgCount,
+      media: mediaCount,
       disk
     });
   });
@@ -2073,22 +2174,22 @@ io.on('connection', (socket) => {
 
     if (q) {
       const param = '%' + q + '%';
-      total = db.prepare('SELECT COUNT(*) c FROM posts WHERE title LIKE ? OR body LIKE ?').get(param, param).c;
+      total = countSearchPosts.get(param, param)?.c || 0;
       if (sort === 'latest') {
-        rows = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?').all(param, param, limit, offset);
+        rows = searchPostsDesc.all(param, param, limit, offset);
       } else if (sort === 'oldest') {
-        rows = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id ASC LIMIT ? OFFSET ?').all(param, param, limit, offset);
+        rows = searchPostsAsc.all(param, param, limit, offset);
       } else {
-        rows = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY (COALESCE(upvotes,0) - COALESCE(downvotes,0) + COALESCE(comments_count,0)*2 + COALESCE(views,0)) DESC, id DESC LIMIT ? OFFSET ?').all(param, param, limit, offset);
+        rows = searchPostsHot.all(param, param, limit, offset);
       }
     } else {
-      total = db.prepare('SELECT COUNT(*) c FROM posts').get().c;
+      total = countAllPosts.get()?.c || 0;
       if (sort === 'latest') {
-        rows = db.prepare('SELECT * FROM posts ORDER BY id DESC LIMIT ? OFFSET ?').all(limit, offset);
+        rows = listPostsDesc.all(limit, offset);
       } else if (sort === 'oldest') {
-        rows = db.prepare('SELECT * FROM posts ORDER BY id ASC LIMIT ? OFFSET ?').all(limit, offset);
+        rows = listPostsAsc.all(limit, offset);
       } else {
-        rows = db.prepare('SELECT * FROM posts ORDER BY (COALESCE(upvotes,0) - COALESCE(downvotes,0) + COALESCE(comments_count,0)*2 + COALESCE(views,0)) DESC, id DESC LIMIT ? OFFSET ?').all(limit, offset);
+        rows = listPostsHot.all(limit, offset);
       }
     }
 
@@ -2122,7 +2223,7 @@ io.on('connection', (socket) => {
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
     const dayIso = dayStart.toISOString();
-    const todayCount = db.prepare('SELECT COUNT(*) c FROM posts WHERE ip = ? AND created_at >= ?').get(ip, dayIso).c;
+    const todayCount = countPostsTodayStmt.get(ip, dayIso)?.c || 0;
     if (todayCount >= MAX_POSTS_PER_DAY) {
       socket.emit('error', 'Maximum ' + MAX_POSTS_PER_DAY + ' posts per day reached');
       return;
@@ -2130,9 +2231,7 @@ io.on('connection', (socket) => {
 
     // Identical post within 24h (same title + body by same IP)
     const dupWindow = new Date(Date.now() - DUPLICATE_POST_HOURS * 60 * 60 * 1000).toISOString();
-    const dup = db.prepare(
-      'SELECT id FROM posts WHERE ip = ? AND title = ? AND body = ? AND created_at >= ? LIMIT 1'
-    ).get(ip, title, body, dupWindow);
+    const dup = findDuplicatePostStmt.get(ip, title, body, dupWindow);
     if (dup) {
       socket.emit('error', 'Identical post already exists within 24 hours');
       return;
@@ -2147,9 +2246,7 @@ io.on('connection', (socket) => {
     let videoFile = null;
     if (typeof payload.video === 'string' && payload.video) {
       // Stricter video daily limit (disk)
-      const vidCount = db.prepare(
-        "SELECT COUNT(*) c FROM posts WHERE ip = ? AND created_at >= ? AND video IS NOT NULL AND video != ''"
-      ).get(ip, dayIso).c;
+      const vidCount = countVideosTodayStmt.get(ip, dayIso)?.c || 0;
       if (vidCount >= MAX_VIDEOS_PER_DAY) {
         socket.emit('error', 'Maximum ' + MAX_VIDEOS_PER_DAY + ' videos per day (disk protection)');
         return;

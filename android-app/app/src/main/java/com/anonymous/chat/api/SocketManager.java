@@ -50,6 +50,7 @@ public class SocketManager {
     }
     private volatile PendingAuthAction pendingAuthAction = PendingAuthAction.NONE;
     private volatile String pendingAuthData = null;
+    private volatile boolean isAuthenticated = false;
 
     // Ping tracking
     private long pingStartTime = 0;
@@ -61,7 +62,14 @@ public class SocketManager {
         @Override
         public void run() {
             if (!isAppForeground) {
-                // Background: do not wake CPU or measure ping to conserve battery
+                // Background watchdog: verify connection every 30s to keep notifications alive
+                if (socket == null || !socket.connected()) {
+                    if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                        Log.d(TAG, "Background watchdog reconnecting socket to " + currentServerUrl);
+                        connect(currentServerUrl);
+                    }
+                }
+                mainHandler.postDelayed(this, 30000);
                 return;
             }
             if (socket != null && socket.connected()) {
@@ -187,16 +195,16 @@ public class SocketManager {
 
     public void setAppForeground(boolean foreground) {
         this.isAppForeground = foreground;
-        if (foreground) {
-            mainHandler.removeCallbacks(pingRunnable);
-            mainHandler.post(pingRunnable);
-        } else {
-            mainHandler.removeCallbacks(pingRunnable);
-        }
+        mainHandler.removeCallbacks(pingRunnable);
+        mainHandler.post(pingRunnable);
     }
 
     public boolean isAppForeground() {
         return isAppForeground;
+    }
+
+    public boolean isAuthenticated() {
+        return isAuthenticated;
     }
 
     public UserProfile getMyProfile() {
@@ -226,20 +234,24 @@ public class SocketManager {
     public void connect(String serverUrl) {
         if (serverUrl == null || serverUrl.trim().isEmpty()) return;
 
-        // If already connected or connecting to the exact same server, do NOT tear down socket!
+        // If already connected to the exact same server, do NOT tear down socket!
         if (socket != null && serverUrl.equals(currentServerUrl)) {
             if (socket.connected()) {
                 Log.d(TAG, "Socket already connected to " + serverUrl);
                 return;
             }
-            Log.d(TAG, "Reconnecting existing socket to " + serverUrl);
-            socket.connect();
-            return;
+            try {
+                socket.disconnect();
+                socket.off();
+            } catch (Exception ignored) {}
+            socket = null;
         }
 
         if (socket != null) {
-            socket.disconnect();
-            socket.off();
+            try {
+                socket.disconnect();
+                socket.off();
+            } catch (Exception ignored) {}
             socket = null;
         }
 
@@ -251,12 +263,12 @@ public class SocketManager {
 
             IO.Options options = IO.Options.builder()
                     .setQuery("mac=" + deviceMac)
-                    .setTransports(new String[]{"polling", "websocket"})
+                    .setTransports(new String[]{"websocket", "polling"})
                     .setReconnection(true)
                     .setReconnectionAttempts(Integer.MAX_VALUE)
-                    .setReconnectionDelay(300)
+                    .setReconnectionDelay(200)
                     .setReconnectionDelayMax(1500)
-                    .setTimeout(10000)
+                    .setTimeout(8000)
                     .build();
 
             socket = IO.socket(URI.create(serverUrl), options);
@@ -339,12 +351,11 @@ public class SocketManager {
                 }
             });
 
-            if (pendingAuthAction != PendingAuthAction.NONE) {
-                flushPendingAuth();
-            }
+            flushPendingAuth();
         });
 
         socket.on(Socket.EVENT_DISCONNECT, args -> {
+            isAuthenticated = false;
             mainHandler.post(() -> {
                 mainHandler.removeCallbacks(pingRunnable);
                 for (ConnectionListener l : connectionListeners) l.onDisconnected();
@@ -352,6 +363,7 @@ public class SocketManager {
         });
 
         socket.on(Socket.EVENT_CONNECT_ERROR, args -> {
+            isAuthenticated = false;
             String err = (args.length > 0 && args[0] != null) ? args[0].toString() : "Connection Error";
             mainHandler.post(() -> {
                 for (ConnectionListener l : connectionListeners) l.onConnectionError(err);
@@ -372,6 +384,7 @@ public class SocketManager {
 
         // Auth handling
         socket.on("auto-auth", args -> {
+            isAuthenticated = true;
             if (args.length > 0 && args[0] != null && appContext != null) {
                 try {
                     JSONObject obj = (JSONObject) args[0];
@@ -384,21 +397,25 @@ public class SocketManager {
         });
 
         socket.on("require-auth", args -> {
+            isAuthenticated = false;
             flushPendingAuth();
         });
 
         socket.on("auth-error", args -> {
             pendingAuthAction = PendingAuthAction.NONE;
             pendingAuthData = null;
-            if (appContext != null) {
-                PreferenceManager.getInstance(appContext).setAuthKey(null);
-            }
+            isAuthenticated = false;
             String msg = (args.length > 0 && args[0] != null) ? args[0].toString() : "Invalid key";
             try {
                 if (args[0] instanceof JSONObject) {
                     msg = ((JSONObject) args[0]).optString("message", msg);
                 }
             } catch (Exception ignored) {}
+            // ONLY clear saved key if the key was invalid on login
+            // NEVER clear saved key if error was "This key is already taken"
+            if ("Invalid key".equalsIgnoreCase(msg) && appContext != null) {
+                PreferenceManager.getInstance(appContext).setAuthKey(null);
+            }
             String finalMsg = msg;
             mainHandler.post(() -> {
                 for (AuthListener l : authListeners) l.onAuthError(finalMsg);
@@ -408,6 +425,7 @@ public class SocketManager {
         socket.on("key-created", args -> {
             pendingAuthAction = PendingAuthAction.NONE;
             pendingAuthData = null;
+            isAuthenticated = true;
             if (args.length > 0 && args[0] != null && appContext != null) {
                 try {
                     JSONObject obj = (JSONObject) args[0];
@@ -442,6 +460,7 @@ public class SocketManager {
         socket.on("profile", args -> {
             pendingAuthAction = PendingAuthAction.NONE;
             pendingAuthData = null;
+            isAuthenticated = true;
             if (args.length == 0 || args[0] == null) return;
             try {
                 JSONObject obj = (JSONObject) args[0];
@@ -914,6 +933,18 @@ public class SocketManager {
         if (key == null || key.trim().isEmpty()) return;
         String cleanKey = key.trim();
 
+        // If socket is already connected and authenticated with our profile, immediately confirm success!
+        if (socket != null && socket.connected() && isAuthenticated && myProfile != null) {
+            String savedKey = appContext != null ? PreferenceManager.getInstance(appContext).getAuthKey() : null;
+            if (cleanKey.equals(savedKey)) {
+                Log.d(TAG, "Already authenticated with key. Dispatching profile immediately.");
+                mainHandler.post(() -> {
+                    for (ProfileListener l : profileListeners) l.onProfileLoaded(myProfile);
+                });
+                return;
+            }
+        }
+
         if (socket == null || !socket.connected()) {
             Log.d(TAG, "authKey queued (waiting for socket connection)");
             pendingAuthAction = PendingAuthAction.AUTH;
@@ -997,6 +1028,7 @@ public class SocketManager {
     public void logout() {
         pendingAuthAction = PendingAuthAction.NONE;
         pendingAuthData = null;
+        isAuthenticated = false;
         if (socket != null && socket.connected()) {
             socket.emit("logout");
         }

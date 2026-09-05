@@ -1245,22 +1245,36 @@ function resetUnstuckFlags() {
   if (inputEl && typeof topicLocked !== 'undefined' && !topicLocked) inputEl.disabled = false;
 }
 
+let _consecutiveConnectErrors = 0;
 socket.on('disconnect', (reason) => {
   resetUnstuckFlags();
-  if (reason !== 'io client disconnect') {
-    _isReconnecting = true;
+  _isReconnecting = true;
+  if (reason === 'io server disconnect') {
+    showConnBanner('Server disconnected, reconnecting...');
+    setTimeout(() => {
+      try { socket.connect(); } catch(e) {}
+    }, 300);
+  } else if (reason !== 'io client disconnect') {
     showConnBanner('Connection interrupted, reconnecting...');
   }
 });
 
 socket.on('connect_error', () => {
   resetUnstuckFlags();
+  _consecutiveConnectErrors++;
+  if (_consecutiveConnectErrors >= 2 && socket.io && socket.io.opts) {
+    socket.io.opts.transports = ['polling', 'websocket'];
+  }
   if (_isReconnecting) {
     showConnBanner('Reconnecting to server...');
   }
 });
 
 socket.on('connect', () => {
+  _consecutiveConnectErrors = 0;
+  if (socket.io && socket.io.opts) {
+    socket.io.opts.transports = ['websocket', 'polling'];
+  }
   resetUnstuckFlags();
   hideConnBanner();
   if (!window.__pingIv) window.__pingIv = setInterval(() => socket.emit('ping-check', Date.now()), 3000);
@@ -1287,7 +1301,7 @@ setInterval(() => {
     resetUnstuckFlags();
     try { socket.connect(); } catch(e) {}
   }
-}, 4000);
+}, 2500);
 
 // Re-sync when tab becomes visible again (handles stale connections)
 let _lastVisibleAt = Date.now();
@@ -1597,10 +1611,14 @@ function playClickSound() {
 function playNotifySound() {
   if (!soundOn) return;
   const now = Date.now();
-  if (now - _lastSoundAt < 380) return;
+  if (now - _lastSoundAt < 280) return;
   _lastSoundAt = now;
 
-  let played = false;
+  const ctx = getAudioContext();
+  if (ctx && ctx.state === 'running') {
+    synthChime();
+    return;
+  }
   try {
     if (!_popAudio) {
       _popAudio = new Audio('/pop.wav');
@@ -1610,9 +1628,7 @@ function playNotifySound() {
     _popAudio.volume = 0.55;
     const p = _popAudio.play();
     if (p && typeof p.catch === 'function') {
-      p.then(() => { played = true; }).catch(() => {
-        if (!played) synthChime();
-      });
+      p.catch(() => synthChime());
     }
   } catch (e) {
     synthChime();
@@ -3000,7 +3016,7 @@ function buildExComment(c){
   if(c.parentId) div.dataset.parentId = c.parentId;
   const colors=(c.color||'#666,#999').split(',');
   const av='<div class="ex-av2" style="background:linear-gradient(135deg,'+colors[0]+','+(colors[1]||colors[0])+')">'
-    +(c.avatar?'<img src="'+esc(c.avatar)+'" alt="" referrerpolicy="no-referrer"/>':'')+'</div>';
+    +(c.avatar?'<img src="'+esc(c.avatar)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>':'')+'</div>';
   const replyTo = c.replyName
     ? '<span class="ex-reply-to">▸ '+esc(c.replyName)+'</span>'
     : '';
@@ -3010,7 +3026,7 @@ function buildExComment(c){
   if (cmtImgs.length) {
     const multiCls = cmtImgs.length > 1 ? ' multi' : '';
     imgHtml = '<div class="ex-cmt-media' + multiCls + '">'
-      + cmtImgs.map(src => '<img src="' + esc(src) + '" alt="" />').join('')
+      + cmtImgs.map(src => '<img src="' + esc(src) + '" alt="" loading="lazy" decoding="async" />').join('')
       + '</div>';
   }
   div.innerHTML=av+'<div class="ex-cmt-body">'
@@ -3132,7 +3148,7 @@ function buildExCard(p){
   const colors=(p.color||'#666,#999').split(',');
   const avStyle='background:linear-gradient(135deg,'+colors[0]+','+(colors[1]||colors[0])+')';
   const avHtml='<div class="ex-card-av" style="'+avStyle+'">'
-    +(p.avatar?'<img src="'+esc(p.avatar)+'" alt="" referrerpolicy="no-referrer"/>':'')+'</div>';
+    +(p.avatar?'<img src="'+esc(p.avatar)+'" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"/>':'')+'</div>';
   const tags=(p.tags||[]).map(t=>'<span class="ex-tag">#'+esc(t)+'</span>').join('');
   let media='';
   if(p.video){
@@ -3143,7 +3159,7 @@ function buildExCard(p){
   } else if(p.images&&p.images.length){
     const multi=p.images.length>1?' multi':'';
     media='<div class="ex-card-media'+multi+'">'+p.images.map(src=>
-      '<img src="'+esc(src)+'" alt="" loading="lazy"/>'
+      '<img src="'+esc(src)+'" alt="" loading="lazy" decoding="async"/>'
     ).join('')+'</div>';
   }
   const fullBody = plainPreview(p.body||'');
@@ -3954,6 +3970,8 @@ function buildMsgEl(data,prevData,opts){
   if(grouped) av.style.visibility='hidden';
   if(data.avatar){
     const aimg=document.createElement('img');aimg.src=data.avatar;aimg.alt='';aimg.referrerPolicy='no-referrer';
+    aimg.loading = 'lazy';
+    aimg.decoding = 'async';
     aimg.onload=()=>{ if(stuckToBottom || _isEnteringChat) scrollBottom(); };
     av.appendChild(aimg);
   }
@@ -3982,6 +4000,8 @@ function buildMsgEl(data,prevData,opts){
     const row=document.createElement('div');row.className='msg-media';
     imgs.forEach(src=>{
       const img=document.createElement('img');img.src=src;
+      img.loading = 'lazy';
+      img.decoding = 'async';
       img.onload=()=>{ if(stuckToBottom || _isEnteringChat) scrollBottom(); };
       img.onclick=()=>{lbImg.src=src;lightbox.classList.add('show')};
       row.appendChild(img);

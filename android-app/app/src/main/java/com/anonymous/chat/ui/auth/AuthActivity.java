@@ -61,14 +61,24 @@ public class AuthActivity extends AppCompatActivity implements
         String savedKey = prefs.getAuthKey();
         if (savedKey != null && !savedKey.isEmpty()) {
             binding.etAuthKeyInput.setText(savedKey);
+            // If already connected and profile is loaded, jump straight to MainActivity
+            if (SocketManager.getInstance().isConnected() && SocketManager.getInstance().getMyProfile() != null) {
+                Intent intent = new Intent(this, MainActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
         }
 
         // Connect socket
         String serverUrl = prefs.getServerBaseUrl();
         if (!SocketManager.getInstance().isConnected()) {
+            if (savedKey != null && !savedKey.isEmpty()) {
+                setLoading(true, "Logging in...");
+            }
             SocketManager.getInstance().connect(serverUrl);
         } else if (savedKey != null && !savedKey.isEmpty()) {
-            setLoading(true, "Authenticating saved key...");
+            setLoading(true, "Logging in...");
             SocketManager.getInstance().authKey(savedKey);
         }
     }
@@ -243,7 +253,17 @@ public class AuthActivity extends AppCompatActivity implements
     @Override
     public void onConnected() {
         hideError();
-        if (binding.panelAuthLoading.getVisibility() == View.VISIBLE) {
+        String savedKey = prefs.getAuthKey();
+        if (savedKey != null && !savedKey.isEmpty() && !isRegistering) {
+            if (SocketManager.getInstance().getMyProfile() != null) {
+                Intent intent = new Intent(this, MainActivity.class);
+                startActivity(intent);
+                finish();
+                return;
+            }
+            setLoading(true, "Logging in...");
+            SocketManager.getInstance().authKey(savedKey);
+        } else if (binding.panelAuthLoading.getVisibility() == View.VISIBLE) {
             binding.tvAuthLoadingText.setText("Connected. Authenticating...");
         }
     }
