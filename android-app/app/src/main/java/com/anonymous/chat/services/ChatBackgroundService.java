@@ -62,9 +62,8 @@ public class ChatBackgroundService extends Service {
         try {
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
             if (pm != null) {
-                serviceWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "anom:bg_service_wake");
-                serviceWakeLock.setReferenceCounted(false);
-                serviceWakeLock.acquire();
+                PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "anom:bg_service_start");
+                wl.acquire(3000);
             }
         } catch (Exception ignored) {}
 
@@ -158,7 +157,7 @@ public class ChatBackgroundService extends Service {
             channel.enableVibration(false);
             channel.setSound(null, null);
 
-            NotificationManager manager = getSystemService(NotificationManager.class);
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
             }
@@ -167,7 +166,7 @@ public class ChatBackgroundService extends Service {
 
     private Notification buildServiceNotification() {
         return new NotificationCompat.Builder(this, CHANNEL_SERVICE)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_notification_stat)
                 .setContentTitle("Anonymous Chat")
                 .setContentText("Connected in background")
                 .setPriority(NotificationCompat.PRIORITY_MIN)

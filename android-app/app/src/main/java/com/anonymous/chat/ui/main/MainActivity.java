@@ -469,14 +469,18 @@ public class MainActivity extends AppCompatActivity implements
         currentLobbyMode = mode;
         if ("topics".equals(mode)) {
             setActiveButton(binding.btnTabTopics, binding.btnTabExplore);
-            binding.swipeTopics.setVisibility(View.VISIBLE);
             binding.swipeExplore.setVisibility(View.GONE);
+            binding.swipeTopics.setAlpha(0f);
+            binding.swipeTopics.setVisibility(View.VISIBLE);
+            binding.swipeTopics.animate().alpha(1f).setDuration(160).start();
             binding.toolbarTopics.setVisibility(View.VISIBLE);
             binding.toolbarExplore.setVisibility(View.GONE);
         } else {
             setActiveButton(binding.btnTabExplore, binding.btnTabTopics);
             binding.swipeTopics.setVisibility(View.GONE);
+            binding.swipeExplore.setAlpha(0f);
             binding.swipeExplore.setVisibility(View.VISIBLE);
+            binding.swipeExplore.animate().alpha(1f).setDuration(160).start();
             binding.toolbarTopics.setVisibility(View.GONE);
             binding.toolbarExplore.setVisibility(View.VISIBLE);
             if (postAdapter.getItemCount() == 0) {

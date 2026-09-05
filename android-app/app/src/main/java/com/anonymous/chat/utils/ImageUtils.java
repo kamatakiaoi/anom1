@@ -11,6 +11,8 @@ import android.util.Base64;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
+import com.anonymous.chat.R;
+
 public class ImageUtils {
 
     public static String getFileName(Context context, Uri uri) {
@@ -205,6 +207,9 @@ public class ImageUtils {
             String full = getFullMediaUrl(serverUrl, mediaUrl);
             com.bumptech.glide.RequestBuilder<android.graphics.drawable.Drawable> rb = com.bumptech.glide.Glide.with(context)
                     .load(full)
+                    .priority(com.bumptech.glide.Priority.HIGH)
+                    .thumbnail(0.15f)
+                    .placeholder(R.drawable.bg_card_topic)
                     .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL);
             if (!fullRes) {
@@ -240,6 +245,7 @@ public class ImageUtils {
                     com.bumptech.glide.Glide.with(context)
                             .load(decoded)
                             .override(120, 120)
+                            .priority(com.bumptech.glide.Priority.HIGH)
                             .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                             .circleCrop()
                             .into(target);
@@ -251,6 +257,7 @@ public class ImageUtils {
             com.bumptech.glide.Glide.with(context)
                     .load(full)
                     .override(120, 120)
+                    .priority(com.bumptech.glide.Priority.HIGH)
                     .format(com.bumptech.glide.load.DecodeFormat.PREFER_RGB_565)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL)
                     .circleCrop()

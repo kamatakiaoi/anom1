@@ -16,8 +16,18 @@
         <item name="android:windowBackground">@color/bg_main</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
 
+        <!-- Silky smooth activity transitions across the entire app -->
+        <item name="android:windowAnimationStyle">@style/CustomWindowAnimations</item>
+
         <!-- Bottom Sheet Dialog transparent background to remove grey/white square outline -->
         <item name="bottomSheetDialogTheme">@style/CustomBottomSheetDialogTheme</item>
+    </style>
+
+    <style name="CustomWindowAnimations">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
     </style>
 
     <style name="CustomBottomSheetDialogTheme" parent="Theme.Design.Light.BottomSheetDialog">

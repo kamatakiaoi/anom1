@@ -239,15 +239,9 @@ app.get('/uploads/:filename', (req, res) => {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
 
-      // Progressive streaming: 3MB for video, 4MB for audio on open-ended requests
-      // If client requests explicit range (seek / buffer probe), respect requestedEnd without truncating
-      let end;
-      if (parts[1]) {
-        end = parseInt(parts[1], 10);
-      } else {
-        const CHUNK_SIZE = isVideo ? (3 * 1024 * 1024) : (isAudio ? (4 * 1024 * 1024) : (4 * 1024 * 1024));
-        end = Math.min(start + CHUNK_SIZE - 1, fileSize - 1);
-      }
+      // RFC 7233 Range: if explicit end requested, honor it; otherwise stream to end of file
+      // Backpressure on TCP socket naturally regulates bandwidth without player starvation/stutter
+      let end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
 
       if (isNaN(start) || isNaN(end) || start >= fileSize || end >= fileSize || start > end) {
         res.setHeader('Content-Range', `bytes */${fileSize}`);

@@ -25,6 +25,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 public class VideoThumbnailManager {
     private static final String TAG = "VideoThumbnailManager";
@@ -34,7 +40,12 @@ public class VideoThumbnailManager {
     private static volatile VideoThumbnailManager instance;
 
     private final LruCache<String, Bitmap> memoryCache;
-    private final ExecutorService executor = Executors.newFixedThreadPool(4);
+    private final ExecutorService executor = Executors.newFixedThreadPool(2, r -> {
+        Thread t = new Thread(r, "video-thumb-worker");
+        t.setPriority(Thread.MIN_PRIORITY + 1);
+        t.setDaemon(true);
+        return t;
+    });
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final Set<String> activeExtractingUrls = new HashSet<>();
 
@@ -109,11 +120,14 @@ public class VideoThumbnailManager {
                         extractedBitmap = extractFrameFromFile(localCached);
                     }
 
-                    // If not on disk, extract frame directly over HTTP Range headers (<100ms)
+                    // If not on disk, extract frame directly via fast header range probe (<50ms)
                     if (extractedBitmap == null) {
                         String serverUrl = PreferenceManager.getInstance(appContext).getServerBaseUrl();
                         String fullUrl = ImageUtils.getFullMediaUrl(serverUrl, cleanUrl);
-                        extractedBitmap = extractFrameFromNetwork(fullUrl);
+                        extractedBitmap = extractFrameViaFastRange(appContext, fullUrl);
+                        if (extractedBitmap == null) {
+                            extractedBitmap = extractFrameFromNetwork(fullUrl);
+                        }
                     }
 
                     if (extractedBitmap != null) {
@@ -185,6 +199,48 @@ public class VideoThumbnailManager {
                 retriever.release();
             } catch (Exception ignored) {}
         }
+    }
+
+    private Bitmap extractFrameViaFastRange(Context context, String fullUrl) {
+        File tempFile = null;
+        MediaMetadataRetriever retriever = null;
+        try {
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .connectTimeout(4, TimeUnit.SECONDS)
+                    .readTimeout(6, TimeUnit.SECONDS)
+                    .build();
+            Request request = new Request.Builder()
+                    .url(fullUrl)
+                    .header("User-Agent", "AnonymousChat-Android/3.6.16")
+                    .header("Range", "bytes=0-393215") // Fast 384KB header probe
+                    .build();
+            try (Response response = client.newCall(request).execute()) {
+                ResponseBody body = response.body();
+                if (response.isSuccessful() && body != null) {
+                    tempFile = File.createTempFile("thumb_probe_", ".mp4", context.getCacheDir());
+                    try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+                        fos.write(body.bytes());
+                        fos.flush();
+                    }
+                    retriever = new MediaMetadataRetriever();
+                    retriever.setDataSource(tempFile.getAbsolutePath());
+                    Bitmap frame = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+                    if (frame == null) {
+                        frame = retriever.getFrameAtTime();
+                    }
+                    return frame;
+                }
+            }
+        } catch (Exception ignored) {
+        } finally {
+            if (retriever != null) {
+                try { retriever.release(); } catch (Exception ignored) {}
+            }
+            if (tempFile != null && tempFile.exists()) {
+                try { tempFile.delete(); } catch (Exception ignored) {}
+            }
+        }
+        return null;
     }
 
     private Bitmap extractFrameFromNetwork(String fullUrl) {
