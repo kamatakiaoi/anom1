@@ -201,9 +201,20 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private long lastNavigationClickTime = 0;
+    private boolean canNavigate() {
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (now - lastNavigationClickTime < 500) {
+            return false;
+        }
+        lastNavigationClickTime = now;
+        return true;
+    }
+
     private void setupUI() {
         // Topics Adapter
         topicAdapter = new TopicAdapter(topic -> {
+            if (!canNavigate()) return;
             if ("patch notes".equalsIgnoreCase(topic.getName())) {
                 startActivity(new Intent(MainActivity.this, PatchNotesActivity.class));
             } else {
@@ -224,6 +235,7 @@ public class MainActivity extends AppCompatActivity implements
         postAdapter = new PostFeedAdapter(new PostFeedAdapter.PostInteractionListener() {
             @Override
             public void onPostClicked(Post post) {
+                if (!canNavigate()) return;
                 Intent intent = new Intent(MainActivity.this, PostDetailActivity.class);
                 intent.putExtra(PostDetailActivity.EXTRA_POST_ID, post.getId());
                 startActivity(intent);
@@ -241,6 +253,7 @@ public class MainActivity extends AppCompatActivity implements
 
             @Override
             public void onMediaClicked(String mediaUrl, boolean isVideo) {
+                if (!canNavigate()) return;
                 Intent intent = new Intent(MainActivity.this, LightboxActivity.class);
                 if (isVideo) {
                     intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, mediaUrl);
@@ -445,6 +458,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void switchLobbyMode(String mode) {
+        if (mode.equals(currentLobbyMode)) return;
         currentLobbyMode = mode;
         if ("topics".equals(mode)) {
             setActiveButton(binding.btnTabTopics, binding.btnTabExplore);
@@ -458,11 +472,16 @@ public class MainActivity extends AppCompatActivity implements
             binding.swipeExplore.setVisibility(View.VISIBLE);
             binding.toolbarTopics.setVisibility(View.GONE);
             binding.toolbarExplore.setVisibility(View.VISIBLE);
-            switchSort("latest");
+            if (postAdapter.getItemCount() == 0) {
+                switchSort("latest");
+            }
         }
     }
 
     private void switchSort(String sort) {
+        if (sort.equals(currentExploreSort) && postAdapter.getItemCount() > 0) {
+            return;
+        }
         currentExploreSort = sort;
         if ("hot".equals(sort)) {
             binding.btnSortHot.setBackgroundResource(R.drawable.bg_btn_primary);

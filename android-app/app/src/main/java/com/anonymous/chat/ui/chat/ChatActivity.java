@@ -215,6 +215,14 @@ public class ChatActivity extends AppCompatActivity implements
             }
 
             @Override
+            public void onVideoClickedWithPosition(String mediaUrl, int positionMs) {
+                Intent intent = new Intent(ChatActivity.this, LightboxActivity.class);
+                intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, mediaUrl);
+                intent.putExtra(LightboxActivity.EXTRA_VIDEO_POSITION, positionMs);
+                startActivity(intent);
+            }
+
+            @Override
             public void onAudioClicked(String audioUrl) {
                 AudioPlayerManager.getInstance().playOrPause(audioUrl);
             }
@@ -412,7 +420,7 @@ public class ChatActivity extends AppCompatActivity implements
         boolean isAtBottom = !binding.rvChatMessages.canScrollVertically(1);
         messageAdapter.addMessage(message);
         if (isAtBottom || (messageAdapter.getItemCount() > 0 && messageAdapter.getItemViewType(messageAdapter.getItemCount() - 1) == 1)) {
-            binding.rvChatMessages.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
+            binding.rvChatMessages.scrollToPosition(messageAdapter.getItemCount() - 1);
         }
     }
 
@@ -482,6 +490,9 @@ public class ChatActivity extends AppCompatActivity implements
         sm.removeMessageListener(this);
         sm.removeUserProfileListener(this);
         sm.removeGeneralGlobalListener(this);
+        if (messageAdapter != null) {
+            messageAdapter.cleanup();
+        }
         com.anonymous.chat.services.ChatBackgroundService.start(this);
     }
 }

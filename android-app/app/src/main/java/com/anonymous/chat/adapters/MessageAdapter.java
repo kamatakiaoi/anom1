@@ -47,11 +47,15 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         void onMediaClicked(String mediaUrl, boolean isVideo);
         void onAudioClicked(String audioUrl);
         void onJumpToMessage(int messageId);
+        default void onVideoClickedWithPosition(String mediaUrl, int positionMs) {
+            onMediaClicked(mediaUrl, true);
+        }
     }
 
     private final List<Message> messages = new ArrayList<>();
     private final MessageInteractionListener listener;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private static final java.util.concurrent.ExecutorService diffExecutor = java.util.concurrent.Executors.newSingleThreadExecutor();
 
     public MessageAdapter(MessageInteractionListener listener) {
         this.listener = listener;
@@ -75,7 +79,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         final List<Message> oldList = new ArrayList<>(messages);
         final List<Message> newList = new ArrayList<>(newMessages);
 
-        new Thread(() -> {
+        diffExecutor.execute(() -> {
             DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new DiffUtil.Callback() {
                 @Override
                 public int getOldListSize() { return oldList.size(); }
@@ -108,7 +112,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 messages.addAll(newList);
                 diffResult.dispatchUpdatesTo(MessageAdapter.this);
             });
-        }).start();
+        });
     }
 
     public void addMessage(Message message) {
@@ -605,12 +609,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
             View.OnClickListener videoClickListener = v -> {
                 if (vvMsgVideoInline.isPlaying()) {
-                    // 2nd Click -> Launch Fullscreen
+                    // 2nd Click -> Launch Fullscreen resuming from current position
+                    int currentPos = 0;
                     try {
+                        currentPos = vvMsgVideoInline.getCurrentPosition();
                         vvMsgVideoInline.pause();
                     } catch (Exception ignored) {}
                     if (listener != null) {
-                        listener.onMediaClicked(videoUrl, true);
+                        listener.onVideoClickedWithPosition(videoUrl, currentPos);
                     }
                 } else {
                     // 1st Click -> Play Inline
@@ -668,13 +674,27 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             cardMsgVideo.setOnClickListener(videoClickListener);
 
             btnFullscreenVideo.setOnClickListener(v -> {
+                int currentPos = 0;
                 try {
+                    currentPos = vvMsgVideoInline.getCurrentPosition();
                     vvMsgVideoInline.pause();
                 } catch (Exception ignored) {}
-                if (listener != null) listener.onMediaClicked(videoUrl, true);
+                if (listener != null) {
+                    listener.onVideoClickedWithPosition(videoUrl, currentPos);
+                }
             });
         } else {
             cardMsgVideo.setVisibility(View.GONE);
+        }
+    }
+
+    public void cleanup() {
+        if (activePlayingVideo != null) {
+            try {
+                activePlayingVideo.stopPlayback();
+                activePlayingVideo.setVisibility(View.GONE);
+            } catch (Exception ignored) {}
+            activePlayingVideo = null;
         }
     }
 
