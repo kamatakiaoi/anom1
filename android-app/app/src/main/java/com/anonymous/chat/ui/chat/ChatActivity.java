@@ -191,6 +191,15 @@ public class ChatActivity extends AppCompatActivity implements
 
             @Override
             public void onAvatarClicked(String uid, String name, String id) {
+                UserProfile preview = new UserProfile();
+                preview.setUid(uid != null ? uid : "");
+                preview.setName(name != null ? name : "Anon");
+                preview.setId(id != null ? id : "");
+                if (activeProfileDialog != null && activeProfileDialog.isShowing()) {
+                    activeProfileDialog.dismiss();
+                }
+                activeProfileDialog = new UserProfileDialog(ChatActivity.this, preview);
+                activeProfileDialog.show();
                 SocketManager.getInstance().requestUserProfile(uid, name, id);
             }
 
@@ -407,11 +416,17 @@ public class ChatActivity extends AppCompatActivity implements
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
+    private UserProfileDialog activeProfileDialog;
+
     @Override
     public void onUserProfileReceived(UserProfile userProfile) {
         if (!isFinishing() && !isDestroyed() && userProfile != null) {
-            UserProfileDialog dialog = new UserProfileDialog(this, userProfile);
-            dialog.show();
+            if (activeProfileDialog != null && activeProfileDialog.isShowing()) {
+                activeProfileDialog.updateProfile(userProfile);
+            } else {
+                activeProfileDialog = new UserProfileDialog(this, userProfile);
+                activeProfileDialog.show();
+            }
         }
     }
 

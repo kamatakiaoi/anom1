@@ -10,8 +10,8 @@ android {
         applicationId "com.anonymous.chat"
         minSdk 26
         targetSdk 34
-        versionCode 3611
-        versionName "3.6.11"
+        versionCode 3612
+        versionName "3.6.12"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true

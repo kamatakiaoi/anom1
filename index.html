@@ -97,8 +97,49 @@ body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:#0
 .topic-item:active{transform:translateY(0)}
 .topic-item.pinned{border-color:#333;background:#131313}
 .ti-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.ti-name{font-size:16px;font-weight:600;letter-spacing:-0.01em;min-width:0;overflow:hidden}
+.ti-name{font-size:16px;font-weight:600;letter-spacing:-0.01em;min-width:0;overflow:hidden;display:flex;align-items:center;gap:6px}
 .ti-name .ti-name-text{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.ti-unread-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:20px;height:20px;padding:0 6px;border-radius:10px;
+  background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;
+  font-size:11px;font-weight:700;line-height:1;margin-left:4px;
+  box-shadow:0 2px 8px rgba(239,68,68,0.45);flex-shrink:0;
+  animation:pulseUnread 2.2s infinite ease-in-out;
+}
+@keyframes pulseUnread{
+  0%,100%{transform:scale(1);box-shadow:0 2px 8px rgba(239,68,68,0.45)}
+  50%{transform:scale(1.08);box-shadow:0 3px 12px rgba(239,68,68,0.7)}
+}
+.header-unread-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+  background:#ef4444;color:#fff;font-size:10.5px;font-weight:700;line-height:1;
+  margin-left:4px;box-shadow:0 2px 6px rgba(239,68,68,0.4);flex-shrink:0;
+}
+.general-toast{
+  position:fixed;top:20px;right:20px;z-index:10000;
+  display:flex;align-items:center;gap:12px;
+  background:rgba(20,20,22,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid rgba(255,255,255,0.12);border-left:4px solid #2563eb;
+  color:#f5f5f5;padding:10px 14px;border-radius:12px;
+  box-shadow:0 10px 32px rgba(0,0,0,0.55),0 0 16px rgba(37,99,235,0.22);
+  max-width:min(380px,calc(100vw - 32px));cursor:pointer;
+  transform:translateY(-18px) scale(0.96);opacity:0;
+  transition:transform 0.25s cubic-bezier(0.16,1,0.3,1),opacity 0.2s ease;
+  pointer-events:auto;
+}
+.general-toast.show{transform:translateY(0) scale(1);opacity:1}
+.general-toast:hover{background:rgba(26,26,30,0.98);border-color:rgba(255,255,255,0.2)}
+.gt-icon{font-size:18px;flex-shrink:0;line-height:1}
+.gt-content{flex:1;min-width:0}
+.gt-title{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt-title b{color:#60a5fa}
+.gt-text{font-size:12px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.gt-btn{background:#2563eb;color:#fff;border:none;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:6px;cursor:pointer;flex-shrink:0;transition:background 0.15s ease}
+.gt-btn:hover{background:#1d4ed8}
+.gt-close{background:none;border:none;color:#777;font-size:18px;line-height:1;cursor:pointer;padding:0 4px;flex-shrink:0;transition:color 0.15s ease}
+.gt-close:hover{color:#eee}
 .ti-stats{display:flex;align-items:center;gap:14px;flex-shrink:0}
 .ti-stat{display:flex;align-items:center;gap:5px;font-size:13px;color:#888;font-weight:500}
 .ti-stat svg{width:14px;height:14px;flex-shrink:0}
@@ -746,6 +787,7 @@ header{height:52px;min-height:52px;padding:0 12px 0 16px;border-bottom:1px solid
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
     </button>
     <button type="button" id="soundBtnLobby" title="Notification sound" aria-label="Sound"></button>
+    <button type="button" id="profileBtnLobby" title="Profile & notifications" style="background:#e8e8e8;border:none;color:#0a0a0a;font-size:12px;font-weight:600;font-family:inherit;padding:8px 14px;border-radius:10px;cursor:pointer;flex-shrink:0">Profile</button>
     <button type="button" id="logoutBtnLobby" title="Log out" style="background:none;border:1px solid #333;color:#ccc;font-size:12px;font-weight:500;font-family:inherit;padding:8px 14px;border-radius:10px;cursor:pointer;flex-shrink:0">Log Out</button>
   </div>
   <div class="lobby-toolbar" id="lobbyToolbar">
@@ -893,6 +935,7 @@ header{height:52px;min-height:52px;padding:0 12px 0 16px;border-bottom:1px solid
       <button id="backBtn" title="Back to Home">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
         <span class="back-text">Back to Home</span>
+        <span id="backGeneralBadge" class="header-unread-badge" style="display:none"></span>
       </button>
     </div>
     <div class="header-center" id="topicPresence" title="View who's here">
@@ -1006,10 +1049,10 @@ async function computeQuickHash(file) {
 const socket = io({
   query: { mac: deviceMac },
   reconnection: true,
-  reconnectionDelay: 300,
-  reconnectionDelayMax: 1500,
+  reconnectionDelay: 200,
+  reconnectionDelayMax: 1000,
   reconnectionAttempts: Infinity,
-  timeout: 8000,
+  timeout: 6000,
   transports: ['websocket', 'polling']
 });
 
@@ -1221,7 +1264,7 @@ socket.on('connect', () => {
   resetUnstuckFlags();
   hideConnBanner();
   if (!window.__pingIv) window.__pingIv = setInterval(() => socket.emit('ping-check', Date.now()), 3000);
-  if (_isReconnecting || currentAuthKey) {
+  if (_isReconnecting) {
     _isReconnecting = false;
     if (currentAuthKey) {
       socket.emit('auth-key', { key: currentAuthKey, mac: deviceMac });
@@ -1229,8 +1272,11 @@ socket.on('connect', () => {
     if (typeof currentTopic !== 'undefined' && currentTopic && currentTopic.name) {
       socket.emit('join-topic', currentTopic.name);
     }
+  } else if (currentAuthKey) {
+    socket.emit('auth-key', { key: currentAuthKey, mac: deviceMac });
+  } else {
+    socket.emit('get-topics');
   }
-  socket.emit('get-topics');
   if (typeof lobbyMode !== 'undefined' && lobbyMode === 'explore') {
     if (typeof loadExploreFeed === 'function') loadExploreFeed(false);
   }
@@ -1434,6 +1480,7 @@ function saveClientCache() {
     }
   } catch(e) {}
 }
+loadClientCache();
 
 // Preferences (localStorage)
 let msgTz = localStorage.getItem('chat_tz') || 'vn'; // 'vn' | 'utc'
@@ -1469,38 +1516,121 @@ function toggleSound(){
   localStorage.setItem('chat_sound', soundOn ? '1' : '0');
   updateSoundBtn();
 }
-function playClickSound(){
+// Instant Web Audio Chime & Preloaded Sound Engine
+let _audioCtx = null;
+let _popAudio = null;
+let _clickAudio = null;
+
+function getAudioContext() {
+  try {
+    if (!_audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) _audioCtx = new AC();
+    }
+    if (_audioCtx && _audioCtx.state === 'suspended') {
+      _audioCtx.resume().catch(() => {});
+    }
+  } catch (e) {}
+  return _audioCtx;
+}
+
+function primeAudioEngine() {
+  getAudioContext();
+  if (!_popAudio) {
+    _popAudio = new Audio('/pop.wav');
+    _popAudio.preload = 'auto';
+  }
+  if (!_clickAudio) {
+    _clickAudio = new Audio('/click.wav');
+    _clickAudio.preload = 'auto';
+  }
+}
+
+['pointerdown', 'touchstart', 'keydown', 'click'].forEach(evt => {
+  window.addEventListener(evt, primeAudioEngine, { once: true, passive: true });
+});
+
+function synthChime() {
+  const ctx = getAudioContext();
+  if (!ctx) return;
+  try {
+    const now = ctx.currentTime;
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(587.33, now); // D5
+    osc1.frequency.exponentialRampToValueAtTime(880, now + 0.08); // A5
+
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(880, now);
+    osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.12); // D6
+
+    gain.gain.setValueAtTime(0.24, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.36);
+    osc2.stop(now + 0.36);
+  } catch (e) {}
+}
+
+function playClickSound() {
   if (!soundOn) return;
   try {
-    const a = playClickSound.audio || (playClickSound.audio = new Audio('/click.wav'));
-    a.currentTime = 0;
-    a.volume = 0.42;
-    a.play().catch(()=>{});
-  } catch(e) {}
+    if (!_clickAudio) {
+      _clickAudio = new Audio('/click.wav');
+      _clickAudio.preload = 'auto';
+    }
+    _clickAudio.currentTime = 0;
+    _clickAudio.volume = 0.42;
+    _clickAudio.play().catch(() => {});
+  } catch (e) {}
 }
-function playNotifySound(){
+
+function playNotifySound() {
   if (!soundOn) return;
   const now = Date.now();
-  if (now - _lastSoundAt < 500) return;
+  if (now - _lastSoundAt < 380) return;
   _lastSoundAt = now;
+
+  let played = false;
   try {
-    const a = playNotifySound.audio || (playNotifySound.audio = new Audio('/pop.wav'));
-    a.currentTime = 0;
-    a.volume = 0.51;
-    a.play().catch(()=>{});
-  } catch(e) {}
+    if (!_popAudio) {
+      _popAudio = new Audio('/pop.wav');
+      _popAudio.preload = 'auto';
+    }
+    _popAudio.currentTime = 0;
+    _popAudio.volume = 0.55;
+    const p = _popAudio.play();
+    if (p && typeof p.catch === 'function') {
+      p.then(() => { played = true; }).catch(() => {
+        if (!played) synthChime();
+      });
+    }
+  } catch (e) {
+    synthChime();
+  }
 }
 
 // --- Browser & In-App Notifications ---
 let _origDocTitle = 'Anonymous Chat';
 let _titleFlashIv = null;
+let generalUnreadCount = 0;
 
 function flashDocTitle(text) {
   if (document.hasFocus() && !document.hidden) return;
-  if (_titleFlashIv) return;
   const t1 = '💬 ' + (text || 'New message in General');
   const t2 = _origDocTitle;
   let toggle = false;
+  if (_titleFlashIv) clearInterval(_titleFlashIv);
+  document.title = t1;
   _titleFlashIv = setInterval(() => {
     document.title = toggle ? t1 : t2;
     toggle = !toggle;
@@ -1511,14 +1641,100 @@ function stopFlashDocTitle() {
   if (_titleFlashIv) {
     clearInterval(_titleFlashIv);
     _titleFlashIv = null;
-    document.title = (currentTopic && currentTopic.name) ? (currentTopic.name + ' · Anonymous Chat') : _origDocTitle;
+  }
+  document.title = (currentTopic && currentTopic.name) ? (currentTopic.name + ' · Anonymous Chat') : _origDocTitle;
+}
+
+window.addEventListener('focus', () => {
+  if (currentTopic && currentTopic.name && currentTopic.name.toLowerCase() === 'general') {
+    stopFlashDocTitle();
+  }
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && currentTopic && currentTopic.name && currentTopic.name.toLowerCase() === 'general') {
+    stopFlashDocTitle();
+  }
+});
+
+function updateGeneralCardUI(data) {
+  const badge = document.getElementById('generalCardBadge');
+  if (badge) {
+    if (generalUnreadCount > 0) {
+      badge.textContent = generalUnreadCount > 99 ? '99+' : String(generalUnreadCount);
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+      badge.textContent = '';
+    }
+  }
+  if (data && topicsWrap) {
+    const pinned = topicsWrap.querySelector('.topic-item.pinned');
+    if (pinned) {
+      const lastEl = pinned.querySelector('.ti-last');
+      if (lastEl) {
+        lastEl.innerHTML = '<b>' + esc(data.name || 'Anon') + '</b>: ' + esc(data.text || '');
+      }
+    }
   }
 }
 
-window.addEventListener('focus', stopFlashDocTitle);
-document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) stopFlashDocTitle();
-});
+function updateHeaderGeneralBadge() {
+  const el = document.getElementById('backGeneralBadge');
+  if (!el) return;
+  const inOtherTopic = (currentTopic && currentTopic.name && currentTopic.name.toLowerCase() !== 'general' && chat.classList.contains('show'));
+  if (inOtherTopic && generalUnreadCount > 0) {
+    el.textContent = generalUnreadCount > 99 ? '99+' : String(generalUnreadCount);
+    el.style.display = 'inline-flex';
+    el.title = generalUnreadCount + ' unread message' + (generalUnreadCount > 1 ? 's' : '') + ' in General';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function showGeneralNotificationToast(data) {
+  if (currentTopic && currentTopic.name && currentTopic.name.toLowerCase() === 'general' && chat.classList.contains('show')) return;
+
+  const existing = document.getElementById('generalToast');
+  if (existing) existing.remove();
+
+  const toastEl = document.createElement('div');
+  toastEl.id = 'generalToast';
+  toastEl.className = 'general-toast';
+  const name = esc(data.name || 'Anon');
+  const text = esc(data.text || (data.hasMedia ? '[Media]' : ''));
+
+  toastEl.innerHTML = '<div class="gt-icon">💬</div>'
+    + '<div class="gt-content">'
+    + '<div class="gt-title">General · <b>' + name + '</b></div>'
+    + '<div class="gt-text">' + text + '</div>'
+    + '</div>'
+    + '<button type="button" class="gt-btn" aria-label="Open General">Open</button>'
+    + '<button type="button" class="gt-close" aria-label="Close">&times;</button>';
+
+  toastEl.onclick = (e) => {
+    if (e.target.classList.contains('gt-close')) {
+      e.stopPropagation();
+      toastEl.classList.remove('show');
+      setTimeout(() => toastEl.remove(), 250);
+      return;
+    }
+    toastEl.classList.remove('show');
+    setTimeout(() => toastEl.remove(), 250);
+    goTopic('General');
+  };
+
+  document.body.appendChild(toastEl);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => toastEl.classList.add('show'));
+  });
+
+  setTimeout(() => {
+    if (toastEl.parentNode) {
+      toastEl.classList.remove('show');
+      setTimeout(() => toastEl.remove(), 250);
+    }
+  }, 5000);
+}
 
 function requestNotifPermission(cb) {
   if (!('Notification' in window)) {
@@ -1527,6 +1743,9 @@ function requestNotifPermission(cb) {
   }
   Notification.requestPermission().then(p => {
     updateNotifStatusUI();
+    if (p === 'granted') {
+      toast('Notifications enabled for General chat!', 'ok');
+    }
     if (typeof cb === 'function') cb(p);
   }).catch(() => {
     updateNotifStatusUI();
@@ -1566,7 +1785,7 @@ function updateNotifStatusUI() {
     btn.onclick = () => {
       requestNotifPermission();
     };
-    if (hint) hint.textContent = 'Click Enable to allow desktop alerts';
+    if (hint) hint.textContent = 'Click Enable to allow desktop alerts for General chat';
   }
 }
 
@@ -1585,24 +1804,25 @@ function showBrowserNotification(name, text) {
   const perm = Notification.permission;
   if (perm !== 'granted') return;
   // Don't show OS popup only if chat is actively focused and visible
-  const isChatFocused = chat.classList.contains('show') && document.hasFocus() && !document.hidden;
+  const isChatFocused = chat.classList.contains('show') && currentTopic && currentTopic.name && currentTopic.name.toLowerCase() === 'general' && document.hasFocus() && !document.hidden;
   if (isChatFocused) return;
   try {
     const body = text ? text.slice(0, 120) : '(media)';
-    const n = new Notification(name || 'New message', {
+    const n = new Notification(name || 'New message in General', {
       body: body,
-      icon: '/logo.png',
+      icon: '/logo.ico',
+      badge: '/logo.ico',
       tag: 'chat-general-msg',
       renotify: true
     });
     n.onclick = () => {
       window.focus();
-      n.close();
-      if (!chat.classList.contains('show')) {
+      try { n.close(); } catch(e) {}
+      if (!chat.classList.contains('show') || !currentTopic || currentTopic.name.toLowerCase() !== 'general') {
         goTopic('General');
       }
     };
-    setTimeout(() => n.close(), 6000);
+    setTimeout(() => { try { n.close(); } catch(e) {} }, 6000);
   } catch(e) {}
 }
 
@@ -1887,6 +2107,33 @@ socket.on('topics',list=>{
 });
 socket.on('topic-created',t=>{goTopic(t.name)});
 
+socket.on('general-notify', data => {
+  if (!data || (data.senderId && data.senderId === myId)) return;
+
+  const inGeneral = (currentTopic && currentTopic.name && currentTopic.name.toLowerCase() === 'general' && chat.classList.contains('show'));
+
+  if (inGeneral) {
+    if (document.hidden || !document.hasFocus()) {
+      showBrowserNotification('General · ' + (data.name || 'Anon'), data.text);
+      flashDocTitle('General (' + (data.name || 'Anon') + ')');
+    }
+    return;
+  }
+
+  // Outside General: increment unread, update UI, play sound, alert
+  generalUnreadCount++;
+  updateGeneralCardUI(data);
+  updateHeaderGeneralBadge();
+  playNotifySound();
+
+  if (document.hidden || !document.hasFocus()) {
+    showBrowserNotification('General · ' + (data.name || 'Anon'), data.text);
+    flashDocTitle('(' + generalUnreadCount + ') General: ' + (data.name || 'Anon'));
+  } else {
+    showGeneralNotificationToast(data);
+  }
+});
+
 socket.on('joined',data=>{
   const wasJumped = _isJumpedHistory || _forceFullReload;
   _isJumpedHistory = false;
@@ -1900,6 +2147,15 @@ socket.on('joined',data=>{
   topicOnlineCount=data.topicOnline||topicMembers.length||0;
   renderAvGroup(topicMembers);
   document.title=data.topic.name+' · Anonymous Chat';
+
+  if (data.topic && data.topic.name && data.topic.name.toLowerCase() === 'general') {
+    generalUnreadCount = 0;
+    updateGeneralCardUI();
+    updateHeaderGeneralBadge();
+    stopFlashDocTitle();
+    const gToast = document.getElementById('generalToast');
+    if (gToast) gToast.remove();
+  }
   
   if (!isSameTopic || !messages.children.length || wasJumped) {
     renderHistoryBatch(data.history || []);
@@ -1933,8 +2189,8 @@ socket.on('joined',data=>{
   updateTopicMenu();
   updateLockedUI();
   if (!chat.classList.contains('show')) showChat();
-  messages.scrollTop = messages.scrollHeight;
-  stuckToBottom = true;
+  markEnteringChat();
+  scrollBottom(true);
 });
 socket.on('topic-state',s=>{
   if(currentTopic&&s.id===currentTopic.id){
@@ -2172,9 +2428,12 @@ function topicItemHTML(t){
     lastHtml='<div class="ti-last">No messages yet</div>';
   }
   const badge=(t.isSystem||t.isGeneral)?ICON_VERIFIED:'';
+  const unreadBadge = (t.isGeneral && generalUnreadCount > 0)
+    ? '<span class="ti-unread-badge" id="generalCardBadge">' + (generalUnreadCount > 99 ? '99+' : generalUnreadCount) + '</span>'
+    : (t.isGeneral ? '<span class="ti-unread-badge" id="generalCardBadge" style="display:none"></span>' : '');
   const rec=t.recommended?'<div class="ti-rec">Recommended by moderator</div>':'';
   return '<div class="ti-top">'
-    +'<div class="ti-name"><span class="ti-name-text">'+esc(t.name)+'</span>'+badge+'</div>'
+    +'<div class="ti-name"><span class="ti-name-text">'+esc(t.name)+'</span>'+badge+unreadBadge+'</div>'
     +'<div class="ti-stats">'
     +'<span class="ti-stat">'+ICON_ONLINE+formatCount(t.online)+'</span>'
     +'<span class="ti-stat">'+ICON_MSGS+formatCount(t.msgCount)+'</span>'
@@ -2276,6 +2535,7 @@ function renderTopics(withAnim){
 
 function showFakeLoader(container, delay){
   if(!container) return;
+  if (container.querySelector && container.querySelector('.group, .topic-item, .ex-card, .pv-card, .ti-row, .msg-row')) return;
   const cs=getComputedStyle(container);
   if(cs.position==='static') container.style.position='relative';
   const el=document.createElement('div');
@@ -2458,7 +2718,7 @@ function renderExVideoPrev(){
   if(exPendingVideo){
     const wrap=document.createElement('div');
     wrap.className='ip-item';
-    wrap.innerHTML='<video src="'+exPendingVideo+'" muted style="max-height:64px;max-width:120px;border-radius:8px"></video><button type="button" class="ip-x" title="Remove">&times;</button>';
+    wrap.innerHTML='<video src="'+esc(exPendingVideo)+'" muted style="max-height:64px;max-width:120px;border-radius:8px"></video><button type="button" class="ip-x" title="Remove">&times;</button>';
     wrap.querySelector('.ip-x').onclick=()=>{
       exPendingVideo=null; exPendingVideoHash=null;
       renderExVideoPrev();
@@ -2876,10 +3136,10 @@ function buildExCard(p){
   const tags=(p.tags||[]).map(t=>'<span class="ex-tag">#'+esc(t)+'</span>').join('');
   let media='';
   if(p.video){
-    // Lobby: thumbnail only — no controls, cannot play outside detail
-    media='<div class="ex-card-media ex-vid-thumb"><video src="'+esc(p.video)+'" preload="metadata" playsinline muted></video><div class="ex-vid-play">▶</div></div>';
+    // Lobby: thumbnail only — no controls, lazy loaded to prevent connection queue blockage
+    media='<div class="ex-card-media ex-vid-thumb"><video data-src="'+esc(p.video)+'" preload="none" playsinline muted></video><div class="ex-vid-play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div></div>';
   } else if(p.audio){
-    media='<div class="ex-card-media" style="padding:8px"><audio src="'+esc(p.audio)+'" controls preload="metadata" style="width:100%;max-width:400px"></audio></div>';
+    media='<div class="ex-card-media" style="padding:8px"><audio data-src="'+esc(p.audio)+'" controls preload="none" style="width:100%;max-width:400px"></audio></div>';
   } else if(p.images&&p.images.length){
     const multi=p.images.length>1?' multi':'';
     media='<div class="ex-card-media'+multi+'">'+p.images.map(src=>
@@ -2937,6 +3197,7 @@ function buildExCard(p){
     openPostDetail(p);
   };
   div.querySelector('.ex-open-cmt').onclick=e=>{ e.stopPropagation(); openPostDetail(p); };
+  div.querySelectorAll('video[data-src], audio[data-src]').forEach(v => observeLazyMedia(v, 'metadata'));
   observeMediaItem(div);
   return div;
 }
@@ -2970,9 +3231,9 @@ function openPostDetail(p, fromRoute){
   const tags=(p.tags||[]).map(t=>'<span class="ex-tag">#'+esc(t)+'</span>').join('');
   let media='';
   if(p.video){
-    media='<div class="ex-card-media"><video src="'+esc(p.video)+'" controls preload="metadata" playsinline></video></div>';
+    media='<div class="ex-card-media"><video src="'+esc(p.video)+'" controls preload="auto" playsinline></video></div>';
   } else if(p.audio){
-    media='<div class="ex-card-media" style="padding:12px"><audio src="'+esc(p.audio)+'" controls preload="metadata" style="width:100%"></audio></div>';
+    media='<div class="ex-card-media" style="padding:12px"><audio src="'+esc(p.audio)+'" controls preload="auto" style="width:100%"></audio></div>';
   } else if(p.images&&p.images.length){
     const multi=p.images.length>1?' multi':'';
     media='<div class="ex-card-media'+multi+'">'+p.images.map(src=>
@@ -3056,8 +3317,42 @@ function observeMediaItem(el) {
   }
 }
 
+// Lazy-load offscreen media elements near viewport to avoid network queue congestion
+const _lazyMediaObserver = ('IntersectionObserver' in window) ? new IntersectionObserver((entries, obs) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const el = entry.target;
+      if (el.dataset.src && !el.src) {
+        el.src = el.dataset.src;
+        if (el.dataset.preload) el.preload = el.dataset.preload;
+      }
+      obs.unobserve(el);
+    }
+  });
+}, { rootMargin: '400px 0px' }) : null;
+
+function observeLazyMedia(el, preloadMode = 'metadata') {
+  if (!el) return;
+  if (!_lazyMediaObserver) {
+    if (el.dataset.src && !el.src) {
+      el.src = el.dataset.src;
+      el.preload = preloadMode;
+    }
+    return;
+  }
+  el.dataset.preload = preloadMode;
+  _lazyMediaObserver.observe(el);
+}
+
 function closePostDetail(){
   stopAllMedia();
+  const scroll = document.getElementById('postScroll');
+  if (scroll) {
+    scroll.querySelectorAll('video, audio').forEach(v => {
+      try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {}
+    });
+    scroll.innerHTML = '';
+  }
   exViewingId=null;
   clearCmtReply();
   const postView=document.getElementById('postView');
@@ -3451,11 +3746,21 @@ function goTopic(name){
   }
   hidePatchNotes();
   const cleanName = String(name || 'General').trim().slice(0, 32) || 'General';
+
+  if (cleanName.toLowerCase() === 'general') {
+    generalUnreadCount = 0;
+    updateGeneralCardUI();
+    updateHeaderGeneralBadge();
+    stopFlashDocTitle();
+    const gToast = document.getElementById('generalToast');
+    if (gToast) gToast.remove();
+  }
   
   // 1. Instant optimistic view switch (0ms latency!)
   document.title = cleanName + ' · Anonymous Chat';
   history.pushState(null, '', '/' + encodeURIComponent(cleanName));
   showChat();
+  markEnteringChat();
   
   // Render cached history for this topic immediately if available
   const cachedHistory = sessionStorage.getItem('chat_history_' + cleanName) || localStorage.getItem('chat_history_' + cleanName);
@@ -3532,6 +3837,7 @@ function showLobby(){
   topicLockedBy=null;
   topicOnlineCount=0;
   updateLockedUI();
+  updateHeaderGeneralBadge();
   lobby.classList.remove('anim-in');
   requestAnimationFrame(()=>{
     requestAnimationFrame(()=>{
@@ -3548,7 +3854,6 @@ function showChat(){
   hidePatchNotes();
   lobby.classList.add('hidden');
   chat.classList.add('show');
-  showFakeLoader(chat);
 }
 
 document.getElementById('backBtn').onclick=showLobby;
@@ -3649,7 +3954,7 @@ function buildMsgEl(data,prevData,opts){
   if(grouped) av.style.visibility='hidden';
   if(data.avatar){
     const aimg=document.createElement('img');aimg.src=data.avatar;aimg.alt='';aimg.referrerPolicy='no-referrer';
-    aimg.onload=()=>{ if(stuckToBottom) scrollBottom(); };
+    aimg.onload=()=>{ if(stuckToBottom || _isEnteringChat) scrollBottom(); };
     av.appendChild(aimg);
   }
   const body=document.createElement('div');body.className='group-body';
@@ -3677,16 +3982,26 @@ function buildMsgEl(data,prevData,opts){
     const row=document.createElement('div');row.className='msg-media';
     imgs.forEach(src=>{
       const img=document.createElement('img');img.src=src;
-      img.onload=()=>{ if(stuckToBottom) scrollBottom(); };
+      img.onload=()=>{ if(stuckToBottom || _isEnteringChat) scrollBottom(); };
       img.onclick=()=>{lbImg.src=src;lightbox.classList.add('show')};
       row.appendChild(img);
     });
     if(data.video){
-      const vid=document.createElement('video');vid.src=data.video;vid.controls=true;vid.preload='metadata';vid.setAttribute('playsinline','');
+      const vid=document.createElement('video');
+      vid.controls=true;
+      vid.setAttribute('playsinline','');
+      vid.dataset.src=data.video;
+      vid.preload='none';
+      vid.onloadedmetadata=()=>{ if(stuckToBottom || _isEnteringChat) scrollBottom(); };
+      observeLazyMedia(vid, 'metadata');
       row.appendChild(vid);
     }
     if(data.audio){
-      const aud=document.createElement('audio');aud.src=data.audio;aud.controls=true;aud.preload='metadata';
+      const aud=document.createElement('audio');
+      aud.controls=true;
+      aud.dataset.src=data.audio;
+      aud.preload='none';
+      observeLazyMedia(aud, 'metadata');
       row.appendChild(aud);
     }
     if(!data.text&&!data.replyName){
@@ -3840,14 +4155,17 @@ function setReply(data){
 }
 document.getElementById('rbClose').onclick=()=>{replyData=null;replyBar.classList.remove('show')};
 
-document.getElementById('profileTextBtn').onclick=()=>{
+function openProfileModal(){
   nameInput.value=myName||'';
   setPopupAvatar({color:myColor,avatar:myAvatar});
   setTz(msgTz);
   updateNotifStatusUI();
   overlay.classList.add('show');
   nameInput.focus();
-};
+}
+document.getElementById('profileTextBtn').onclick=openProfileModal;
+const profileBtnLobby=document.getElementById('profileBtnLobby');
+if(profileBtnLobby) profileBtnLobby.onclick=openProfileModal;
 document.getElementById('tzSeg')?.addEventListener('click',e=>{
   const btn=e.target.closest('button[data-tz]');
   if(btn) setTz(btn.dataset.tz);
@@ -4156,12 +4474,25 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-let _scrollTimer1=null,_scrollTimer2=null,_scrollTimer3=null,_scrollTimer4=null;
+let _isEnteringChat = false;
+let _enteringChatTimer = null;
+function markEnteringChat(){
+  _isEnteringChat = true;
+  stuckToBottom = true;
+  if(jumpBtn) jumpBtn.classList.remove('show');
+  clearTimeout(_enteringChatTimer);
+  _enteringChatTimer = setTimeout(() => {
+    _isEnteringChat = false;
+  }, 1200);
+}
+
+let _scrollTimer1=null,_scrollTimer2=null,_scrollTimer3=null,_scrollTimer4=null,_scrollTimer5=null;
 function scrollBottom(force){
   if(!messages) return;
   stuckToBottom=true;
   if(jumpBtn) jumpBtn.classList.remove('show');
   const pin=()=>{
+    if(!messages) return;
     messages.scrollTop=messages.scrollHeight;
     stuckToBottom=true;
     if(jumpBtn) jumpBtn.classList.remove('show');
@@ -4169,23 +4500,32 @@ function scrollBottom(force){
   pin();
   requestAnimationFrame(pin);
   if(force){
-    clearTimeout(_scrollTimer1);clearTimeout(_scrollTimer2);clearTimeout(_scrollTimer3);clearTimeout(_scrollTimer4);
-    _scrollTimer1=setTimeout(pin,40);
-    _scrollTimer2=setTimeout(pin,120);
-    _scrollTimer3=setTimeout(pin,300);
-    _scrollTimer4=setTimeout(pin,600);
+    clearTimeout(_scrollTimer1);clearTimeout(_scrollTimer2);clearTimeout(_scrollTimer3);clearTimeout(_scrollTimer4);clearTimeout(_scrollTimer5);
+    _scrollTimer1=setTimeout(pin,30);
+    _scrollTimer2=setTimeout(pin,80);
+    _scrollTimer3=setTimeout(pin,200);
+    _scrollTimer4=setTimeout(pin,450);
+    _scrollTimer5=setTimeout(pin,800);
   }
 }
 let _msgScrollRaf = null;
 function handleMessagesScroll(){
   _msgScrollRaf = null;
+  if(!messages) return;
   const dist = messages.scrollHeight - messages.scrollTop - messages.clientHeight;
+  if(_isEnteringChat){
+    stuckToBottom = true;
+    if(jumpBtn) jumpBtn.classList.remove('show');
+    return;
+  }
   if(!_isJumpedHistory){
     stuckToBottom = dist < 70;
     jumpBtn.classList.toggle('show', !stuckToBottom);
   }
-  // infinite scroll up — auto load older
-  if(messages.scrollTop < 120 && hasMoreHistory && !loadingHistory) requestOlder();
+  // infinite scroll up — only when not entering, not rendering batch, user deliberately scrolled away from bottom
+  if(!_isEnteringChat && !_isRenderingHistoryBatch && !_isJumpedHistory && !stuckToBottom && messages.scrollHeight > messages.clientHeight + 100 && messages.scrollTop < 120 && hasMoreHistory && !loadingHistory) {
+    requestOlder();
+  }
   // infinite scroll down — auto load newer (only in jumped history)
   if(_isJumpedHistory && dist < 120 && hasMoreNewer && !loadingNewer) requestNewer();
 }
@@ -4193,6 +4533,13 @@ function handleMessagesScroll(){
 messages.addEventListener('scroll', () => {
   if (!_msgScrollRaf) {
     _msgScrollRaf = requestAnimationFrame(handleMessagesScroll);
+  }
+}, { passive: true });
+
+messages.addEventListener('wheel', (e) => {
+  if (e.deltaY < -5) {
+    _isEnteringChat = false;
+    clearTimeout(_enteringChatTimer);
   }
 }, { passive: true });
 

@@ -24,10 +24,10 @@ public class UserProfile implements Serializable {
         this.color = color;
     }
 
-    public String getId() { return id != null ? id : (uid != null ? uid : ""); }
+    public String getId() { return id != null ? id : ""; }
     public void setId(String id) { this.id = id; }
 
-    public String getUid() { return uid != null ? uid : (id != null ? id : ""); }
+    public String getUid() { return uid != null ? uid : ""; }
     public void setUid(String uid) { this.uid = uid; }
 
     public String getName() { return name != null ? name : "Anonymous"; }

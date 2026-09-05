@@ -19,7 +19,7 @@ import com.anonymous.chat.models.Message;
 import com.anonymous.chat.ui.chat.ChatActivity;
 
 public class NotificationHelper {
-    public static final String CHANNEL_GENERAL = "channel_general_chat_v3";
+    public static final String CHANNEL_GENERAL = "channel_general_chat_v4";
     private static int notifCounter = 1000;
 
     public static void createNotificationChannels(Context context) {

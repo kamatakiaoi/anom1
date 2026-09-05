@@ -64,9 +64,10 @@
                 <!-- Reply Box Quote -->
                 <LinearLayout
                     android:id="@+id/replyQuoteBox"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minWidth="140dp"
+                    android:minWidth="130dp"
+                    android:maxWidth="260dp"
                     android:orientation="vertical"
                     android:background="@drawable/bg_quote_me"
                     android:paddingStart="10dp"
@@ -78,8 +79,9 @@
 
                     <TextView
                         android:id="@+id/tvQuoteName"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:maxWidth="240dp"
                         android:textColor="@color/accent_pure_white"
                         android:textSize="12sp"
                         android:textStyle="bold"
@@ -89,8 +91,9 @@
 
                     <TextView
                         android:id="@+id/tvQuoteText"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:maxWidth="240dp"
                         android:textColor="#BFDBFE"
                         android:textSize="12sp"
                         android:singleLine="true"

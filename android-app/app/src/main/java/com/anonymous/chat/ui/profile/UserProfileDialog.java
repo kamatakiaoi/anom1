@@ -42,21 +42,26 @@ public class UserProfileDialog extends Dialog {
         }
 
         if (userProfile != null) {
-            binding.tvUserProfName.setText(userProfile.getName());
-            binding.tvUserStatMessages.setText(String.valueOf(userProfile.getMessages()));
-            binding.tvUserStatMedia.setText(String.valueOf(userProfile.getMedia()));
-            binding.tvUserStatDisk.setText(userProfile.getDisk() != null ? userProfile.getDisk() : "0 B");
-
-            GradientDrawable grad = ColorHelper.getAvatarGradient(userProfile.getColor());
-            binding.ivUserProfAvatar.setBackground(grad);
-
-            if (userProfile.getAvatar() != null && !userProfile.getAvatar().isEmpty()) {
-                String serverUrl = PreferenceManager.getInstance(getContext()).getServerBaseUrl();
-                String fullUrl = ImageUtils.getFullMediaUrl(serverUrl, userProfile.getAvatar());
-                Glide.with(getContext()).load(fullUrl).circleCrop().into(binding.ivUserProfAvatar);
-            }
+            updateProfile(userProfile);
         }
 
         binding.btnUserProfClose.setOnClickListener(v -> dismiss());
+    }
+
+    public void updateProfile(UserProfile profile) {
+        if (profile == null || binding == null) return;
+        binding.tvUserProfName.setText(profile.getName());
+        binding.tvUserStatMessages.setText(String.valueOf(profile.getMessages()));
+        binding.tvUserStatMedia.setText(String.valueOf(profile.getMedia()));
+        binding.tvUserStatDisk.setText(profile.getDisk() != null ? profile.getDisk() : "0 B");
+
+        GradientDrawable grad = ColorHelper.getAvatarGradient(profile.getColor());
+        binding.ivUserProfAvatar.setBackground(grad);
+
+        if (profile.getAvatar() != null && !profile.getAvatar().isEmpty()) {
+            String serverUrl = PreferenceManager.getInstance(getContext()).getServerBaseUrl();
+            String fullUrl = ImageUtils.getFullMediaUrl(serverUrl, profile.getAvatar());
+            Glide.with(getContext()).load(fullUrl).circleCrop().into(binding.ivUserProfAvatar);
+        }
     }
 }

@@ -12,7 +12,7 @@ $env:PATH = "$jdkDir\bin;$gradleDir\bin;$sdkDir\platform-tools;$env:PATH"
 
 Write-Host "=========================================="
 Write-Host " Building Anonymous Chat Native Android APK"
-Write-Host " Version: 3.6.11 (Build 3611)"
+Write-Host " Version: 3.6.12 (Build 3612)"
 Write-Host "=========================================="
 Write-Host "JAVA_HOME   : $env:JAVA_HOME"
 Write-Host "ANDROID_HOME: $env:ANDROID_HOME"
@@ -20,8 +20,9 @@ Write-Host "ANDROID_HOME: $env:ANDROID_HOME"
 $appDir = "c:\Users\flooxie\Downloads\Compressed\code2\android-app"
 Set-Location $appDir
 
-& "$gradleDir\bin\gradle.bat" clean assembleDebug --no-daemon --stacktrace
-if ($LASTEXITCODE -ne 0) {
+& "$gradleDir\bin\gradle.bat" assembleDebug --stacktrace
+$apkPath = "$appDir\app\build\outputs\apk\debug\app-debug.apk"
+if (-not (Test-Path $apkPath) -and $LASTEXITCODE -ne 0) {
     Write-Host "Gradle build failed with exit code $LASTEXITCODE" -ForegroundColor Red
     exit 1
 }

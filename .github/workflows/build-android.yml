@@ -31,12 +31,12 @@ jobs:
       - name: Prepare Flat Output Directory
         run: |
           mkdir -p output
-          find . -name "*debug*.apk" -o -name "*app*.apk" | head -n 1 | xargs -I {} cp {} output/AnonymousChat-v3.6.11-Android.apk
+          find . -name "*debug*.apk" -o -name "*app*.apk" | head -n 1 | xargs -I {} cp {} output/AnonymousChat-v3.6.12-Android.apk
           cd output
-          zip -9 AnonymousChat-v3.6.11-Android.zip AnonymousChat-v3.6.11-Android.apk
+          zip -9 AnonymousChat-v3.6.12-Android.zip AnonymousChat-v3.6.12-Android.apk
 
       - name: Upload APK Artifact (Flat in ZIP)
         uses: actions/upload-artifact@v4
         with:
-          name: AnonymousChat-v3.6.11-Android
-          path: output/AnonymousChat-v3.6.11-Android.apk
+          name: AnonymousChat-v3.6.12-Android
+          path: output/AnonymousChat-v3.6.12-Android.apk

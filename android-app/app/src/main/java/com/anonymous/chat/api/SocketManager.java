@@ -45,9 +45,15 @@ public class SocketManager {
     private long pingStartTime = 0;
     private long lastLatencyMs = 0;
     private boolean isPingPending = false;
+    private boolean isAppForeground = true;
+
     private final Runnable pingRunnable = new Runnable() {
         @Override
         public void run() {
+            if (!isAppForeground) {
+                // Background: do not wake CPU or measure ping to conserve battery
+                return;
+            }
             if (socket != null && socket.connected()) {
                 if (!isPingPending || (System.currentTimeMillis() - pingStartTime > 15000)) {
                     startPingMeasurement();
@@ -168,7 +174,40 @@ public class SocketManager {
     public void addUserProfileListener(UserProfileDialogListener l) { userProfileListeners.add(l); }
     public void removeUserProfileListener(UserProfileDialogListener l) { userProfileListeners.remove(l); }
 
-    public UserProfile getMyProfile() { return myProfile; }
+    public void setAppForeground(boolean foreground) {
+        this.isAppForeground = foreground;
+        if (foreground) {
+            mainHandler.removeCallbacks(pingRunnable);
+            mainHandler.post(pingRunnable);
+        } else {
+            mainHandler.removeCallbacks(pingRunnable);
+        }
+    }
+
+    public boolean isAppForeground() {
+        return isAppForeground;
+    }
+
+    public UserProfile getMyProfile() {
+        if (myProfile == null && appContext != null) {
+            PreferenceManager prefs = PreferenceManager.getInstance(appContext);
+            String uid = prefs.getMyUid();
+            String id = prefs.getMyId();
+            String name = prefs.getMyName();
+            String color = prefs.getMyColor();
+            String avatar = prefs.getMyAvatar();
+            if (uid != null || id != null || name != null) {
+                myProfile = new UserProfile();
+                myProfile.setUid(uid);
+                myProfile.setId(id);
+                myProfile.setName(name != null ? name : "Anon");
+                myProfile.setColor(color != null ? color : "#666,#999");
+                myProfile.setAvatar(avatar);
+            }
+        }
+        return myProfile;
+    }
+
     public ServerStats getServerStats() { return serverStats; }
     public boolean isConnected() { return socket != null && socket.connected(); }
     public String getCurrentTopicName() { return currentTopicName; }
@@ -220,7 +259,9 @@ public class SocketManager {
             mainHandler.post(() -> {
                 for (ConnectionListener l : connectionListeners) l.onConnected();
                 mainHandler.removeCallbacks(pingRunnable);
-                mainHandler.post(pingRunnable);
+                if (isAppForeground) {
+                    mainHandler.post(pingRunnable);
+                }
             });
 
             // Re-authenticate and join General room on every connect/reconnect
@@ -350,27 +391,6 @@ public class SocketManager {
                 mainHandler.post(() -> {
                     for (TopicListener l : topicListeners) l.onTopicsUpdated(list);
                 });
-
-                // Check for new General messages from topics update when not in General
-                if (!"General".equalsIgnoreCase(currentTopicName) && list != null) {
-                    for (Topic t : list) {
-                        if ("General".equalsIgnoreCase(t.getName()) && t.getLastMsg() != null) {
-                            Topic.LastMessage lm = t.getLastMsg();
-                            int msgId = lm.getId() != 0 ? lm.getId() : t.getLastMsgId();
-                            if (msgId > lastSeenGeneralMsgId && lastSeenGeneralMsgId > 0) {
-                                String myName = myProfile != null ? myProfile.getName() : "";
-                                if (lm.getName() != null && !myName.equalsIgnoreCase(lm.getName())) {
-                                    if (appContext != null) {
-                                        NotificationHelper.showGeneralTopicNotification(appContext, lm.getName(), lm.getText());
-                                    }
-                                }
-                            }
-                            if (msgId > lastSeenGeneralMsgId) {
-                                lastSeenGeneralMsgId = msgId;
-                            }
-                        }
-                    }
-                }
             } catch (Exception e) {
                 Log.e(TAG, "topics error", e);
             }
@@ -502,23 +522,71 @@ public class SocketManager {
                 mainHandler.post(() -> {
                     for (MessageListener l : messageListeners) l.onNewMessage(msg);
                 });
-
-                String senderName = msg.getName();
-                String myName = myProfile != null ? myProfile.getName() : "";
-                boolean isMe = (myProfile != null && msg.getId().equals(myProfile.getId())) || myName.equalsIgnoreCase(senderName);
-
-                if (!"General".equalsIgnoreCase(currentTopicName) && !isMe) {
-                    mainHandler.post(() -> {
-                        for (GeneralMessageGlobalListener l : generalGlobalListeners) {
-                            l.onGeneralMessageReceived(msg);
-                        }
-                    });
-                    if (appContext != null) {
-                        NotificationHelper.showGeneralMessageNotification(appContext, msg);
-                    }
-                }
             } catch (Exception e) {
                 Log.e(TAG, "message error", e);
+            }
+        });
+
+        // Fast instant notification broadcast for General channel
+        socket.on("general-notify", args -> {
+            if (args.length == 0 || args[0] == null) return;
+            try {
+                JSONObject obj = (JSONObject) args[0];
+                int msgId = obj.optInt("msgId");
+                String name = obj.optString("name", "Anon");
+                String text = obj.optString("text", "");
+                boolean hasMedia = obj.optBoolean("hasMedia", false);
+                String time = obj.optString("time", "");
+                String senderId = obj.optString("senderId", "");
+                String senderUid = obj.optString("senderUid", "");
+
+                // Filter out self-sent messages
+                UserProfile profile = getMyProfile();
+                String myName = profile != null ? profile.getName() : "";
+                String myId = profile != null ? profile.getId() : "";
+                String myUid = profile != null ? profile.getUid() : "";
+
+                if ((!myId.isEmpty() && myId.equalsIgnoreCase(senderId)) ||
+                    (!myUid.isEmpty() && myUid.equalsIgnoreCase(senderUid)) ||
+                    (!myName.isEmpty() && !"Anon".equalsIgnoreCase(myName) && myName.equalsIgnoreCase(name))) {
+                    return;
+                }
+
+                // Prevent duplicate notifications
+                if (msgId > 0 && msgId <= lastSeenGeneralMsgId) {
+                    return;
+                }
+                if (msgId > lastSeenGeneralMsgId) {
+                    lastSeenGeneralMsgId = msgId;
+                }
+
+                Message msg = new Message();
+                msg.setMsgId(msgId);
+                msg.setName(name);
+                msg.setText(text);
+                msg.setTime(time);
+                msg.setId(senderId);
+                msg.setUid(senderUid);
+
+                // If user is actively inside General Chat in foreground, do not pop notifications
+                boolean inGeneral = com.anonymous.chat.ui.chat.ChatActivity.isGeneralActive;
+                if (inGeneral) {
+                    return;
+                }
+
+                // Display notification in status bar / notification shade
+                if (appContext != null) {
+                    NotificationHelper.showGeneralTopicNotification(appContext, name, text);
+                }
+
+                // Notify UI listeners (MainActivity, etc.) to show InAppNotificationBanner and update unread badge
+                mainHandler.post(() -> {
+                    for (GeneralMessageGlobalListener l : generalGlobalListeners) {
+                        l.onGeneralMessageReceived(msg);
+                    }
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "general-notify error", e);
             }
         });
 

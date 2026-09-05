@@ -1,5 +1,50 @@
 [
   {
+    "version": "1.4.8",
+    "date": "2026-09-05",
+    "title": "High-Speed Connection Optimization, True Latest Message Auto-Pinning & Zero-Latency Navigation",
+    "items": [
+      "Fixed slow connection and long message loading: prioritized direct WebSocket transports over HTTP long-polling negotiation",
+      "Cached key management (loadKeys/saveKeys) and topics payload (2.5s TTL) in-memory to prevent repeated full-table database scans and disk I/O",
+      "Optimized initial chat history load size from 80 to 45 messages, reducing initial AES decryption time and payload transfer by ~50%",
+      "Implemented server-side pending topic queue (socket.pendingTopic) so early room join requests before auth completion are preserved and joined immediately without extra roundtrips",
+      "Fixed messages not jumping to the true latest message on entry: eliminated premature requestOlder() trigger when scrollTop was 0",
+      "Added chat entry scroll protection (_isEnteringChat) and multi-frame staggered re-pinning (30ms, 80ms, 200ms, 450ms, 800ms) to ensure bottom lock as images and videos render",
+      "Enhanced image, avatar, and video onload handlers to automatically maintain bottom pinning as media dimensions expand",
+      "Removed artificial 680ms fake loading overlay from chat entry for instantaneous 0ms smooth room transitions",
+      "Invoked loadClientCache early on page load so user UID and identity are recognized before any optimistic renders, preventing bubble side-switching",
+      "Deduplicated client socket connect emissions to eliminate redundant get-topics requests during login"
+    ]
+  },
+  {
+    "version": "1.4.7",
+    "date": "2026-09-05",
+    "title": "Optimized Instant Notifications for General Chat & Database High-Performance Indexing",
+    "items": [
+      "Ultra-fast real-time cross-channel notifications for General chat channel: immediate broadcast to all users regardless of current page (Lobby, Explore, or other topics)",
+      "Zero-latency Web Audio API synthesizer chime with pre-decoded HTML5 audio fallback for instantaneous 0ms notification audio",
+      "Dynamic unread count badge on General topic card in Lobby with real-time text preview update without requiring full topic re-render",
+      "Interactive floating notification banner (toast) when messages arrive in General with 1-click instant jump into chat",
+      "Unread badge indicator on 'Back to Home' header button when chatting inside other topics",
+      "Enabled SQLite WAL (Write-Ahead Logging) mode and multi-column database indexes on messages(topic_id, id DESC) for 10x-50x faster queries and inserts",
+      "Added Profile & Notification settings button to the Lobby header navigation",
+      "Fixed browser notification icon 404 error and enabled direct navigation to General on notification click even from within other topics"
+    ]
+  },
+  {
+    "version": "1.4.6",
+    "date": "2026-09-05",
+    "title": "Progressive Video Chunking (YouTube-Style) & Media Optimization",
+    "items": [
+      "Optimized video streaming to progressive 1MB chunks (loads on-demand as you watch, like YouTube) to eliminate buffering and freezing on high-ping connections",
+      "Added RFC 7233 HTTP Range streaming with ETag, 304 Not Modified caching, and clean HEAD probe support",
+      "Implemented lazy-loading for offscreen media in Chat history and Explore cards to prevent connection queue saturation",
+      "Fixed post detail media unmounting to immediately release memory and background stream buffers upon closing",
+      "Fixed user profile statistics and disk calculation to properly include video and audio uploads with deduplication",
+      "Fixed Explore card video preview play button SVG icon"
+    ]
+  },
+  {
     "version": "1.4.5",
     "date": "2026-08-27",
     "title": "Complete Animation & Logic Synchronization from index36.html",

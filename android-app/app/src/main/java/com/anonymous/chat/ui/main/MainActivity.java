@@ -100,7 +100,6 @@ public class MainActivity extends AppCompatActivity implements
         setupListeners();
         setupSocket();
         checkNotificationPermission();
-        checkBatteryOptimizations();
         com.anonymous.chat.services.ChatBackgroundService.start(this);
     }
 
@@ -109,19 +108,6 @@ public class MainActivity extends AppCompatActivity implements
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
-        }
-    }
-
-    private void checkBatteryOptimizations() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
-                if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                    intent.setData(android.net.Uri.parse("package:" + getPackageName()));
-                    startActivity(intent);
-                }
-            } catch (Exception ignored) {}
         }
     }
 
@@ -604,6 +590,9 @@ public class MainActivity extends AppCompatActivity implements
     // General Chat In-App Notification (Messenger style)
     @Override
     public void onGeneralMessageReceived(Message message) {
+        if (topicAdapter != null && message != null) {
+            topicAdapter.updateGeneralLastMessage(message.getName(), message.getText());
+        }
         InAppNotificationBanner.show(this, message, msg -> {
             Intent intent = new Intent(MainActivity.this, ChatActivity.class);
             intent.putExtra(ChatActivity.EXTRA_TOPIC_NAME, "General");
@@ -687,11 +676,17 @@ public class MainActivity extends AppCompatActivity implements
     @Override public void onNameChanged(String newName) {}
     @Override public void onAvatarChanged(String newAvatarUrl) {}
 
+    private com.anonymous.chat.ui.profile.UserProfileDialog activeProfileDialog;
+
     @Override
     public void onUserProfileReceived(UserProfile userProfile) {
         if (!isFinishing() && !isDestroyed() && userProfile != null) {
-            com.anonymous.chat.ui.profile.UserProfileDialog dialog = new com.anonymous.chat.ui.profile.UserProfileDialog(this, userProfile);
-            dialog.show();
+            if (activeProfileDialog != null && activeProfileDialog.isShowing()) {
+                activeProfileDialog.updateProfile(userProfile);
+            } else {
+                activeProfileDialog = new com.anonymous.chat.ui.profile.UserProfileDialog(this, userProfile);
+                activeProfileDialog.show();
+            }
         }
     }
 

@@ -232,7 +232,9 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         boolean prevSame = false;
         boolean nextSame = false;
 
-        if (position > 0) {
+        boolean curHasReply = cur.getReplyName() != null && !cur.getReplyName().isEmpty();
+
+        if (position > 0 && !curHasReply) {
             Message prev = messages.get(position - 1);
             if (isSameSender(prev, cur) && isWithin5Minutes(prev, cur)) {
                 prevSame = true;
@@ -241,7 +243,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         if (position < messages.size() - 1) {
             Message next = messages.get(position + 1);
-            if (isSameSender(cur, next) && isWithin5Minutes(cur, next)) {
+            boolean nextHasReply = next.getReplyName() != null && !next.getReplyName().isEmpty();
+            if (!nextHasReply && isSameSender(cur, next) && isWithin5Minutes(cur, next)) {
                 nextSame = true;
             }
         }

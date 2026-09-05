@@ -39,6 +39,24 @@ public class TopicAdapter extends RecyclerView.Adapter<TopicAdapter.TopicViewHol
         notifyDataSetChanged();
     }
 
+    public void updateGeneralLastMessage(String sender, String text) {
+        for (int i = 0; i < topics.size(); i++) {
+            Topic t = topics.get(i);
+            if (t.isGeneral()) {
+                Topic.LastMessage lm = t.getLastMsg();
+                if (lm == null) {
+                    lm = new Topic.LastMessage();
+                    t.setLastMsg(lm);
+                }
+                lm.setName(sender);
+                lm.setText(text);
+                t.setMsgCount(t.getMsgCount() + 1);
+                notifyItemChanged(i);
+                break;
+            }
+        }
+    }
+
     public void filter(String query) {
         topics.clear();
         if (query == null || query.trim().isEmpty()) {
