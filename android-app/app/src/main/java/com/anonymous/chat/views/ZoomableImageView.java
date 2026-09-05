@@ -29,7 +29,8 @@ public class ZoomableImageView extends AppCompatImageView {
     private GestureDetector gestureDetector;
 
     private float currentScale = 1.0f;
-    private final PointF lastTouch = new PointF();
+    private float lastTouchX = 0f;
+    private float lastTouchY = 0f;
     private boolean isDragging = false;
 
     private int viewWidth = 0;
@@ -130,16 +131,22 @@ public class ZoomableImageView extends AppCompatImageView {
                 if (zoomAnimator != null && zoomAnimator.isRunning()) {
                     zoomAnimator.cancel();
                 }
-                lastTouch.set(event.getX(), event.getY());
+                lastTouchX = event.getX();
+                lastTouchY = event.getY();
+                isDragging = false;
+                break;
+
+            case MotionEvent.ACTION_POINTER_DOWN:
                 isDragging = false;
                 break;
 
             case MotionEvent.ACTION_MOVE:
-                if (!scaleDetector.isInProgress() && currentScale > MIN_SCALE) {
-                    float dx = event.getX() - lastTouch.x;
-                    float dy = event.getY() - lastTouch.y;
+                // Only pan/drag when single touch, not scaling, and zoomed in
+                if (!scaleDetector.isInProgress() && event.getPointerCount() == 1 && currentScale > 1.01f) {
+                    float dx = event.getX() - lastTouchX;
+                    float dy = event.getY() - lastTouchY;
 
-                    if (!isDragging && (Math.abs(dx) > 5 || Math.abs(dy) > 5)) {
+                    if (!isDragging && (Math.abs(dx) > 4 || Math.abs(dy) > 4)) {
                         isDragging = true;
                     }
 
@@ -147,12 +154,24 @@ public class ZoomableImageView extends AppCompatImageView {
                         drawMatrix.postTranslate(dx, dy);
                         checkMatrixBounds();
                         setImageMatrix(drawMatrix);
-                        lastTouch.set(event.getX(), event.getY());
                         if (getParent() != null) {
                             getParent().requestDisallowInterceptTouchEvent(true);
                         }
                     }
                 }
+                lastTouchX = event.getX();
+                lastTouchY = event.getY();
+                break;
+
+            case MotionEvent.ACTION_POINTER_UP:
+                // When one pointer lifts from pinch, immediately re-anchor lastTouch to the remaining pointer
+                int liftedIndex = event.getActionIndex();
+                int remainingIndex = (liftedIndex == 0) ? 1 : 0;
+                if (event.getPointerCount() > 1 && remainingIndex < event.getPointerCount()) {
+                    lastTouchX = event.getX(remainingIndex);
+                    lastTouchY = event.getY(remainingIndex);
+                }
+                isDragging = false;
                 break;
 
             case MotionEvent.ACTION_UP:
@@ -173,33 +192,50 @@ public class ZoomableImageView extends AppCompatImageView {
         }
 
         final float startScale = currentScale;
-        final float endScale = targetScale;
-        final float fx = focalX;
-        final float fy = focalY;
+        final Matrix startMatrix = new Matrix(drawMatrix);
+        final Matrix targetMatrix = new Matrix();
+
+        if (targetScale <= MIN_SCALE) {
+            targetMatrix.set(baseMatrix);
+        } else {
+            targetMatrix.set(drawMatrix);
+            float factor = (currentScale > 0) ? (targetScale / currentScale) : 1f;
+            targetMatrix.postScale(factor, factor, focalX, focalY);
+            applyBounds(targetMatrix);
+        }
+
+        final float[] startValues = new float[9];
+        final float[] targetValues = new float[9];
+        startMatrix.getValues(startValues);
+        targetMatrix.getValues(targetValues);
 
         zoomAnimator = ValueAnimator.ofFloat(0f, 1f);
         zoomAnimator.setDuration(220);
         zoomAnimator.setInterpolator(new DecelerateInterpolator());
         zoomAnimator.addUpdateListener(animation -> {
-            float progress = (float) animation.getAnimatedValue();
-            float newScale = startScale + (endScale - startScale) * progress;
-            float factor = (currentScale > 0) ? (newScale / currentScale) : 1f;
-            currentScale = newScale;
-
-            drawMatrix.postScale(factor, factor, fx, fy);
-            checkMatrixBounds();
+            float fraction = (float) animation.getAnimatedValue();
+            float[] currentValues = new float[9];
+            for (int i = 0; i < 9; i++) {
+                currentValues[i] = startValues[i] + (targetValues[i] - startValues[i]) * fraction;
+            }
+            drawMatrix.setValues(currentValues);
+            currentScale = startScale + (targetScale - startScale) * fraction;
             setImageMatrix(drawMatrix);
         });
         zoomAnimator.start();
     }
 
     private void checkMatrixBounds() {
-        RectF rect = getTransformedRect();
-        if (rect == null) return;
+        applyBounds(drawMatrix);
+    }
+
+    private void applyBounds(Matrix matrix) {
+        if (drawableWidth <= 0 || drawableHeight <= 0 || viewWidth <= 0 || viewHeight <= 0) return;
+        RectF rect = new RectF(0, 0, drawableWidth, drawableHeight);
+        matrix.mapRect(rect);
 
         float deltaX = 0f;
         float deltaY = 0f;
-
         float width = rect.width();
         float height = rect.height();
 
@@ -219,7 +255,7 @@ public class ZoomableImageView extends AppCompatImageView {
             deltaY = viewHeight - rect.bottom;
         }
 
-        drawMatrix.postTranslate(deltaX, deltaY);
+        matrix.postTranslate(deltaX, deltaY);
     }
 
     private RectF getTransformedRect() {

@@ -65,6 +65,13 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return;
         }
 
+        // Fast-path: initial load when room is opened or messages list is empty
+        if (messages.isEmpty()) {
+            messages.addAll(newMessages);
+            notifyDataSetChanged();
+            return;
+        }
+
         final List<Message> oldList = new ArrayList<>(messages);
         final List<Message> newList = new ArrayList<>(newMessages);
 
@@ -268,8 +275,8 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     private boolean isWithin5Minutes(Message a, Message b) {
-        long tA = TimeUtils.parseIsoToMillis(a.getTime());
-        long tB = TimeUtils.parseIsoToMillis(b.getTime());
+        long tA = a.getTimeMillis();
+        long tB = b.getTimeMillis();
         return Math.abs(tB - tA) <= 5 * 60 * 1000;
     }
 
@@ -658,6 +665,7 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             btnPlayVideo.setOnClickListener(videoClickListener);
             ivMsgVideoThumb.setOnClickListener(videoClickListener);
             vvMsgVideoInline.setOnClickListener(videoClickListener);
+            cardMsgVideo.setOnClickListener(videoClickListener);
 
             btnFullscreenVideo.setOnClickListener(v -> {
                 try {

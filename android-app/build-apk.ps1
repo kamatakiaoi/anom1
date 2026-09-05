@@ -12,7 +12,7 @@ $env:PATH = "$jdkDir\bin;$gradleDir\bin;$sdkDir\platform-tools;$env:PATH"
 
 Write-Host "=========================================="
 Write-Host " Building Anonymous Chat Native Android APK"
-Write-Host " Version: 3.6.12 (Build 3612)"
+Write-Host " Version: 3.6.13 (Build 3613)"
 Write-Host "=========================================="
 Write-Host "JAVA_HOME   : $env:JAVA_HOME"
 Write-Host "ANDROID_HOME: $env:ANDROID_HOME"

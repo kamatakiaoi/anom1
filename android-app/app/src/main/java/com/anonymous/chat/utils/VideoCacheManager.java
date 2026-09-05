@@ -93,14 +93,7 @@ public class VideoCacheManager {
     }
 
     public void preload(Context context, String videoUrl) {
-        if (context == null || videoUrl == null || videoUrl.trim().isEmpty()) return;
-        if (getCachedFile(context, videoUrl) != null) return;
-
-        getVideoFile(context, videoUrl, new VideoCallback() {
-            @Override public void onReady(File file) {}
-            @Override public void onProgress(int percent) {}
-            @Override public void onError(Exception e) {}
-        });
+        // Disabled heavy background downloading to conserve user bandwidth and prevent thread starvation
     }
 
     public void getVideoFile(Context context, String videoUrl, VideoCallback callback) {

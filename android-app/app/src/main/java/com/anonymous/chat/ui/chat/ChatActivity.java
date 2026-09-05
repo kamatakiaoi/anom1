@@ -370,6 +370,11 @@ public class ChatActivity extends AppCompatActivity implements
         messageAdapter.setMessages(history);
         if (messageAdapter.getItemCount() > 0) {
             binding.rvChatMessages.scrollToPosition(messageAdapter.getItemCount() - 1);
+            binding.rvChatMessages.post(() -> {
+                if (messageAdapter != null && messageAdapter.getItemCount() > 0) {
+                    binding.rvChatMessages.scrollToPosition(messageAdapter.getItemCount() - 1);
+                }
+            });
         }
     }
 

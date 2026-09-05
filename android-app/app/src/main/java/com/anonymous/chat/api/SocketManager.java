@@ -63,8 +63,9 @@ public class SocketManager {
         }
     };
 
-    // Track last seen General message ID to avoid duplicate notifications
-    private int lastSeenGeneralMsgId = 0;
+    // Track seen General message IDs (bounded cache) to avoid duplicate notifications
+    private final java.util.LinkedHashSet<Integer> seenGeneralMsgIds = new java.util.LinkedHashSet<>();
+    private static final int MAX_SEEN_IDS = 200;
 
     // Listeners
     public interface ConnectionListener {
@@ -213,9 +214,23 @@ public class SocketManager {
     public String getCurrentTopicName() { return currentTopicName; }
 
     public void connect(String serverUrl) {
+        if (serverUrl == null || serverUrl.trim().isEmpty()) return;
+
+        // If already connected or connecting to the exact same server, do NOT tear down socket!
+        if (socket != null && serverUrl.equals(currentServerUrl)) {
+            if (socket.connected()) {
+                Log.d(TAG, "Socket already connected to " + serverUrl);
+                return;
+            }
+            Log.d(TAG, "Reconnecting existing socket to " + serverUrl);
+            socket.connect();
+            return;
+        }
+
         if (socket != null) {
             socket.disconnect();
             socket.off();
+            socket = null;
         }
 
         this.currentServerUrl = serverUrl;
@@ -377,7 +392,10 @@ public class SocketManager {
                 mainHandler.post(() -> {
                     for (ProfileListener l : profileListeners) l.onProfileLoaded(myProfile);
                 });
-                joinTopic("General");
+                String targetTopic = (currentTopicName != null && !currentTopicName.trim().isEmpty())
+                        ? currentTopicName
+                        : "General";
+                joinTopic(targetTopic);
             } catch (Exception e) {
                 Log.e(TAG, "profile error", e);
             }
@@ -552,12 +570,21 @@ public class SocketManager {
                     return;
                 }
 
-                // Prevent duplicate notifications
-                if (msgId > 0 && msgId <= lastSeenGeneralMsgId) {
-                    return;
-                }
-                if (msgId > lastSeenGeneralMsgId) {
-                    lastSeenGeneralMsgId = msgId;
+                // Prevent duplicate notifications using bounded set
+                if (msgId > 0) {
+                    synchronized (seenGeneralMsgIds) {
+                        if (seenGeneralMsgIds.contains(msgId)) {
+                            return;
+                        }
+                        seenGeneralMsgIds.add(msgId);
+                        if (seenGeneralMsgIds.size() > MAX_SEEN_IDS) {
+                            java.util.Iterator<Integer> it = seenGeneralMsgIds.iterator();
+                            if (it.hasNext()) {
+                                it.next();
+                                it.remove();
+                            }
+                        }
+                    }
                 }
 
                 Message msg = new Message();
@@ -568,14 +595,9 @@ public class SocketManager {
                 msg.setId(senderId);
                 msg.setUid(senderUid);
 
-                // If user is actively inside General Chat in foreground, do not pop notifications
+                // If user is actively inside General Chat in foreground, do not pop system status bar notifications
                 boolean inGeneral = com.anonymous.chat.ui.chat.ChatActivity.isGeneralActive;
-                if (inGeneral) {
-                    return;
-                }
-
-                // Display notification in status bar / notification shade
-                if (appContext != null) {
+                if (!inGeneral && appContext != null) {
                     NotificationHelper.showGeneralTopicNotification(appContext, name, text);
                 }
 

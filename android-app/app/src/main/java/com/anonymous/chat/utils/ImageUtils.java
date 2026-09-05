@@ -168,10 +168,18 @@ public class ImageUtils {
     }
 
     public static void loadImage(Context context, String mediaUrl, android.widget.ImageView target) {
-        loadImage(context, mediaUrl, target, 0);
+        loadImage(context, mediaUrl, target, 0, false);
     }
 
     public static void loadImage(Context context, String mediaUrl, android.widget.ImageView target, int cornerRadiusDp) {
+        loadImage(context, mediaUrl, target, cornerRadiusDp, false);
+    }
+
+    public static void loadFullImage(Context context, String mediaUrl, android.widget.ImageView target) {
+        loadImage(context, mediaUrl, target, 0, true);
+    }
+
+    public static void loadImage(Context context, String mediaUrl, android.widget.ImageView target, int cornerRadiusDp, boolean fullRes) {
         if (context == null || target == null || mediaUrl == null || mediaUrl.isEmpty()) return;
         try {
             if (mediaUrl.startsWith("data:image/")) {
@@ -181,6 +189,9 @@ public class ImageUtils {
                     com.bumptech.glide.RequestBuilder<android.graphics.drawable.Drawable> rb = com.bumptech.glide.Glide.with(context)
                             .load(decoded)
                             .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.NONE);
+                    if (!fullRes) {
+                        rb = rb.override(720, 720);
+                    }
                     if (cornerRadiusDp > 0) {
                         int radiusPx = (int) (cornerRadiusDp * context.getResources().getDisplayMetrics().density);
                         rb = rb.transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(radiusPx));
@@ -195,6 +206,9 @@ public class ImageUtils {
             com.bumptech.glide.RequestBuilder<android.graphics.drawable.Drawable> rb = com.bumptech.glide.Glide.with(context)
                     .load(full)
                     .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL);
+            if (!fullRes) {
+                rb = rb.override(720, 720);
+            }
             if (cornerRadiusDp > 0) {
                 int radiusPx = (int) (cornerRadiusDp * context.getResources().getDisplayMetrics().density);
                 rb = rb.transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(radiusPx));
@@ -208,12 +222,14 @@ public class ImageUtils {
     public static void loadVideoThumbnail(Context context, String videoUrl, android.widget.ImageView target, int cornerRadiusDp) {
         if (context == null || target == null || videoUrl == null || videoUrl.trim().isEmpty()) return;
         try {
+            // Check if video file has already been downloaded/cached to disk
             java.io.File cached = VideoCacheManager.getInstance().getCachedFile(context, videoUrl);
             if (cached != null) {
                 com.bumptech.glide.RequestBuilder<android.graphics.Bitmap> rb = com.bumptech.glide.Glide.with(context)
                         .asBitmap()
                         .load(cached)
                         .frame(1000000)
+                        .override(480, 360)
                         .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL);
                 if (cornerRadiusDp > 0) {
                     int radiusPx = (int) (cornerRadiusDp * context.getResources().getDisplayMetrics().density);
@@ -221,21 +237,10 @@ public class ImageUtils {
                 }
                 rb.into(target);
             } else {
-                VideoCacheManager.getInstance().preload(context, videoUrl);
-                String serverUrl = PreferenceManager.getInstance(context).getServerBaseUrl();
-                String full = getFullMediaUrl(serverUrl, videoUrl);
-                if (!full.startsWith("data:")) {
-                    com.bumptech.glide.RequestBuilder<android.graphics.Bitmap> rb = com.bumptech.glide.Glide.with(context)
-                            .asBitmap()
-                            .load(full)
-                            .frame(1000000)
-                            .diskCacheStrategy(com.bumptech.glide.load.engine.DiskCacheStrategy.ALL);
-                    if (cornerRadiusDp > 0) {
-                        int radiusPx = (int) (cornerRadiusDp * context.getResources().getDisplayMetrics().density);
-                        rb = rb.transform(new com.bumptech.glide.load.resource.bitmap.RoundedCorners(radiusPx));
-                    }
-                    rb.into(target);
-                }
+                // Instant lightweight video placeholder matching web preload="none"
+                // NEVER execute heavy 50MB background preload or block Glide threads with remote HTTP MediaMetadataRetriever
+                target.setImageResource(com.anonymous.chat.R.drawable.bg_card_topic);
+                target.setScaleType(android.widget.ImageView.ScaleType.CENTER_CROP);
             }
         } catch (Exception e) {
             e.printStackTrace();

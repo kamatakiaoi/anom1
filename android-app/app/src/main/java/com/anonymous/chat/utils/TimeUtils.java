@@ -7,21 +7,40 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 public class TimeUtils {
-    private static final SimpleDateFormat ISO_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-    private static final SimpleDateFormat ISO_FORMAT_NO_MS = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+    private static final TimeZone TZ_UTC = TimeZone.getTimeZone("UTC");
+    private static final TimeZone TZ_VN = TimeZone.getTimeZone("GMT+7");
 
-    static {
-        ISO_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-        ISO_FORMAT_NO_MS.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+    private static final ThreadLocal<SimpleDateFormat> ISO_FORMAT = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        sdf.setTimeZone(TZ_UTC);
+        return sdf;
+    });
+
+    private static final ThreadLocal<SimpleDateFormat> ISO_FORMAT_NO_MS = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US);
+        sdf.setTimeZone(TZ_UTC);
+        return sdf;
+    });
+
+    private static final ThreadLocal<SimpleDateFormat> TIME_FORMAT_VN = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        sdf.setTimeZone(TZ_VN);
+        return sdf;
+    });
+
+    private static final ThreadLocal<SimpleDateFormat> TIME_FORMAT_UTC = ThreadLocal.withInitial(() -> {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        sdf.setTimeZone(TZ_UTC);
+        return sdf;
+    });
 
     public static Date parseIsoDate(String isoString) {
         if (isoString == null || isoString.isEmpty()) return new Date();
         try {
-            return ISO_FORMAT.parse(isoString);
+            return ISO_FORMAT.get().parse(isoString);
         } catch (ParseException e) {
             try {
-                return ISO_FORMAT_NO_MS.parse(isoString);
+                return ISO_FORMAT_NO_MS.get().parse(isoString);
             } catch (ParseException ex) {
                 return new Date();
             }
@@ -35,13 +54,11 @@ public class TimeUtils {
 
     public static String formatMessageTime(String isoString, String timezonePref) {
         Date date = parseIsoDate(isoString);
-        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
         if ("vn".equalsIgnoreCase(timezonePref)) {
-            sdf.setTimeZone(TimeZone.getTimeZone("GMT+7"));
+            return TIME_FORMAT_VN.get().format(date);
         } else {
-            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            return TIME_FORMAT_UTC.get().format(date);
         }
-        return sdf.format(date);
     }
 
     public static String formatRelativeTime(String isoString) {

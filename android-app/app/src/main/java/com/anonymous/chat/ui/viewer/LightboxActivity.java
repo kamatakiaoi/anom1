@@ -91,7 +91,7 @@ public class LightboxActivity extends AppCompatActivity {
             binding.btnLightboxRotate.setVisibility(View.VISIBLE);
             binding.pbLightboxLoading.setVisibility(View.GONE);
 
-            com.anonymous.chat.utils.ImageUtils.loadImage(this, imageUrl, binding.ivLightboxImage);
+            com.anonymous.chat.utils.ImageUtils.loadFullImage(this, imageUrl, binding.ivLightboxImage);
 
             binding.ivLightboxImage.setOnSingleTapListener(v -> toggleControls());
             binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());

@@ -27,6 +27,8 @@ public class Message implements Serializable {
     private transient boolean isGrouped = false;
     private transient boolean showTime = true;
     private transient String groupPosition = "g-only";
+    private transient List<String> cachedParsedImages = null;
+    private transient Long cachedTimeMillis = null;
 
     public Message() {}
 
@@ -52,12 +54,27 @@ public class Message implements Serializable {
     public void setText(String text) { this.text = text; }
 
     public String getTime() { return time != null ? time : ""; }
-    public void setTime(String time) { this.time = time; }
+    public void setTime(String time) { 
+        this.time = time;
+        this.cachedTimeMillis = null;
+    }
+
+    public long getTimeMillis() {
+        if (cachedTimeMillis == null) {
+            cachedTimeMillis = com.anonymous.chat.utils.TimeUtils.parseIsoToMillis(time);
+        }
+        return cachedTimeMillis;
+    }
 
     public String getImage() { return image; }
-    public void setImage(String image) { this.image = image; }
+    public void setImage(String image) { 
+        this.image = image;
+        this.cachedParsedImages = null;
+    }
 
     public List<String> getImages() {
+        if (cachedParsedImages != null) return cachedParsedImages;
+
         List<String> result = new ArrayList<>();
         if (images != null && !images.isEmpty()) {
             for (String img : images) {
@@ -67,6 +84,7 @@ public class Message implements Serializable {
         if (result.isEmpty() && image != null && !image.trim().isEmpty()) {
             parseAndAddImages(result, image);
         }
+        cachedParsedImages = result;
         return result;
     }
 
@@ -100,7 +118,10 @@ public class Message implements Serializable {
         if (token == null) return "";
         return token.trim().replaceAll("^[\"'\\[\\]]+|[\"'\\[\\],]+$", "").trim();
     }
-    public void setImages(List<String> images) { this.images = images; }
+    public void setImages(List<String> images) { 
+        this.images = images;
+        this.cachedParsedImages = null;
+    }
 
     public String getVideo() { return video; }
     public void setVideo(String video) { this.video = video; }
