@@ -54,7 +54,7 @@ public class LightboxActivity extends AppCompatActivity {
     private final Runnable progressRunnable = new Runnable() {
         @Override
         public void run() {
-            if (isVideo && binding.vvLightboxVideo.isPlaying() && !isTracking) {
+            if (isVideo && binding.vvLightboxVideo.isPlaying() && !isTracking && !isSeeking) {
                 updateProgressUI();
             }
             handler.postDelayed(this, 250);
@@ -120,8 +120,6 @@ public class LightboxActivity extends AppCompatActivity {
         } else {
             // 2. Instant Progressive HTTP Streaming - zero wait!
             fallbackStreamVideo(videoUrl);
-            // In the background, cache the video for future instant playback
-            VideoCacheManager.getInstance().getVideoFile(this, videoUrl, null);
         }
 
         binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());
@@ -152,6 +150,15 @@ public class LightboxActivity extends AppCompatActivity {
 
             binding.tvVideoDuration.setText(formatTime(videoDurationMs));
             adjustVideoSize();
+
+            mp.setOnInfoListener((player, what, extra) -> {
+                if (what == MediaPlayer.MEDIA_INFO_BUFFERING_START) {
+                    binding.pbLightboxLoading.setVisibility(View.VISIBLE);
+                } else if (what == MediaPlayer.MEDIA_INFO_BUFFERING_END) {
+                    binding.pbLightboxLoading.setVisibility(View.GONE);
+                }
+                return false;
+            });
 
             mp.setOnSeekCompleteListener(player -> {
                 isSeeking = false;
@@ -205,13 +212,6 @@ public class LightboxActivity extends AppCompatActivity {
                 if (fromUser && videoDurationMs > 0) {
                     int curMs = (int) (((long) progress * videoDurationMs) / 1000L);
                     binding.tvVideoCurrentTime.setText(formatTime(curMs));
-
-                    // Throttle live scrub preview to avoid native decoder congestion
-                    long now = System.currentTimeMillis();
-                    if (now - lastScrubSeekTime > 250) {
-                        lastScrubSeekTime = now;
-                        accurateSeekTo(curMs);
-                    }
                 }
             }
 
@@ -248,14 +248,12 @@ public class LightboxActivity extends AppCompatActivity {
         if (mediaPlayer != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 try {
-                    // Exact frame-accurate seeking! Eliminates keyframe snapping jump
-                    mediaPlayer.seekTo((long) targetMs, MediaPlayer.SEEK_CLOSEST);
+                    // SEEK_CLOSEST_SYNC guarantees immediate responsive seek on HTTP Range stream without frame drop
+                    mediaPlayer.seekTo((long) targetMs, MediaPlayer.SEEK_CLOSEST_SYNC);
                 } catch (Exception e) {
                     try {
-                        mediaPlayer.seekTo((long) targetMs, MediaPlayer.SEEK_CLOSEST_SYNC);
-                    } catch (Exception ex) {
                         mediaPlayer.seekTo(targetMs);
-                    }
+                    } catch (Exception ignored) {}
                 }
             } else {
                 mediaPlayer.seekTo(targetMs);
@@ -263,6 +261,14 @@ public class LightboxActivity extends AppCompatActivity {
         } else {
             binding.vvLightboxVideo.seekTo(targetMs);
         }
+
+        final int capturedTarget = targetMs;
+        handler.postDelayed(() -> {
+            if (isSeeking && lastTargetSeekMs == capturedTarget) {
+                isSeeking = false;
+                updateProgressUI();
+            }
+        }, 1500);
     }
 
     private void updateProgressUI() {

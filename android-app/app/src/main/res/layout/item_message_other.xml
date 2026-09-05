@@ -162,7 +162,9 @@
                             android:layout_height="42dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_play"
+                            android:tint="#FFFFFF"
                             android:background="@drawable/bg_btn_circle"
+                            android:backgroundTint="#B3000000"
                             android:padding="10dp" />
 
                         <ImageView
@@ -172,7 +174,9 @@
                             android:layout_gravity="bottom|end"
                             android:layout_margin="6dp"
                             android:src="@drawable/ic_fullscreen"
+                            android:tint="#FFFFFF"
                             android:background="@drawable/bg_btn_circle"
+                            android:backgroundTint="#B3000000"
                             android:padding="5dp"
                             android:visibility="gone" />
                     </FrameLayout>

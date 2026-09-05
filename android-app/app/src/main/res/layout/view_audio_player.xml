@@ -18,7 +18,9 @@
         android:layout_width="34dp"
         android:layout_height="34dp"
         android:src="@drawable/ic_play"
+        android:tint="#FFFFFF"
         android:background="@drawable/bg_btn_circle"
+        android:backgroundTint="@color/status_blue"
         android:padding="8dp"
         android:clickable="true"
         android:focusable="true" />

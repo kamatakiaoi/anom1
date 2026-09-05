@@ -632,39 +632,18 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     btnPlayVideo.setVisibility(View.GONE);
                     vvMsgVideoInline.setVisibility(View.VISIBLE);
 
-                    VideoCacheManager.getInstance().getVideoFile(itemView.getContext(), videoUrl, new VideoCacheManager.VideoCallback() {
-                        @Override
-                        public void onReady(java.io.File file) {
-                            itemView.post(() -> {
-                                try {
-                                    vvMsgVideoInline.setVideoPath(file.getAbsolutePath());
-                                    setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
-                                } catch (Exception e) {
-                                    onError(e);
-                                }
-                            });
+                    // Instant playback: if file cached on disk, play from disk; otherwise stream directly via HTTP Range!
+                    java.io.File cached = VideoCacheManager.getInstance().getCachedFile(itemView.getContext(), videoUrl);
+                    if (cached != null && cached.exists() && cached.length() > 0) {
+                        try {
+                            vvMsgVideoInline.setVideoPath(cached.getAbsolutePath());
+                            setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
+                        } catch (Exception e) {
+                            streamVideoInline(itemView.getContext(), vvMsgVideoInline, videoUrl, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
                         }
-
-                        @Override
-                        public void onProgress(int percent) {}
-
-                        @Override
-                        public void onError(Exception e) {
-                            itemView.post(() -> {
-                                try {
-                                    String serverUrl = PreferenceManager.getInstance(itemView.getContext()).getServerBaseUrl();
-                                    String full = ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
-                                    vvMsgVideoInline.setVideoURI(Uri.parse(full));
-                                    setupVideoListeners(vvMsgVideoInline, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
-                                } catch (Exception ex) {
-                                    pbVideoLoading.setVisibility(View.GONE);
-                                    btnPlayVideo.setVisibility(View.VISIBLE);
-                                    ivMsgVideoThumb.setVisibility(View.VISIBLE);
-                                    vvMsgVideoInline.setVisibility(View.GONE);
-                                }
-                            });
-                        }
-                    });
+                    } else {
+                        streamVideoInline(itemView.getContext(), vvMsgVideoInline, videoUrl, pbVideoLoading, ivMsgVideoThumb, btnFullscreenVideo, btnPlayVideo);
+                    }
                 }
             };
 
@@ -698,6 +677,28 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
+    private static void streamVideoInline(
+            Context context,
+            VideoView vv,
+            String videoUrl,
+            ProgressBar pb,
+            ImageView thumb,
+            ImageView btnFs,
+            ImageView btnPlay
+    ) {
+        try {
+            String serverUrl = PreferenceManager.getInstance(context).getServerBaseUrl();
+            String full = ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
+            vv.setVideoURI(Uri.parse(full));
+            setupVideoListeners(vv, pb, thumb, btnFs, btnPlay);
+        } catch (Exception ex) {
+            pb.setVisibility(View.GONE);
+            btnPlay.setVisibility(View.VISIBLE);
+            thumb.setVisibility(View.VISIBLE);
+            vv.setVisibility(View.GONE);
+        }
+    }
+
     private static void setupVideoListeners(VideoView vv, ProgressBar pb, ImageView thumb, ImageView btnFs, ImageView btnPlay) {
         vv.setOnPreparedListener(mp -> {
             pb.setVisibility(View.GONE);
@@ -705,6 +706,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             btnFs.setVisibility(View.VISIBLE);
             activePlayingVideo = vv;
             mp.setLooping(true);
+            mp.setOnInfoListener((player, what, extra) -> {
+                if (what == android.media.MediaPlayer.MEDIA_INFO_BUFFERING_START) {
+                    pb.setVisibility(View.VISIBLE);
+                } else if (what == android.media.MediaPlayer.MEDIA_INFO_BUFFERING_END) {
+                    pb.setVisibility(View.GONE);
+                }
+                return false;
+            });
             mp.start();
         });
 

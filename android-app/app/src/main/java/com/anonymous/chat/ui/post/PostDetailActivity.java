@@ -6,8 +6,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.content.res.ColorStateList;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -244,17 +247,38 @@ public class PostDetailActivity extends AppCompatActivity implements
 
         if (post.getVideo() != null && !post.getVideo().isEmpty()) {
             String videoUrl = post.getVideo();
+            FrameLayout frame = new FrameLayout(this);
+            LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, heightPx);
+            frameLp.setMargins(0, (int) (6 * density), 0, (int) (6 * density));
+            frame.setLayoutParams(frameLp);
+
             ImageView videoThumb = new ImageView(this);
-            videoThumb.setLayoutParams(new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, heightPx));
+            videoThumb.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             videoThumb.setScaleType(ImageView.ScaleType.CENTER_CROP);
             ImageUtils.loadVideoThumbnail(this, videoUrl, videoThumb, 10);
-            videoThumb.setOnClickListener(v -> {
+            frame.addView(videoThumb);
+
+            ImageView playBtn = new ImageView(this);
+            int btnSize = (int) (52 * density);
+            FrameLayout.LayoutParams playLp = new FrameLayout.LayoutParams(btnSize, btnSize);
+            playLp.gravity = Gravity.CENTER;
+            playBtn.setLayoutParams(playLp);
+            playBtn.setImageResource(R.drawable.ic_play);
+            playBtn.setBackgroundResource(R.drawable.bg_btn_circle);
+            playBtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#B3000000")));
+            playBtn.setImageTintList(ColorStateList.valueOf(Color.WHITE));
+            int pad = (int) (13 * density);
+            playBtn.setPadding(pad, pad, pad, pad);
+            frame.addView(playBtn);
+
+            frame.setOnClickListener(v -> {
                 Intent intent = new Intent(PostDetailActivity.this, LightboxActivity.class);
                 intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, videoUrl);
                 startActivity(intent);
             });
-            binding.detailMediaContainer.addView(videoThumb);
+            binding.detailMediaContainer.addView(frame);
         } else if (post.getImages() != null && !post.getImages().isEmpty()) {
             for (String img : post.getImages()) {
                 ImageView iv = new ImageView(this);

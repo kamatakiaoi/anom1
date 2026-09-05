@@ -1,5 +1,19 @@
 [
   {
+    "version": "3.6.14",
+    "date": "2026-09-05",
+    "title": "Universal Video Thumbnails, Instant YouTube-Style Chunked Streaming & High-Contrast Video Controls",
+    "items": [
+      "Added universal 2-tier video thumbnail system (in-memory LRU + disk cache) extracting keyframes over HTTP Range in <100ms for chat messages, feeds, and post details",
+      "Fixed missing video thumbnails across all post feeds, chat items, and post details",
+      "Replaced blocking full-file OkHttp downloads with instant progressive 1MB chunked streaming (YouTube-like playback starting in <200ms)",
+      "Fixed black-on-black play/pause/close buttons with modern high-contrast frosted translucent controls and pure white icons",
+      "Fixed video seeking jumping to inaccurate locations by switching to SEEK_CLOSEST_SYNC keyframe alignment and throttling scrub requests",
+      "Enhanced inline and fullscreen video buffering listeners with responsive progress spinners",
+      "Added centered video play button overlay with rounded corner thumbnails in PostDetailActivity"
+    ]
+  },
+  {
     "version": "1.4.8",
     "date": "2026-09-05",
     "title": "High-Speed Connection Optimization, True Latest Message Auto-Pinning & Zero-Latency Navigation",

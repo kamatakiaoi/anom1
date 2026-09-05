@@ -109,7 +109,9 @@
             android:layout_height="48dp"
             android:layout_gravity="center"
             android:src="@drawable/ic_play"
+            android:tint="#FFFFFF"
             android:background="@drawable/bg_btn_circle"
+            android:backgroundTint="#B3000000"
             android:padding="12dp"
             android:visibility="gone" />
     </FrameLayout>
