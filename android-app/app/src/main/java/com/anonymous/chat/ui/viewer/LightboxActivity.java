@@ -2,34 +2,69 @@ package com.anonymous.chat.ui.viewer;
 
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.widget.FrameLayout;
-import android.widget.MediaController;
+import android.widget.SeekBar;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.media3.common.MediaItem;
+import androidx.media3.common.PlaybackException;
+import androidx.media3.common.Player;
+import androidx.media3.common.VideoSize;
+import androidx.media3.exoplayer.ExoPlayer;
 
+import com.anonymous.chat.R;
 import com.anonymous.chat.databinding.ActivityLightboxBinding;
-import com.bumptech.glide.Glide;
+import com.anonymous.chat.utils.ImageUtils;
+import com.anonymous.chat.utils.PreferenceManager;
+import com.anonymous.chat.utils.VideoCacheManager;
+
+import java.io.File;
+import java.util.Locale;
 
 public class LightboxActivity extends AppCompatActivity {
 
     public static final String EXTRA_IMAGE_URL = "extra_image_url";
     public static final String EXTRA_VIDEO_URL = "extra_video_url";
+    public static final String EXTRA_VIDEO_POSITION = "extra_video_position";
 
     private ActivityLightboxBinding binding;
     private boolean isVideo = false;
     private int videoWidth = 0;
     private int videoHeight = 0;
+
+    private ExoPlayer mediaPlayer = null;
+    private int videoDurationMs = 0;
+    private boolean isTracking = false;
+    private boolean isSeeking = false;
+    private int pendingSeekMs = -1;
+    private int lastTargetSeekMs = -1;
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private boolean controlsVisible = true;
+
+    private final Runnable progressRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (isVideo && mediaPlayer != null && mediaPlayer.isPlaying() && !isTracking && !isSeeking) {
+                updateProgressUI();
+            }
+            handler.postDelayed(this, 250);
+        }
+    };
+
+    private final Runnable autoHideRunnable = this::hideControls;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,49 +74,300 @@ public class LightboxActivity extends AppCompatActivity {
 
         String imageUrl = getIntent().getStringExtra(EXTRA_IMAGE_URL);
         String videoUrl = getIntent().getStringExtra(EXTRA_VIDEO_URL);
+        int startPositionMs = getIntent().getIntExtra(EXTRA_VIDEO_POSITION, 0);
 
         if (videoUrl != null && !videoUrl.isEmpty()) {
-            isVideo = true;
-            binding.ivLightboxImage.setVisibility(View.GONE);
-            binding.vvLightboxVideo.setVisibility(View.VISIBLE);
-            binding.pbLightboxLoading.setVisibility(View.VISIBLE);
-            binding.btnLightboxRotate.setVisibility(View.VISIBLE);
-
-            MediaController mediaController = new MediaController(this);
-            mediaController.setAnchorView(binding.vvLightboxVideo);
-            binding.vvLightboxVideo.setMediaController(mediaController);
-
-            try {
-                binding.vvLightboxVideo.setVideoURI(Uri.parse(videoUrl));
-                binding.vvLightboxVideo.setOnPreparedListener(mp -> {
-                    binding.pbLightboxLoading.setVisibility(View.GONE);
-                    videoWidth = mp.getVideoWidth();
-                    videoHeight = mp.getVideoHeight();
-                    adjustVideoSize();
-                    mp.start();
-                    mediaController.show(3000);
-                });
-                binding.vvLightboxVideo.setOnErrorListener((mp, what, extra) -> {
-                    binding.pbLightboxLoading.setVisibility(View.GONE);
-                    Toast.makeText(LightboxActivity.this, "Cannot play video", Toast.LENGTH_SHORT).show();
-                    return true;
-                });
-            } catch (Exception e) {
-                binding.pbLightboxLoading.setVisibility(View.GONE);
-                Toast.makeText(this, "Error loading video: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-
-            binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());
+            setupVideoMode(videoUrl, startPositionMs);
         } else if (imageUrl != null && !imageUrl.isEmpty()) {
-            binding.ivLightboxImage.setVisibility(View.VISIBLE);
-            binding.vvLightboxVideo.setVisibility(View.GONE);
-            binding.btnLightboxRotate.setVisibility(View.VISIBLE);
-            Glide.with(this).load(imageUrl).into(binding.ivLightboxImage);
-            binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());
+            setupImageMode(imageUrl);
         }
 
         binding.btnLightboxClose.setOnClickListener(v -> finish());
         applyOrientationState(getResources().getConfiguration().orientation);
+    }
+
+    private void setupImageMode(String imageUrl) {
+        isVideo = false;
+        binding.ivLightboxImage.setVisibility(View.VISIBLE);
+        binding.vvLightboxVideo.setVisibility(View.GONE);
+        binding.layoutVideoControls.setVisibility(View.GONE);
+        binding.ivVideoCenterPlay.setVisibility(View.GONE);
+        binding.btnLightboxRotate.setVisibility(View.VISIBLE);
+        binding.pbLightboxLoading.setVisibility(View.GONE);
+
+        ImageUtils.loadFullImage(this, imageUrl, binding.ivLightboxImage);
+
+        binding.ivLightboxImage.setOnSingleTapListener(v -> toggleControls());
+        binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());
+    }
+
+    private void setupVideoMode(String videoUrl, int startPositionMs) {
+        isVideo = true;
+        binding.ivLightboxImage.setVisibility(View.GONE);
+        binding.vvLightboxVideo.setVisibility(View.VISIBLE);
+        binding.layoutVideoControls.setVisibility(View.VISIBLE);
+        binding.pbLightboxLoading.setVisibility(View.VISIBLE);
+        binding.btnLightboxRotate.setVisibility(View.VISIBLE);
+
+        mediaPlayer = new ExoPlayer.Builder(this).build();
+        binding.vvLightboxVideo.setPlayer(mediaPlayer);
+
+        setupVideoListeners(startPositionMs);
+        setupVideoControls();
+
+        File cached = VideoCacheManager.getInstance().getCachedFile(this, videoUrl);
+        if (cached != null) {
+            try {
+                mediaPlayer.setMediaItem(MediaItem.fromUri(Uri.fromFile(cached)));
+                mediaPlayer.prepare();
+                mediaPlayer.play();
+            } catch (Exception e) {
+                fallbackStreamVideo(videoUrl);
+            }
+        } else {
+            fallbackStreamVideo(videoUrl);
+        }
+
+        binding.btnLightboxRotate.setOnClickListener(v -> toggleOrientation());
+        binding.btnVideoFullscreen.setOnClickListener(v -> toggleOrientation());
+    }
+
+    private void fallbackStreamVideo(String videoUrl) {
+        try {
+            String serverUrl = PreferenceManager.getInstance(this).getServerBaseUrl();
+            String full = ImageUtils.getFullMediaUrl(serverUrl, videoUrl);
+            mediaPlayer.setMediaItem(MediaItem.fromUri(Uri.parse(full)));
+            mediaPlayer.prepare();
+            mediaPlayer.play();
+        } catch (Exception ex) {
+            binding.pbLightboxLoading.setVisibility(View.GONE);
+            Toast.makeText(this, "Cannot play video", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void setupVideoListeners(int startPositionMs) {
+        mediaPlayer.addListener(new Player.Listener() {
+            @Override
+            public void onPlaybackStateChanged(int playbackState) {
+                if (playbackState == Player.STATE_READY) {
+                    binding.pbLightboxLoading.setVisibility(View.GONE);
+                    long duration = mediaPlayer.getDuration();
+                    videoDurationMs = duration == androidx.media3.common.C.TIME_UNSET ? 0 : (int) duration;
+                    binding.tvVideoDuration.setText(formatTime(videoDurationMs));
+
+                    if (startPositionMs > 0 && startPositionMs < videoDurationMs && mediaPlayer.getCurrentPosition() < startPositionMs) {
+                        accurateSeekTo(startPositionMs);
+                    }
+                    
+                    updatePlayPauseButtons(mediaPlayer.isPlaying());
+                    showControls();
+                    scheduleAutoHide();
+                    handler.post(progressRunnable);
+                } else if (playbackState == Player.STATE_ENDED) {
+                    updatePlayPauseButtons(false);
+                    binding.sbVideoProgress.setProgress(1000);
+                    binding.tvVideoCurrentTime.setText(formatTime(videoDurationMs));
+                    showControls();
+                    cancelAutoHide();
+                } else if (playbackState == Player.STATE_BUFFERING) {
+                    binding.pbLightboxLoading.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onIsPlayingChanged(boolean isPlaying) {
+                updatePlayPauseButtons(isPlaying);
+            }
+
+            @Override
+            public void onVideoSizeChanged(VideoSize videoSize) {
+                videoWidth = videoSize.width;
+                videoHeight = videoSize.height;
+                adjustVideoSize();
+            }
+
+            @Override
+            public void onPlayerError(PlaybackException error) {
+                binding.pbLightboxLoading.setVisibility(View.GONE);
+                Toast.makeText(LightboxActivity.this, "Video playback error: " + error.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onPositionDiscontinuity(Player.PositionInfo oldPosition, Player.PositionInfo newPosition, int reason) {
+                if (reason == Player.DISCONTINUITY_REASON_SEEK) {
+                    isSeeking = false;
+                    if (pendingSeekMs >= 0) {
+                        int next = pendingSeekMs;
+                        pendingSeekMs = -1;
+                        accurateSeekTo(next);
+                    } else {
+                        updateProgressUI();
+                    }
+                }
+            }
+        });
+
+        View.OnClickListener clickListener = v -> toggleControls();
+        binding.vvLightboxVideo.setOnClickListener(clickListener);
+        binding.getRoot().setOnClickListener(clickListener);
+    }
+
+    private void setupVideoControls() {
+        binding.btnVideoPlayPause.setOnClickListener(v -> togglePlayPause());
+        binding.ivVideoCenterPlay.setOnClickListener(v -> togglePlayPause());
+
+        binding.sbVideoProgress.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if (fromUser && videoDurationMs > 0) {
+                    int curMs = (int) (((long) progress * videoDurationMs) / 1000L);
+                    binding.tvVideoCurrentTime.setText(formatTime(curMs));
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isTracking = true;
+                cancelAutoHide();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                isTracking = false;
+                if (videoDurationMs > 0) {
+                    int finalMs = (int) (((long) seekBar.getProgress() * videoDurationMs) / 1000L);
+                    accurateSeekTo(finalMs);
+                }
+                scheduleAutoHide();
+            }
+        });
+    }
+
+    private void accurateSeekTo(int targetMs) {
+        if (targetMs < 0) targetMs = 0;
+        if (videoDurationMs > 0 && targetMs > videoDurationMs) targetMs = videoDurationMs;
+
+        if (isSeeking) {
+            pendingSeekMs = targetMs;
+            return;
+        }
+
+        isSeeking = true;
+        lastTargetSeekMs = targetMs;
+
+        if (mediaPlayer != null) {
+            mediaPlayer.seekTo(targetMs);
+        }
+
+        final int capturedTarget = targetMs;
+        handler.postDelayed(() -> {
+            if (isSeeking && lastTargetSeekMs == capturedTarget) {
+                isSeeking = false;
+                updateProgressUI();
+            }
+        }, 1500);
+    }
+
+    private void updateProgressUI() {
+        if (videoDurationMs <= 0 || isTracking || mediaPlayer == null) return;
+        int currentPos = (int) mediaPlayer.getCurrentPosition();
+
+        if (currentPos < 0) currentPos = 0;
+        if (currentPos > videoDurationMs) currentPos = videoDurationMs;
+
+        int progress = (int) (((long) currentPos * 1000L) / videoDurationMs);
+        binding.sbVideoProgress.setProgress(progress);
+        binding.tvVideoCurrentTime.setText(formatTime(currentPos));
+    }
+
+    private void togglePlayPause() {
+        if (mediaPlayer != null) {
+            if (mediaPlayer.isPlaying()) {
+                mediaPlayer.pause();
+                updatePlayPauseButtons(false);
+                cancelAutoHide();
+                showCenterFlash(false);
+            } else {
+                mediaPlayer.play();
+                updatePlayPauseButtons(true);
+                scheduleAutoHide();
+                showCenterFlash(true);
+            }
+        }
+    }
+
+    private void updatePlayPauseButtons(boolean isPlaying) {
+        binding.btnVideoPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+        binding.ivVideoCenterPlay.setImageResource(isPlaying ? R.drawable.ic_play : R.drawable.ic_pause);
+    }
+
+    private void showCenterFlash(boolean isPlay) {
+        binding.ivVideoCenterPlay.setImageResource(isPlay ? R.drawable.ic_play : R.drawable.ic_pause);
+        binding.ivVideoCenterPlay.setAlpha(1.0f);
+        binding.ivVideoCenterPlay.setVisibility(View.VISIBLE);
+        binding.ivVideoCenterPlay.animate()
+                .alpha(0f)
+                .setDuration(500)
+                .withEndAction(() -> {
+                    if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                        binding.ivVideoCenterPlay.setVisibility(View.GONE);
+                    } else {
+                        binding.ivVideoCenterPlay.setAlpha(0.8f);
+                        binding.ivVideoCenterPlay.setVisibility(View.VISIBLE);
+                        binding.ivVideoCenterPlay.setImageResource(R.drawable.ic_play);
+                    }
+                })
+                .start();
+    }
+
+    private void toggleControls() {
+        if (controlsVisible) {
+            hideControls();
+        } else {
+            showControls();
+            scheduleAutoHide();
+        }
+    }
+
+    private void showControls() {
+        controlsVisible = true;
+        binding.layoutTopControls.setVisibility(View.VISIBLE);
+        if (isVideo) {
+            binding.layoutVideoControls.setVisibility(View.VISIBLE);
+        }
+    }
+
+    private void hideControls() {
+        if (isVideo && mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            return;
+        }
+        controlsVisible = false;
+        binding.layoutTopControls.setVisibility(View.GONE);
+        if (isVideo) {
+            binding.layoutVideoControls.setVisibility(View.GONE);
+        }
+    }
+
+    private void scheduleAutoHide() {
+        cancelAutoHide();
+        handler.postDelayed(autoHideRunnable, 3500);
+    }
+
+    private void cancelAutoHide() {
+        handler.removeCallbacks(autoHideRunnable);
+    }
+
+    private String formatTime(int ms) {
+        if (ms < 0) ms = 0;
+        int totalSeconds = ms / 1000;
+        int seconds = totalSeconds % 60;
+        int minutes = (totalSeconds / 60) % 60;
+        int hours = totalSeconds / 3600;
+        if (hours > 0) {
+            return String.format(Locale.US, "%d:%02d:%02d", hours, minutes, seconds);
+        } else {
+            return String.format(Locale.US, "%02d:%02d", minutes, seconds);
+        }
     }
 
     private void adjustVideoSize() {
@@ -100,11 +386,9 @@ public class LightboxActivity extends AppCompatActivity {
             }
 
             if (videoAspect > containerAspect) {
-                // Video is wider than screen: fit width, compute height
                 lp.width = containerWidth;
                 lp.height = (int) (containerWidth / videoAspect);
             } else {
-                // Video is taller than screen: fit height, compute width
                 lp.height = containerHeight;
                 lp.width = (int) (containerHeight * videoAspect);
             }
@@ -127,6 +411,9 @@ public class LightboxActivity extends AppCompatActivity {
         super.onConfigurationChanged(newConfig);
         applyOrientationState(newConfig.orientation);
         adjustVideoSize();
+        if (!isVideo) {
+            binding.ivLightboxImage.resetZoom();
+        }
     }
 
     private void applyOrientationState(int orientation) {
@@ -170,8 +457,25 @@ public class LightboxActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (isVideo && binding.vvLightboxVideo.isPlaying()) {
-            binding.vvLightboxVideo.pause();
+        cancelAutoHide();
+        handler.removeCallbacks(progressRunnable);
+        if (isVideo && mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
+            updatePlayPauseButtons(false);
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        cancelAutoHide();
+        handler.removeCallbacksAndMessages(null);
+        if (isVideo && mediaPlayer != null) {
+            try {
+                mediaPlayer.stop();
+                mediaPlayer.release();
+            } catch (Exception ignored) {}
+            mediaPlayer = null;
         }
     }
 }

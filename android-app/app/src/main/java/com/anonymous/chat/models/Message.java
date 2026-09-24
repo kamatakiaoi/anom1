@@ -27,16 +27,18 @@ public class Message implements Serializable {
     private transient boolean isGrouped = false;
     private transient boolean showTime = true;
     private transient String groupPosition = "g-only";
+    private transient List<String> cachedParsedImages = null;
+    private transient Long cachedTimeMillis = null;
 
     public Message() {}
 
     public int getMsgId() { return msgId; }
     public void setMsgId(int msgId) { this.msgId = msgId; }
 
-    public String getId() { return id != null ? id : (uid != null ? uid : ""); }
+    public String getId() { return id != null ? id : ""; }
     public void setId(String id) { this.id = id; }
 
-    public String getUid() { return uid != null ? uid : (id != null ? id : ""); }
+    public String getUid() { return uid != null ? uid : ""; }
     public void setUid(String uid) { this.uid = uid; }
 
     public String getName() { return name != null ? name : "Anonymous"; }
@@ -52,50 +54,74 @@ public class Message implements Serializable {
     public void setText(String text) { this.text = text; }
 
     public String getTime() { return time != null ? time : ""; }
-    public void setTime(String time) { this.time = time; }
+    public void setTime(String time) { 
+        this.time = time;
+        this.cachedTimeMillis = null;
+    }
+
+    public long getTimeMillis() {
+        if (cachedTimeMillis == null) {
+            cachedTimeMillis = com.anonymous.chat.utils.TimeUtils.parseIsoToMillis(time);
+        }
+        return cachedTimeMillis;
+    }
 
     public String getImage() { return image; }
-    public void setImage(String image) { this.image = image; }
+    public void setImage(String image) { 
+        this.image = image;
+        this.cachedParsedImages = null;
+    }
 
     public List<String> getImages() {
+        if (cachedParsedImages != null) return cachedParsedImages;
+
         List<String> result = new ArrayList<>();
         if (images != null && !images.isEmpty()) {
             for (String img : images) {
-                if (img != null && !img.trim().isEmpty()) {
-                    String trimmed = img.trim();
-                    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                        try {
-                            JSONArray arr = new JSONArray(trimmed);
-                            for (int i = 0; i < arr.length(); i++) {
-                                result.add(arr.getString(i));
-                            }
-                        } catch (Exception e) {
-                            result.add(trimmed);
-                        }
-                    } else {
-                        result.add(trimmed);
-                    }
-                }
+                parseAndAddImages(result, img);
             }
         }
         if (result.isEmpty() && image != null && !image.trim().isEmpty()) {
-            String trimmed = image.trim();
-            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-                try {
-                    JSONArray arr = new JSONArray(trimmed);
-                    for (int i = 0; i < arr.length(); i++) {
-                        result.add(arr.getString(i));
-                    }
-                } catch (Exception e) {
-                    result.add(trimmed);
-                }
-            } else {
-                result.add(trimmed);
-            }
+            parseAndAddImages(result, image);
         }
+        cachedParsedImages = result;
         return result;
     }
-    public void setImages(List<String> images) { this.images = images; }
+
+    private static void parseAndAddImages(List<String> result, String raw) {
+        if (raw == null || raw.trim().isEmpty()) return;
+        String trimmed = raw.trim();
+        // If it starts with [ and ends with ] or contains commas
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            try {
+                JSONArray arr = new JSONArray(trimmed);
+                for (int i = 0; i < arr.length(); i++) {
+                    String item = cleanImgToken(arr.getString(i));
+                    if (!item.isEmpty() && !result.contains(item)) result.add(item);
+                }
+                return;
+            } catch (Exception ignored) {}
+        }
+        // Fallback: strip outer brackets if any and split by comma
+        if (trimmed.startsWith("[")) trimmed = trimmed.substring(1);
+        if (trimmed.endsWith("]")) trimmed = trimmed.substring(0, trimmed.length() - 1);
+        String[] parts = trimmed.split(",");
+        for (String p : parts) {
+            String clean = cleanImgToken(p);
+            if (!clean.isEmpty() && !result.contains(clean)) {
+                result.add(clean);
+            }
+        }
+    }
+
+    private static String cleanImgToken(String token) {
+        if (token == null) return "";
+        return token.trim().replaceAll("^[\"'\\[\\]]+|[\"'\\[\\],]+$", "").trim();
+    }
+    public void setImages(List<String> images) { 
+        this.images = images;
+        this.cachedParsedImages = null;
+    }
 
     public String getVideo() { return video; }
     public void setVideo(String video) { this.video = video; }

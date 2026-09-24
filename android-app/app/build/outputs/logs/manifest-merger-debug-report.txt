@@ -10,6 +10,14 @@ MERGED from [androidx.constraintlayout:constraintlayout:2.2.0] C:\Users\flooxie\
 MERGED from [androidx.appcompat:appcompat-resources:1.7.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\dcaca2e11dad7e017c34ae86d8e2229a\transformed\jetified-appcompat-resources-1.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.appcompat:appcompat:1.7.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\2c7d21bb40ab5615b936a7cd99a11c3c\transformed\appcompat-1.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\d7a95389cdc6b62b4a3b4f99642e5e28\transformed\swiperefreshlayout-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media3:media3-exoplayer:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\acf6cd3306b01649a8554a6589d592ff\transformed\jetified-media3-exoplayer-1.4.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media3:media3-extractor:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\c77786185a46d450c013e28890db6998\transformed\jetified-media3-extractor-1.4.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-container:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\f363887814aad6fcd54df9de966aee91\transformed\jetified-media3-container-1.4.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-datasource:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\cd0e05b8e69adde50783cfcbe85e53c8\transformed\jetified-media3-datasource-1.4.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-decoder:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\c72917f7991cd33fed3ccd62fd46cb3a\transformed\jetified-media3-decoder-1.4.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-database:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\8b9b98a9a079320110f1414b1367f897\transformed\jetified-media3-database-1.4.1\AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media3:media3-common:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\7c0626e157862f79b2370d8145c800dd\transformed\jetified-media3-common-1.4.1\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media3:media3-ui:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\db7bf1d465c58e7f3e944aa6c6f7facf\transformed\jetified-media3-ui-1.4.1\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.viewpager2:viewpager2:1.1.0-beta02] C:\Users\flooxie\.gradle\caches\8.8\transforms\0751877a12f1d0257ce000dcfff3b225\transformed\jetified-viewpager2-1.1.0-beta02\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.recyclerview:recyclerview:1.3.2] C:\Users\flooxie\.gradle\caches\8.8\transforms\654251e20322ce939232a36871afd818\transformed\recyclerview-1.3.2\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.cardview:cardview:1.0.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\75b02aa536b400ba1b17d02da1a781d2\transformed\cardview-1.0.0\AndroidManifest.xml:17:1-22:12
@@ -35,6 +43,7 @@ MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] C:\Users\flooxie\.gradle\
 MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\9750803d52784bcdf6df605dabcf47c0\transformed\coordinatorlayout-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\b40b2e2e05ef86dac1e3a3487d3dcb42\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\3dad680910e84d63c2126c92696d2cd1\transformed\vectordrawable-1.1.0\AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.media:media:1.7.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\7bffa894494604e78f8eb524bdaf7af1\transformed\media-1.7.0\AndroidManifest.xml:2:1-7:12
 MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\6dc9517ac150299cf81df5903eb62c8f\transformed\viewpager-1.0.0\AndroidManifest.xml:17:1-22:12
 MERGED from [androidx.customview:customview:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\305151aa65982cf67ebb59e28fd134db\transformed\customview-1.1.0\AndroidManifest.xml:17:1-24:12
 MERGED from [androidx.core:core:1.13.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\a895f6753216848fc635099897bcb5e6\transformed\core-1.13.0\AndroidManifest.xml:17:1-30:12
@@ -67,6 +76,10 @@ ADDED from C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\
 		ADDED from C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:5:22-64
 uses-permission#android.permission.ACCESS_NETWORK_STATE
 ADDED from C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:6:5-79
+MERGED from [androidx.media3:media3-exoplayer:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\acf6cd3306b01649a8554a6589d592ff\transformed\jetified-media3-exoplayer-1.4.1\AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-exoplayer:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\acf6cd3306b01649a8554a6589d592ff\transformed\jetified-media3-exoplayer-1.4.1\AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-common:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\7c0626e157862f79b2370d8145c800dd\transformed\jetified-media3-common-1.4.1\AndroidManifest.xml:22:5-79
+MERGED from [androidx.media3:media3-common:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\7c0626e157862f79b2370d8145c800dd\transformed\jetified-media3-common-1.4.1\AndroidManifest.xml:22:5-79
 	android:name
 		ADDED from C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:6:22-76
 uses-permission#android.permission.POST_NOTIFICATIONS
@@ -244,6 +257,22 @@ MERGED from [androidx.appcompat:appcompat:1.7.0] C:\Users\flooxie\.gradle\caches
 MERGED from [androidx.appcompat:appcompat:1.7.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\2c7d21bb40ab5615b936a7cd99a11c3c\transformed\appcompat-1.7.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\d7a95389cdc6b62b4a3b4f99642e5e28\transformed\swiperefreshlayout-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.swiperefreshlayout:swiperefreshlayout:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\d7a95389cdc6b62b4a3b4f99642e5e28\transformed\swiperefreshlayout-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media3:media3-exoplayer:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\acf6cd3306b01649a8554a6589d592ff\transformed\jetified-media3-exoplayer-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-exoplayer:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\acf6cd3306b01649a8554a6589d592ff\transformed\jetified-media3-exoplayer-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-extractor:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\c77786185a46d450c013e28890db6998\transformed\jetified-media3-extractor-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-extractor:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\c77786185a46d450c013e28890db6998\transformed\jetified-media3-extractor-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-container:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\f363887814aad6fcd54df9de966aee91\transformed\jetified-media3-container-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-container:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\f363887814aad6fcd54df9de966aee91\transformed\jetified-media3-container-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\cd0e05b8e69adde50783cfcbe85e53c8\transformed\jetified-media3-datasource-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-datasource:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\cd0e05b8e69adde50783cfcbe85e53c8\transformed\jetified-media3-datasource-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-decoder:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\c72917f7991cd33fed3ccd62fd46cb3a\transformed\jetified-media3-decoder-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-decoder:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\c72917f7991cd33fed3ccd62fd46cb3a\transformed\jetified-media3-decoder-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-database:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\8b9b98a9a079320110f1414b1367f897\transformed\jetified-media3-database-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-database:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\8b9b98a9a079320110f1414b1367f897\transformed\jetified-media3-database-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-common:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\7c0626e157862f79b2370d8145c800dd\transformed\jetified-media3-common-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-common:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\7c0626e157862f79b2370d8145c800dd\transformed\jetified-media3-common-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-ui:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\db7bf1d465c58e7f3e944aa6c6f7facf\transformed\jetified-media3-ui-1.4.1\AndroidManifest.xml:20:5-44
+MERGED from [androidx.media3:media3-ui:1.4.1] C:\Users\flooxie\.gradle\caches\8.8\transforms\db7bf1d465c58e7f3e944aa6c6f7facf\transformed\jetified-media3-ui-1.4.1\AndroidManifest.xml:20:5-44
 MERGED from [androidx.viewpager2:viewpager2:1.1.0-beta02] C:\Users\flooxie\.gradle\caches\8.8\transforms\0751877a12f1d0257ce000dcfff3b225\transformed\jetified-viewpager2-1.1.0-beta02\AndroidManifest.xml:5:5-44
 MERGED from [androidx.viewpager2:viewpager2:1.1.0-beta02] C:\Users\flooxie\.gradle\caches\8.8\transforms\0751877a12f1d0257ce000dcfff3b225\transformed\jetified-viewpager2-1.1.0-beta02\AndroidManifest.xml:5:5-44
 MERGED from [androidx.recyclerview:recyclerview:1.3.2] C:\Users\flooxie\.gradle\caches\8.8\transforms\654251e20322ce939232a36871afd818\transformed\recyclerview-1.3.2\AndroidManifest.xml:20:5-44
@@ -294,6 +323,8 @@ MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\flo
 MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\b40b2e2e05ef86dac1e3a3487d3dcb42\transformed\vectordrawable-animated-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\3dad680910e84d63c2126c92696d2cd1\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
 MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\3dad680910e84d63c2126c92696d2cd1\transformed\vectordrawable-1.1.0\AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media:media:1.7.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\7bffa894494604e78f8eb524bdaf7af1\transformed\media-1.7.0\AndroidManifest.xml:5:5-44
+MERGED from [androidx.media:media:1.7.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\7bffa894494604e78f8eb524bdaf7af1\transformed\media-1.7.0\AndroidManifest.xml:5:5-44
 MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\6dc9517ac150299cf81df5903eb62c8f\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.viewpager:viewpager:1.0.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\6dc9517ac150299cf81df5903eb62c8f\transformed\viewpager-1.0.0\AndroidManifest.xml:20:5-44
 MERGED from [androidx.customview:customview:1.1.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\305151aa65982cf67ebb59e28fd134db\transformed\customview-1.1.0\AndroidManifest.xml:20:5-22:41

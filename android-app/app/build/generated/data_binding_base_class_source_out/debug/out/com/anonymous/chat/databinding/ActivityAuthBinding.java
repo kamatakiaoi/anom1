@@ -6,6 +6,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -55,6 +56,12 @@ public final class ActivityAuthBinding implements ViewBinding {
   public final EditText etRecoveryKeyInput;
 
   @NonNull
+  public final LinearLayout panelAuthDivider;
+
+  @NonNull
+  public final LinearLayout panelAuthLoading;
+
+  @NonNull
   public final LinearLayout panelRecoverForm;
 
   @NonNull
@@ -64,7 +71,13 @@ public final class ActivityAuthBinding implements ViewBinding {
   public final LinearLayout panelServerConfig;
 
   @NonNull
+  public final ProgressBar pbAuthLoading;
+
+  @NonNull
   public final TextView tvAuthError;
+
+  @NonNull
+  public final TextView tvAuthLoadingText;
 
   @NonNull
   public final TextView tvRecoveryKeyDisplay;
@@ -78,8 +91,10 @@ public final class ActivityAuthBinding implements ViewBinding {
       @NonNull TextView btnToggleRecover, @NonNull LinearLayout btnToggleServerSettings,
       @NonNull EditText etAuthKeyInput, @NonNull EditText etAuthServerHost,
       @NonNull EditText etAuthServerPort, @NonNull EditText etRecoveryKeyInput,
+      @NonNull LinearLayout panelAuthDivider, @NonNull LinearLayout panelAuthLoading,
       @NonNull LinearLayout panelRecoverForm, @NonNull LinearLayout panelRecoveryDisplay,
-      @NonNull LinearLayout panelServerConfig, @NonNull TextView tvAuthError,
+      @NonNull LinearLayout panelServerConfig, @NonNull ProgressBar pbAuthLoading,
+      @NonNull TextView tvAuthError, @NonNull TextView tvAuthLoadingText,
       @NonNull TextView tvRecoveryKeyDisplay, @NonNull TextView tvServerConfigLabel) {
     this.rootView = rootView;
     this.btnAuthContinue = btnAuthContinue;
@@ -93,10 +108,14 @@ public final class ActivityAuthBinding implements ViewBinding {
     this.etAuthServerHost = etAuthServerHost;
     this.etAuthServerPort = etAuthServerPort;
     this.etRecoveryKeyInput = etRecoveryKeyInput;
+    this.panelAuthDivider = panelAuthDivider;
+    this.panelAuthLoading = panelAuthLoading;
     this.panelRecoverForm = panelRecoverForm;
     this.panelRecoveryDisplay = panelRecoveryDisplay;
     this.panelServerConfig = panelServerConfig;
+    this.pbAuthLoading = pbAuthLoading;
     this.tvAuthError = tvAuthError;
+    this.tvAuthLoadingText = tvAuthLoadingText;
     this.tvRecoveryKeyDisplay = tvRecoveryKeyDisplay;
     this.tvServerConfigLabel = tvServerConfigLabel;
   }
@@ -194,6 +213,18 @@ public final class ActivityAuthBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.panelAuthDivider;
+      LinearLayout panelAuthDivider = ViewBindings.findChildViewById(rootView, id);
+      if (panelAuthDivider == null) {
+        break missingId;
+      }
+
+      id = R.id.panelAuthLoading;
+      LinearLayout panelAuthLoading = ViewBindings.findChildViewById(rootView, id);
+      if (panelAuthLoading == null) {
+        break missingId;
+      }
+
       id = R.id.panelRecoverForm;
       LinearLayout panelRecoverForm = ViewBindings.findChildViewById(rootView, id);
       if (panelRecoverForm == null) {
@@ -212,9 +243,21 @@ public final class ActivityAuthBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.pbAuthLoading;
+      ProgressBar pbAuthLoading = ViewBindings.findChildViewById(rootView, id);
+      if (pbAuthLoading == null) {
+        break missingId;
+      }
+
       id = R.id.tvAuthError;
       TextView tvAuthError = ViewBindings.findChildViewById(rootView, id);
       if (tvAuthError == null) {
+        break missingId;
+      }
+
+      id = R.id.tvAuthLoadingText;
+      TextView tvAuthLoadingText = ViewBindings.findChildViewById(rootView, id);
+      if (tvAuthLoadingText == null) {
         break missingId;
       }
 
@@ -233,8 +276,9 @@ public final class ActivityAuthBinding implements ViewBinding {
       return new ActivityAuthBinding((ScrollView) rootView, btnAuthContinue, btnAuthLogin,
           btnAuthRecover, btnAuthRegister, btnSaveServerConfig, btnToggleRecover,
           btnToggleServerSettings, etAuthKeyInput, etAuthServerHost, etAuthServerPort,
-          etRecoveryKeyInput, panelRecoverForm, panelRecoveryDisplay, panelServerConfig,
-          tvAuthError, tvRecoveryKeyDisplay, tvServerConfigLabel);
+          etRecoveryKeyInput, panelAuthDivider, panelAuthLoading, panelRecoverForm,
+          panelRecoveryDisplay, panelServerConfig, pbAuthLoading, tvAuthError, tvAuthLoadingText,
+          tvRecoveryKeyDisplay, tvServerConfigLabel);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

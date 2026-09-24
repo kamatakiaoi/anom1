@@ -7,13 +7,30 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
+// Process-level crash prevention
+process.on('uncaughtException', (err) => {
+  try {
+    const msg = (err && err.stack) ? err.stack : String(err);
+    console.error('[CRITICAL UNCAUGHT EXCEPTION]', msg);
+    if (typeof log === 'function') log('CRITICAL UNCAUGHT EXCEPTION: ' + msg);
+  } catch {}
+});
+process.on('unhandledRejection', (reason, promise) => {
+  try {
+    const msg = (reason && reason.stack) ? reason.stack : String(reason);
+    console.error('[CRITICAL UNHANDLED REJECTION]', msg);
+    if (typeof log === 'function') log('CRITICAL UNHANDLED REJECTION: ' + msg);
+  } catch {}
+});
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  maxHttpBufferSize: 100e6,
-  pingInterval: 25000,
-  pingTimeout: 60000,
-  connectTimeout: 20000,
+  maxHttpBufferSize: 10e6,
+  pingInterval: 15000,
+  pingTimeout: 10000,
+  connectTimeout: 10000,
+  transports: ['websocket', 'polling'],
   cors: { origin: '*' }
 });
 
@@ -34,14 +51,20 @@ function logTimestamp() {
 
 let _logFile = path.join(LOGS_DIR, logTimestamp() + '.txt');
 let _logStream = fs.createWriteStream(_logFile, { flags: 'a' });
+_logStream.on('error', () => {});
+let _logCount = 0;
 
 function rotateLogIfNeeded() {
   try {
-    const stat = fs.statSync(_logFile);
-    if (stat.size >= LOG_MAX_SIZE) {
-      _logStream.end();
-      _logFile = path.join(LOGS_DIR, logTimestamp() + '.txt');
-      _logStream = fs.createWriteStream(_logFile, { flags: 'a' });
+    _logCount++;
+    if (_logCount % 25 === 0) {
+      const stat = fs.statSync(_logFile);
+      if (stat.size >= LOG_MAX_SIZE) {
+        _logStream.end();
+        _logFile = path.join(LOGS_DIR, logTimestamp() + '.txt');
+        _logStream = fs.createWriteStream(_logFile, { flags: 'a' });
+        _logStream.on('error', () => {});
+      }
     }
   } catch {}
 }
@@ -51,23 +74,30 @@ function log(msg) {
   const line = '[' + ts + '] ' + msg;
   console.log(line);
   rotateLogIfNeeded();
-  _logStream.write(line + '\n');
+  try { _logStream.write(line + '\n'); } catch {}
 }
 
 // --- Key management ---
 const KEY_FILE = path.join(__dirname, 'key.json');
+let _cachedKeys = null;
 
 function loadKeys() {
+  if (_cachedKeys && _cachedKeys.keys) return _cachedKeys;
   try {
     if (fs.existsSync(KEY_FILE)) {
       const data = JSON.parse(fs.readFileSync(KEY_FILE, 'utf8'));
-      if (data && data.keys) return data;
+      if (data && data.keys) {
+        _cachedKeys = data;
+        return _cachedKeys;
+      }
     }
   } catch {}
-  return { keys: {} };
+  _cachedKeys = { keys: {} };
+  return _cachedKeys;
 }
 
 function saveKeys(data) {
+  _cachedKeys = data;
   try {
     const tmp = KEY_FILE + '.tmp';
     fs.writeFileSync(tmp, JSON.stringify(data, null, 2));
@@ -142,12 +172,27 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 const MIME_MAP = {
   '.mp4': 'video/mp4',
+  '.m4v': 'video/mp4',
   '.webm': 'video/webm',
   '.mov': 'video/quicktime',
+  '.ogv': 'video/ogg',
+  '.mkv': 'video/x-matroska',
+  '.ts': 'video/mp2t',
+  '.avi': 'video/x-msvideo',
+  '.3gp': 'video/3gpp',
+  '.wmv': 'video/x-ms-wmv',
   '.ogg': 'audio/ogg',
+  '.oga': 'audio/ogg',
+  '.opus': 'audio/ogg',
   '.mp3': 'audio/mpeg',
   '.wav': 'audio/wav',
   '.m4a': 'audio/mp4',
+  '.flac': 'audio/flac',
+  '.aac': 'audio/aac',
+  '.weba': 'audio/webm',
+  '.aiff': 'audio/aiff',
+  '.aif': 'audio/aiff',
+  '.wma': 'audio/x-ms-wma',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
   '.jpeg': 'image/jpeg',
@@ -156,7 +201,38 @@ const MIME_MAP = {
   '.ico': 'image/x-icon'
 };
 
-// HTTP Range-supported streaming for media files (prevents playback errors midway)
+function sniffMediaType(filePath, ext) {
+  // If ext is recognized and not ambiguous, use it
+  if (ext && ext !== '.bin' && ext !== '.mp3' && MIME_MAP[ext]) {
+    return MIME_MAP[ext];
+  }
+  // Check magic bytes for ambiguous or mislabeled audio/video
+  try {
+    const fd = fs.openSync(filePath, 'r');
+    const buf = Buffer.alloc(32);
+    const bytesRead = fs.readSync(fd, buf, 0, 32, 0);
+    fs.closeSync(fd);
+    if (bytesRead >= 4) {
+      if (buf[0] === 0x66 && buf[1] === 0x4C && buf[2] === 0x61 && buf[3] === 0x43) return 'audio/flac';
+      if (buf[0] === 0x4F && buf[1] === 0x67 && buf[2] === 0x67 && buf[3] === 0x53) return 'audio/ogg';
+      if (buf[0] === 0x1A && buf[1] === 0x45 && buf[2] === 0xDF && buf[3] === 0xA3) return 'video/webm';
+      if (bytesRead >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WAVE') return 'audio/wav';
+      if (bytesRead >= 12 && buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+      if (bytesRead >= 8 && buf.toString('ascii', 4, 8) === 'ftyp') {
+        const brand = buf.toString('ascii', 8, 12).toLowerCase();
+        return (brand.includes('m4a') || brand.includes('m4b')) ? 'audio/mp4' : 'video/mp4';
+      }
+      if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47) return 'image/png';
+      if (buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF) return 'image/jpeg';
+      if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) return 'image/gif';
+      if (buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) return 'audio/mpeg';
+      if (buf[0] === 0xFF && (buf[1] & 0xE0) === 0xE0) return 'audio/mpeg';
+    }
+  } catch {}
+  return MIME_MAP[ext] || 'application/octet-stream';
+}
+
+// HTTP Range-supported progressive chunked streaming (delivers video & audio in smooth responsive chunks)
 app.get('/uploads/:filename', (req, res) => {
   const rawName = path.basename(req.params.filename || '');
   if (!rawName || rawName.includes('..')) return res.status(400).send('Invalid filename');
@@ -166,17 +242,52 @@ app.get('/uploads/:filename', (req, res) => {
     if (err || !stats.isFile()) return res.status(404).send('Not found');
 
     const ext = path.extname(rawName).toLowerCase();
-    const mimeType = MIME_MAP[ext] || 'application/octet-stream';
+    const mimeType = sniffMediaType(filePath, ext);
     const fileSize = stats.size;
-    const range = req.headers.range;
+    const isVideo = mimeType.startsWith('video/');
+    const isAudio = mimeType.startsWith('audio/');
+
+    // Strong RFC 7233 Range & Caching headers
+    const etag = `W/"${fileSize.toString(16)}-${Math.floor(stats.mtimeMs).toString(16)}"`;
+    const lastModified = stats.mtime.toUTCString();
 
     res.setHeader('Accept-Ranges', 'bytes');
-    res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('ETag', etag);
+    res.setHeader('Last-Modified', lastModified);
+    res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
 
-    if (range) {
+    // 304 Not Modified check
+    if (req.headers['if-none-match'] === etag) {
+      return res.status(304).end();
+    }
+
+    // HEAD request support (video players probe file dimensions & range support via HEAD)
+    if (req.method === 'HEAD') {
+      res.setHeader('Content-Length', fileSize);
+      res.setHeader('Content-Type', mimeType);
+      return res.status(200).end();
+    }
+
+    const range = req.headers.range;
+
+    // Check If-Range if provided by seeking player
+    let ifRangeOk = true;
+    if (req.headers['if-range']) {
+      const ifRange = req.headers['if-range'].trim();
+      if (ifRange !== etag && ifRange !== lastModified) {
+        ifRangeOk = false;
+      }
+    }
+
+    if (range && ifRangeOk) {
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      let requestedEnd = parts[1] ? parseInt(parts[1], 10) : NaN;
+      let end = !isNaN(requestedEnd) ? requestedEnd : fileSize - 1;
+      
+      // Ensure end is within bounds
+      end = Math.min(end, fileSize - 1);
 
       if (isNaN(start) || isNaN(end) || start >= fileSize || end >= fileSize || start > end) {
         res.setHeader('Content-Range', `bytes */${fileSize}`);
@@ -184,22 +295,43 @@ app.get('/uploads/:filename', (req, res) => {
       }
 
       const chunkSize = (end - start) + 1;
-      const stream = fs.createReadStream(filePath, { start, end });
       res.writeHead(206, {
         'Content-Range': `bytes ${start}-${end}/${fileSize}`,
         'Content-Length': chunkSize,
-        'Content-Type': mimeType
+        'Content-Type': mimeType,
+        'Accept-Ranges': 'bytes',
+        'ETag': etag,
+        'Last-Modified': lastModified,
+        'Cache-Control': 'public, max-age=2592000, immutable'
       });
-      stream.on('error', () => { if (!res.headersSent) res.status(500).end(); });
+
+      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 128 * 1024 });
+      stream.on('error', () => {
+        if (!res.headersSent) res.status(500).end();
+        stream.destroy();
+      });
+      res.on('error', () => { stream.destroy(); });
+      res.on('finish', () => { stream.destroy(); });
+      res.on('close', () => { stream.destroy(); });
       req.on('close', () => { stream.destroy(); });
       stream.pipe(res);
     } else {
       res.writeHead(200, {
         'Content-Length': fileSize,
-        'Content-Type': mimeType
+        'Content-Type': mimeType,
+        'Accept-Ranges': 'bytes',
+        'ETag': etag,
+        'Last-Modified': lastModified,
+        'Cache-Control': 'public, max-age=2592000, immutable'
       });
-      const stream = fs.createReadStream(filePath);
-      stream.on('error', () => { if (!res.headersSent) res.status(500).end(); });
+      const stream = fs.createReadStream(filePath, { highWaterMark: 128 * 1024 });
+      stream.on('error', () => {
+        if (!res.headersSent) res.status(500).end();
+        stream.destroy();
+      });
+      res.on('error', () => { stream.destroy(); });
+      res.on('finish', () => { stream.destroy(); });
+      res.on('close', () => { stream.destroy(); });
       req.on('close', () => { stream.destroy(); });
       stream.pipe(res);
     }
@@ -217,12 +349,15 @@ app.use((req, res, next) => {
   next();
 });
 app.use(express.static(__dirname));
-app.use('/uploads', express.static(UPLOADS));
+app.get('/logo.png', (req, res) => res.sendFile(path.join(__dirname, 'logo.ico')));
+app.use('/uploads', express.static(UPLOADS, { maxAge: '30d', immutable: true }));
 
 app.post('/api/upload', express.raw({ type: '*/*', limit: '100mb' }), (req, res) => {
   try {
     const qType = req.query.type || 'image';
     const qHash = req.query.hash || null;
+    const qExt = (req.query.ext || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const qName = (req.query.name || '').toLowerCase();
     let rawBody = req.body;
     let clientHash = qHash && qHash !== 'null' && qHash !== 'undefined' ? qHash : null;
 
@@ -230,13 +365,60 @@ app.post('/api/upload', express.raw({ type: '*/*', limit: '100mb' }), (req, res)
     if (Buffer.isBuffer(rawBody) && rawBody.length > 0) {
       const mime = (req.headers['content-type'] || '').toLowerCase();
       let ext = 'bin';
-      if (mime.includes('video') || qType === 'video') {
-        ext = mime.includes('webm') ? 'webm' : (mime.includes('mov') ? 'mov' : 'mp4');
-      } else if (mime.includes('audio') || qType === 'audio') {
-        ext = mime.includes('ogg') ? 'ogg' : (mime.includes('wav') ? 'wav' : 'mp3');
-      } else {
-        ext = mime.includes('png') ? 'png' : (mime.includes('gif') ? 'gif' : (mime.includes('webp') ? 'webp' : 'jpg'));
+
+      // 1. Check if client explicitly sent a recognized extension
+      if (qExt && MIME_MAP['.' + qExt]) {
+        ext = qExt;
+      } else if (qName && qName.includes('.')) {
+        const parsedExt = qName.split('.').pop();
+        if (parsedExt && MIME_MAP['.' + parsedExt]) ext = parsedExt;
       }
+
+      // 2. If still unverified or default, sniff binary magic bytes
+      if (ext === 'bin') {
+        if (rawBody.length >= 4) {
+          if (rawBody[0] === 0x66 && rawBody[1] === 0x4C && rawBody[2] === 0x61 && rawBody[3] === 0x43) ext = 'flac';
+          else if (rawBody[0] === 0x4F && rawBody[1] === 0x67 && rawBody[2] === 0x67 && rawBody[3] === 0x53) ext = (qType === 'video' || mime.includes('video')) ? 'ogv' : 'ogg';
+          else if (rawBody[0] === 0x1A && rawBody[1] === 0x45 && rawBody[2] === 0xDF && rawBody[3] === 0xA3) ext = (qType === 'audio' || mime.includes('audio')) ? 'weba' : 'webm';
+          else if (rawBody.length >= 12 && rawBody.toString('ascii', 0, 4) === 'RIFF' && rawBody.toString('ascii', 8, 12) === 'WAVE') ext = 'wav';
+          else if (rawBody.length >= 12 && rawBody.toString('ascii', 0, 4) === 'RIFF' && rawBody.toString('ascii', 8, 12) === 'WEBP') ext = 'webp';
+          else if (rawBody.length >= 8 && rawBody.toString('ascii', 4, 8) === 'ftyp') {
+            const brand = rawBody.toString('ascii', 8, 12).toLowerCase();
+            ext = (brand.includes('m4a') || brand.includes('m4b') || qType === 'audio') ? 'm4a' : 'mp4';
+          }
+          else if (rawBody[0] === 0x89 && rawBody[1] === 0x50 && rawBody[2] === 0x4E && rawBody[3] === 0x47) ext = 'png';
+          else if (rawBody[0] === 0xFF && rawBody[1] === 0xD8 && rawBody[2] === 0xFF) ext = 'jpg';
+          else if (rawBody[0] === 0x47 && rawBody[1] === 0x49 && rawBody[2] === 0x46) ext = 'gif';
+          else if (rawBody[0] === 0x49 && rawBody[1] === 0x44 && rawBody[2] === 0x33) ext = 'mp3';
+          else if (rawBody[0] === 0xFF && (rawBody[1] & 0xE0) === 0xE0) ext = (rawBody[1] & 0x06) === 0 ? 'aac' : 'mp3';
+        }
+      }
+
+      // 3. Fallback to MIME inspection
+      if (ext === 'bin') {
+        if (mime.includes('video') || qType === 'video') {
+          if (mime.includes('webm')) ext = 'webm';
+          else if (mime.includes('quicktime') || mime.includes('mov')) ext = 'mov';
+          else if (mime.includes('matroska') || mime.includes('mkv')) ext = 'mkv';
+          else if (mime.includes('ogg') || mime.includes('ogv')) ext = 'ogv';
+          else ext = 'mp4';
+        } else if (mime.includes('audio') || qType === 'audio') {
+          if (mime.includes('flac')) ext = 'flac';
+          else if (mime.includes('opus')) ext = 'opus';
+          else if (mime.includes('ogg')) ext = 'ogg';
+          else if (mime.includes('wav')) ext = 'wav';
+          else if (mime.includes('aac')) ext = 'aac';
+          else if (mime.includes('m4a') || mime.includes('mp4')) ext = 'm4a';
+          else if (mime.includes('webm')) ext = 'weba';
+          else ext = 'mp3';
+        } else {
+          if (mime.includes('png')) ext = 'png';
+          else if (mime.includes('gif')) ext = 'gif';
+          else if (mime.includes('webp')) ext = 'webp';
+          else ext = 'jpg';
+        }
+      }
+
       if (!clientHash) clientHash = computeBufferQuickHash(rawBody);
       const fn = saveMediaWithQuickHash(rawBody, ext, clientHash);
       if (!fn) return res.status(500).json({ error: 'Failed to save file' });
@@ -403,6 +585,12 @@ function ACTION_LIMIT(ip, type) {
     b.comment.push(now);
     return true;
   }
+  if (_actionBuckets.size > 2000) {
+    for (const [k, v] of _actionBuckets) {
+      if (now - (v.last || 0) > 60000) _actionBuckets.delete(k);
+    }
+  }
+  b.last = now;
   return true;
 }
 // occasional cleanup
@@ -415,7 +603,7 @@ setInterval(() => {
     b.comment = (b.comment || []).filter(t => now - t < 20000);
     if (!b.msg.length && !b.topic.length && !b.post.length && !b.comment.length) _actionBuckets.delete(ip);
   }
-}, 60000);
+}, 30000);
 
 
 const ADJECTIVES = [
@@ -469,6 +657,12 @@ function getClientIP(socket) {
 const dbPath = path.join(__dirname, 'chat.db');
 const db = new Database(dbPath);
 
+// Enable WAL mode & high-performance pragmas for concurrent zero-latency operations
+db.pragma('journal_mode = WAL');
+db.pragma('synchronous = NORMAL');
+db.pragma('cache_size = -32000');
+db.pragma('temp_store = MEMORY');
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     ip TEXT PRIMARY KEY,
@@ -486,31 +680,7 @@ db.exec(`
     user_id TEXT NOT NULL DEFAULT '',
     content TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT ''
-  )
-`);
-
-function addColumnIfMissing(table, column, definition) {
-  const cols = db.prepare('PRAGMA table_info(' + table + ')').all().map(c => c.name);
-  if (!cols.includes(column)) {
-    console.log('Adding column:', table + '.' + column);
-    db.exec('ALTER TABLE ' + table + ' ADD COLUMN ' + column + ' ' + definition);
-  }
-}
-
-addColumnIfMissing('messages', 'user_name', "TEXT NOT NULL DEFAULT 'Anon'");
-addColumnIfMissing('messages', 'user_color', "TEXT NOT NULL DEFAULT '#666,#999'");
-addColumnIfMissing('messages', 'image', 'TEXT');
-addColumnIfMissing('messages', 'reply_name', 'TEXT');
-addColumnIfMissing('messages', 'reply_text', 'TEXT');
-addColumnIfMissing('messages', 'reply_msg_id', 'INTEGER');
-addColumnIfMissing('messages', 'topic_id', 'INTEGER DEFAULT 1');
-addColumnIfMissing('messages', 'avatar', 'TEXT');
-addColumnIfMissing('topics', 'creator_ip', 'TEXT');
-addColumnIfMissing('topics', 'locked', 'INTEGER DEFAULT 0');
-addColumnIfMissing('topics', 'locked_by', 'TEXT'); // user | moderator
-addColumnIfMissing('topics', 'recommended', 'INTEGER DEFAULT 0');
-
-db.exec(`
+  );
   CREATE TABLE IF NOT EXISTS posts (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id TEXT,
@@ -544,36 +714,100 @@ db.exec(`
     ip TEXT,
     created_at TEXT NOT NULL
   );
-  CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(id DESC);
-  CREATE INDEX IF NOT EXISTS idx_comments_post ON post_comments(post_id, id);
-`);
-addColumnIfMissing('posts', 'video', 'TEXT');
-addColumnIfMissing('post_comments', 'parent_id', 'INTEGER');
-addColumnIfMissing('post_comments', 'reply_name', 'TEXT');
-addColumnIfMissing('post_comments', 'reply_text', 'TEXT');
-addColumnIfMissing('post_comments', 'image', 'TEXT');
-addColumnIfMissing('posts', 'upvotes', 'INTEGER NOT NULL DEFAULT 0');
-addColumnIfMissing('posts', 'downvotes', 'INTEGER NOT NULL DEFAULT 0');
-addColumnIfMissing('posts', 'views', 'INTEGER NOT NULL DEFAULT 0');
-addColumnIfMissing('posts', 'audio', 'TEXT');
-db.exec(`
   CREATE TABLE IF NOT EXISTS post_votes (
     post_id INTEGER NOT NULL,
     ip TEXT NOT NULL,
-    vote INTEGER NOT NULL,
+    vote INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     PRIMARY KEY (post_id, ip)
   );
 `);
 
+function addColumnIfMissing(table, column, definition) {
+  try {
+    const cols = db.prepare('PRAGMA table_info(' + table + ')').all().map(c => c.name);
+    if (!cols.includes(column)) {
+      console.log('Adding column:', table + '.' + column);
+      db.exec('ALTER TABLE ' + table + ' ADD COLUMN ' + column + ' ' + definition);
+    }
+  } catch (e) {
+    console.warn('[DB] addColumnIfMissing for ' + table + '.' + column + ':', e.message);
+  }
+}
+
+// 1. Ensure all columns exist across all tables first (covers all legacy schema versions)
 addColumnIfMissing('users', 'avatar', 'TEXT');
 addColumnIfMissing('users', 'name_changed_at', 'TEXT');
 addColumnIfMissing('users', 'avatar_changed_at', 'TEXT');
 addColumnIfMissing('users', 'uid', 'TEXT');
+addColumnIfMissing('users', 'discord_id', 'TEXT');
+addColumnIfMissing('users', 'discord_username', 'TEXT');
+addColumnIfMissing('users', 'discord_avatar', 'TEXT');
+
+addColumnIfMissing('topics', 'creator_ip', 'TEXT');
+addColumnIfMissing('topics', 'locked', 'INTEGER DEFAULT 0');
+addColumnIfMissing('topics', 'locked_by', 'TEXT'); // user | moderator
+addColumnIfMissing('topics', 'recommended', 'INTEGER DEFAULT 0');
+
+addColumnIfMissing('messages', 'user_name', "TEXT NOT NULL DEFAULT 'Anon'");
+addColumnIfMissing('messages', 'user_color', "TEXT NOT NULL DEFAULT '#666,#999'");
+addColumnIfMissing('messages', 'image', 'TEXT');
+addColumnIfMissing('messages', 'reply_name', 'TEXT');
+addColumnIfMissing('messages', 'reply_text', 'TEXT');
+addColumnIfMissing('messages', 'reply_msg_id', 'INTEGER');
+addColumnIfMissing('messages', 'topic_id', 'INTEGER DEFAULT 1');
+addColumnIfMissing('messages', 'avatar', 'TEXT');
 addColumnIfMissing('messages', 'user_uid', 'TEXT');
 addColumnIfMissing('messages', 'user_ip', 'TEXT');
 addColumnIfMissing('messages', 'video', 'TEXT');
 addColumnIfMissing('messages', 'audio', 'TEXT');
+
+addColumnIfMissing('posts', 'video', 'TEXT');
+addColumnIfMissing('posts', 'upvotes', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('posts', 'downvotes', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('posts', 'views', 'INTEGER NOT NULL DEFAULT 0');
+addColumnIfMissing('posts', 'audio', 'TEXT');
+addColumnIfMissing('posts', 'user_uid', 'TEXT');
+addColumnIfMissing('posts', 'user_ip', 'TEXT');
+
+addColumnIfMissing('post_comments', 'parent_id', 'INTEGER');
+addColumnIfMissing('post_comments', 'reply_name', 'TEXT');
+addColumnIfMissing('post_comments', 'reply_text', 'TEXT');
+addColumnIfMissing('post_comments', 'image', 'TEXT');
+addColumnIfMissing('post_comments', 'user_uid', 'TEXT');
+addColumnIfMissing('post_comments', 'user_ip', 'TEXT');
+
+// 2. Safe index creation (executed ONLY after all columns are guaranteed to exist)
+function safeIndex(name, sql) {
+  try {
+    db.exec(sql);
+  } catch (e) {
+    console.warn('[DB] Notice on index ' + name + ':', e.message);
+  }
+}
+
+safeIndex('idx_posts_created', 'CREATE INDEX IF NOT EXISTS idx_posts_created ON posts(id DESC)');
+safeIndex('idx_posts_ip_created', 'CREATE INDEX IF NOT EXISTS idx_posts_ip_created ON posts(ip, created_at)');
+safeIndex('idx_posts_user_uid', 'CREATE INDEX IF NOT EXISTS idx_posts_user_uid ON posts(user_uid)');
+safeIndex('idx_comments_post', 'CREATE INDEX IF NOT EXISTS idx_comments_post ON post_comments(post_id, id)');
+safeIndex('idx_messages_topic_id', 'CREATE INDEX IF NOT EXISTS idx_messages_topic_id ON messages(topic_id, id DESC)');
+safeIndex('idx_messages_user_uid', 'CREATE INDEX IF NOT EXISTS idx_messages_user_uid ON messages(user_uid)');
+safeIndex('idx_messages_user_ip', 'CREATE INDEX IF NOT EXISTS idx_messages_user_ip ON messages(user_ip)');
+safeIndex('idx_users_uid', 'CREATE INDEX IF NOT EXISTS idx_users_uid ON users(uid)');
+
+// 3. Backward-compatibility data backfill for older databases
+try {
+  // Populate posts.user_ip from posts.ip if missing
+  db.exec("UPDATE posts SET user_ip = ip WHERE (user_ip IS NULL OR user_ip = '') AND ip IS NOT NULL");
+  // Populate post_comments.user_ip from post_comments.ip if missing
+  db.exec("UPDATE post_comments SET user_ip = ip WHERE (user_ip IS NULL OR user_ip = '') AND ip IS NOT NULL");
+  // Backfill posts.user_uid from users table where ip matches
+  db.exec("UPDATE posts SET user_uid = (SELECT uid FROM users WHERE users.ip = posts.ip AND users.uid IS NOT NULL AND users.uid != '') WHERE (user_uid IS NULL OR user_uid = '') AND ip IS NOT NULL");
+  // Backfill post_comments.user_uid from users table where ip matches
+  db.exec("UPDATE post_comments SET user_uid = (SELECT uid FROM users WHERE users.ip = post_comments.ip AND users.uid IS NOT NULL AND users.uid != '') WHERE (user_uid IS NULL OR user_uid = '') AND ip IS NOT NULL");
+} catch (e) {
+  console.warn('[DB] Backward-compatibility backfill notice:', e.message);
+}
 
 // Fix empty / blank / zalgo-only names left by older clients (runs every startup)
 (() => {
@@ -677,7 +911,32 @@ function parseImageField(raw) {
   return [s];
 }
 
-function getTopicsPayload() {
+let _cachedTopicsPayload = null;
+let _cachedTopicsPayloadAt = 0;
+
+function invalidateTopicsCache() {
+  _cachedTopicsPayload = null;
+  _cachedTopicsPayloadAt = 0;
+}
+
+let _topicNotifyDebounce = null;
+function scheduleTopicsBroadcast() {
+  if (_topicNotifyDebounce) return;
+  _topicNotifyDebounce = setTimeout(() => {
+    _topicNotifyDebounce = null;
+    io.emit('topics', getTopicsPayload());
+  }, 2000);
+}
+
+function getTopicsPayload(forceFresh) {
+  const now = Date.now();
+  if (!forceFresh && _cachedTopicsPayload && (now - _cachedTopicsPayloadAt < 2500)) {
+    return _cachedTopicsPayload.map(t => {
+      const room = io.sockets.adapter.rooms.get('t:' + t.id);
+      return { ...t, online: room ? room.size : 0 };
+    });
+  }
+
   const rows = listTopics.all();
   const counts = {};
   countMsgsByTopic.all().forEach(r => { counts[r.topic_id] = r.c; });
@@ -733,13 +992,15 @@ function getTopicsPayload() {
     if (a.recommended !== b.recommended) return a.recommended ? -1 : 1;
     return a.name.localeCompare(b.name);
   });
+  _cachedTopicsPayload = mapped;
+  _cachedTopicsPayloadAt = now;
   return mapped;
 }
 const insertMsg = db.prepare(`
   INSERT INTO messages (user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, topic_id, created_at, avatar, user_uid, user_ip, video, audio)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
-const HISTORY_PAGE = 80;
+const HISTORY_PAGE = 45;
 const getHistory = db.prepare(`
   SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
   FROM messages WHERE topic_id = ? ORDER BY id DESC LIMIT ?
@@ -749,6 +1010,19 @@ const getHistoryBefore = db.prepare(`
   FROM messages WHERE topic_id = ? AND id < ? ORDER BY id DESC LIMIT ?
 `);
 const getHistoryAfter = db.prepare(`
+  SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
+  FROM messages WHERE topic_id = ? AND id > ? ORDER BY id ASC LIMIT ?
+`);
+
+const countUserMsgs = db.prepare('SELECT COUNT(*) c FROM messages WHERE user_uid = ? OR user_ip = ?');
+const countUserMedia = db.prepare("SELECT COUNT(*) c FROM messages WHERE (user_uid = ? OR user_ip = ?) AND ((image IS NOT NULL AND image != '') OR (video IS NOT NULL AND video != '') OR (audio IS NOT NULL AND audio != ''))");
+const getUserMediaFiles = db.prepare('SELECT image, video, audio FROM messages WHERE user_uid = ? OR user_ip = ?');
+const getPostMediaFiles = db.prepare('SELECT images, video, audio FROM posts WHERE (user_uid IS NOT NULL AND user_uid = ?) OR (user_ip IS NOT NULL AND user_ip = ?) OR ip = ?');
+const getTargetMsgStmt = db.prepare(`
+  SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
+  FROM messages WHERE topic_id = ? AND id = ?
+`);
+const getMsgsAfterStmt = db.prepare(`
   SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
   FROM messages WHERE topic_id = ? AND id > ? ORDER BY id ASC LIMIT ?
 `);
@@ -858,27 +1132,46 @@ function getTopicMembers(topicId) {
 
 function calcUserDisk(uid, ip) {
   let bytes = 0;
-  const rows = db.prepare('SELECT image FROM messages WHERE user_uid = ? OR user_ip = ?').all(uid, ip);
-  rows.forEach(r => {
-    if (!r.image) return;
-    let files = [];
+  const counted = new Set();
+  const checkFile = (f) => {
+    if (!f || String(f).startsWith('http')) return;
+    const clean = String(f).replace(/^\/uploads\//, '');
+    if (!clean || counted.has(clean)) return;
+    counted.add(clean);
     try {
-      if (String(r.image).startsWith('[')) files = JSON.parse(r.image);
-      else files = [r.image];
-    } catch { files = [r.image]; }
-    files.forEach(f => {
+      const fp = path.join(UPLOADS, clean);
+      bytes += fs.statSync(fp).size;
+    } catch {}
+  };
+
+  const rows = getUserMediaFiles.all(uid, ip);
+  rows.forEach(r => {
+    if (r.image) {
       try {
-        const fp = path.join(UPLOADS, String(f).replace(/^\/uploads\//, ''));
-        bytes += fs.statSync(fp).size;
-      } catch {}
-    });
+        if (String(r.image).startsWith('[')) JSON.parse(r.image).forEach(checkFile);
+        else checkFile(r.image);
+      } catch { checkFile(r.image); }
+    }
+    if (r.video) checkFile(r.video);
+    if (r.audio) checkFile(r.audio);
   });
+
+  const postRows = getPostMediaFiles.all(uid || '', ip || '', ip || '');
+  postRows.forEach(r => {
+    if (r.images) {
+      try {
+        if (String(r.images).startsWith('[')) JSON.parse(r.images).forEach(checkFile);
+        else checkFile(r.images);
+      } catch { checkFile(r.images); }
+    }
+    if (r.video) checkFile(r.video);
+    if (r.audio) checkFile(r.audio);
+  });
+
   // avatar
   try {
     const u = getUser.get(ip);
-    if (u && u.avatar && !String(u.avatar).startsWith('http')) {
-      bytes += fs.statSync(path.join(UPLOADS, u.avatar)).size;
-    }
+    if (u && u.avatar) checkFile(u.avatar);
   } catch {}
   return bytes;
 }
@@ -990,6 +1283,8 @@ function getStats() {
 
 const hashDbPath = path.join(__dirname, 'hash.db');
 const hashDb = new Database(hashDbPath);
+hashDb.pragma('journal_mode = WAL');
+hashDb.pragma('synchronous = NORMAL');
 
 hashDb.exec(`
   CREATE TABLE IF NOT EXISTS file_hashes (
@@ -1150,9 +1445,9 @@ function saveVideo(base64, clientHash) {
     const fn = path.basename(base64.replace(/^\/uploads\//, ''));
     if (fn && fs.existsSync(path.join(UPLOADS, fn))) return fn;
   }
-  const match = String(base64 || '').match(/^data:video\/(mp4|webm|quicktime|ogg);base64,(.+)$/i);
+  const match = String(base64 || '').match(/^data:video\/(mp4|webm|quicktime|ogg|ogv|x-matroska|mp2t|x-msvideo|3gpp|x-ms-wmv|mkv|mov|avi);base64,(.+)$/i);
   if (!match) return null;
-  const extMap = { quicktime: 'mov' };
+  const extMap = { quicktime: 'mov', 'x-matroska': 'mkv', 'x-msvideo': 'avi', 'x-ms-wmv': 'wmv', mp2t: 'ts', '3gpp': '3gp' };
   const ext = extMap[match[1].toLowerCase()] || match[1].toLowerCase();
   const buf = Buffer.from(match[2], 'base64');
   if (buf.length > 50 * 1024 * 1024) return null;
@@ -1165,9 +1460,9 @@ function saveAudio(base64, clientHash) {
     const fn = path.basename(base64.replace(/^\/uploads\//, ''));
     if (fn && fs.existsSync(path.join(UPLOADS, fn))) return fn;
   }
-  const match = String(base64 || '').match(/^data:audio\/(mpeg|mp3|ogg|wav|webm|mp4);base64,(.+)$/i);
+  const match = String(base64 || '').match(/^data:audio\/(mpeg|mp3|ogg|wav|webm|mp4|flac|x-flac|aac|opus|m4a|x-m4a|x-wav|wave|weba|aiff|x-ms-wma);base64,(.+)$/i);
   if (!match) return null;
-  const extMap = { mpeg: 'mp3', mp3: 'mp3', mp4: 'm4a' };
+  const extMap = { mpeg: 'mp3', mp3: 'mp3', mp4: 'm4a', 'x-m4a': 'm4a', 'x-flac': 'flac', 'x-wav': 'wav', wave: 'wav', 'x-ms-wma': 'wma' };
   const ext = extMap[match[1].toLowerCase()] || match[1].toLowerCase();
   const buf = Buffer.from(match[2], 'base64');
   if (buf.length > 50 * 1024 * 1024) return null;
@@ -1201,9 +1496,9 @@ function savePostVideo(base64, clientHash) {
     const fn = path.basename(base64.replace(/^\/uploads\//, ''));
     if (fn && fs.existsSync(path.join(UPLOADS, fn))) return fn;
   }
-  const match = base64.match(/^data:video\/(mp4|webm|quicktime|ogg);base64,(.+)$/i);
+  const match = base64.match(/^data:video\/(mp4|webm|quicktime|ogg|ogv|x-matroska|mp2t|x-msvideo|3gpp|x-ms-wmv|mkv|mov|avi);base64,(.+)$/i);
   if (!match) return null;
-  const extMap = { quicktime: 'mov' };
+  const extMap = { quicktime: 'mov', 'x-matroska': 'mkv', 'x-msvideo': 'avi', 'x-ms-wmv': 'wmv', mp2t: 'ts', '3gpp': '3gp' };
   const ext = extMap[match[1].toLowerCase()] || match[1].toLowerCase();
   const buf = Buffer.from(match[2], 'base64');
   if (buf.length > POST_VIDEO_MAX) return null;
@@ -1215,9 +1510,9 @@ function savePostAudio(base64, clientHash) {
     const fn = path.basename(base64.replace(/^\/uploads\//, ''));
     if (fn && fs.existsSync(path.join(UPLOADS, fn))) return fn;
   }
-  const match = base64.match(/^data:audio\/(mpeg|mp3|ogg|wav|webm|mp4);base64,(.+)$/i);
+  const match = base64.match(/^data:audio\/(mpeg|mp3|ogg|wav|webm|mp4|flac|x-flac|aac|opus|m4a|x-m4a|x-wav|wave|weba|aiff|x-ms-wma);base64,(.+)$/i);
   if (!match) return null;
-  const extMap = { mpeg: 'mp3', mp3: 'mp3', mp4: 'm4a' };
+  const extMap = { mpeg: 'mp3', mp3: 'mp3', mp4: 'm4a', 'x-m4a': 'm4a', 'x-flac': 'flac', 'x-wav': 'wav', wave: 'wav', 'x-ms-wma': 'wma' };
   const ext = extMap[match[1].toLowerCase()] || match[1].toLowerCase();
   const buf = Buffer.from(match[2], 'base64');
   if (buf.length > POST_AUDIO_MAX) return null;
@@ -1260,8 +1555,8 @@ function deletePostMedia(post) {
 
 // ===== Explore (posts) =====
 const insertPost = db.prepare(`
-  INSERT INTO posts (user_id, user_name, user_color, avatar, title, body, tags, images, video, audio, ip, created_at)
-  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  INSERT INTO posts (user_id, user_name, user_color, avatar, title, body, tags, images, video, audio, user_uid, user_ip, ip, created_at)
+  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `);
 const getPost = db.prepare('SELECT * FROM posts WHERE id = ?');
 const listPosts = db.prepare('SELECT * FROM posts ORDER BY id DESC LIMIT ? OFFSET ?');
@@ -1294,6 +1589,20 @@ const listComments = db.prepare('SELECT * FROM post_comments WHERE post_id = ? O
 const bumpComments = db.prepare('UPDATE posts SET comments_count = (SELECT COUNT(*) FROM post_comments WHERE post_id = ?) WHERE id = ?');
 const bumpShares = db.prepare('UPDATE posts SET shares_count = shares_count + 1 WHERE id = ?');
 const bumpViews = db.prepare('UPDATE posts SET views = COALESCE(views,0) + 1 WHERE id = ?');
+
+const countAllPosts = db.prepare('SELECT COUNT(*) c FROM posts');
+const listPostsDesc = db.prepare('SELECT * FROM posts ORDER BY id DESC LIMIT ? OFFSET ?');
+const listPostsAsc = db.prepare('SELECT * FROM posts ORDER BY id ASC LIMIT ? OFFSET ?');
+const listPostsHot = db.prepare('SELECT * FROM posts ORDER BY (COALESCE(upvotes,0) - COALESCE(downvotes,0) + COALESCE(comments_count,0)*2 + COALESCE(views,0)) DESC, id DESC LIMIT ? OFFSET ?');
+
+const countSearchPosts = db.prepare('SELECT COUNT(*) c FROM posts WHERE title LIKE ? OR body LIKE ?');
+const searchPostsDesc = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?');
+const searchPostsAsc = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id ASC LIMIT ? OFFSET ?');
+const searchPostsHot = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY (COALESCE(upvotes,0) - COALESCE(downvotes,0) + COALESCE(comments_count,0)*2 + COALESCE(views,0)) DESC, id DESC LIMIT ? OFFSET ?');
+
+const countPostsTodayStmt = db.prepare('SELECT COUNT(*) c FROM posts WHERE ip = ? AND created_at >= ?');
+const findDuplicatePostStmt = db.prepare('SELECT id FROM posts WHERE ip = ? AND title = ? AND body = ? AND created_at >= ? LIMIT 1');
+const countVideosTodayStmt = db.prepare("SELECT COUNT(*) c FROM posts WHERE ip = ? AND created_at >= ? AND video IS NOT NULL AND video != ''");
 
 
 function parseJsonArr(raw, max) {
@@ -1351,13 +1660,61 @@ function mapPost(row, ip) {
 }
 
 
+function isTopicOwner(topic, userIp) {
+  if (!topic || isSystemTopicName(topic.name)) return false;
+  return !!(topic.creator_ip && topic.creator_ip === userIp);
+}
+
 io.on('connection', (socket) => {
   const clientIp = getClientIP(socket);
   const clientMac = (socket.handshake.query && socket.handshake.query.mac) || null;
   socket.clientMac = clientMac;
   socket.authenticated = false;
   socket.topicId = null;
+  socket.pendingTopic = null;
   log('Connection: socketId=' + socket.id.slice(0, 6) + ' mac=' + (clientMac || 'none') + ' ip=' + clientIp);
+
+  function doJoinTopic(topicName) {
+    if (!socket.authenticated || !socket.profile) return;
+    const ip = socket.profile.ip;
+    const clean = sanitizeTopic(topicName || 'General');
+    const topic = getTopicByName.get(clean) || getTopicByName.get('General');
+    if (!topic) return;
+
+    if (socket.topicId) socket.leave('t:' + socket.topicId);
+    socket.topicId = topic.id;
+    socket.join('t:' + topic.id);
+
+    const rows = getHistory.all(topic.id, HISTORY_PAGE).reverse();
+    const hasMore = rows.length >= HISTORY_PAGE;
+    const owner = isTopicOwner(topic, ip);
+    const members = getTopicMembers(topic.id);
+    socket.emit('joined', {
+      topic: {
+        id: topic.id,
+        name: topic.name,
+        locked: !!topic.locked,
+        lockedBy: topic.locked ? (topic.locked_by === 'moderator' ? 'moderator' : 'user') : null,
+        isOwner: owner,
+        isGeneral: topic.name === 'General',
+        isSystem: isSystemTopicName(topic.name)
+      },
+      topicOnline: members.length,
+      members,
+      hasMore,
+      history: rows.map(mapMsgRow)
+    });
+    io.to('t:' + topic.id).emit('topic-online', { online: members.length, members });
+  }
+
+  function finishAuth() {
+    socket.authenticated = true;
+    if (socket.pendingTopic) {
+      const pt = socket.pendingTopic;
+      socket.pendingTopic = null;
+      doJoinTopic(pt);
+    }
+  }
 
   // Multi-MAC auto-login: check if this MAC is authorized on any key
   const keysData = loadKeys();
@@ -1386,6 +1743,7 @@ io.on('connection', (socket) => {
     socket.emit('profile', buildProfilePayload(socket));
     socket.emit('topics', getTopicsPayload());
     io.emit('stats', getStats());
+    finishAuth();
   } else {
     socket.emit('require-auth');
   }
@@ -1394,6 +1752,12 @@ io.on('connection', (socket) => {
     if (!payload || typeof payload.key !== 'string') return;
     const key = payload.key.trim();
     if (!key) return;
+    if (socket.authenticated && socket.authKey === key) {
+      socket.emit('profile', buildProfilePayload(socket));
+      socket.emit('topics', getTopicsPayload());
+      finishAuth();
+      return;
+    }
     const currentMac = (payload && payload.mac) || socket.clientMac || null;
     socket.clientMac = currentMac;
     const keysData = loadKeys();
@@ -1426,6 +1790,7 @@ io.on('connection', (socket) => {
     socket.emit('profile', buildProfilePayload(socket));
     socket.emit('topics', getTopicsPayload());
     io.emit('stats', getStats());
+    finishAuth();
   });
 
   socket.on('create-key', (payload) => {
@@ -1472,6 +1837,7 @@ io.on('connection', (socket) => {
     socket.emit('profile', buildProfilePayload(socket));
     socket.emit('topics', getTopicsPayload());
     io.emit('stats', getStats());
+    finishAuth();
   });
 
   socket.on('recover-key', (payload) => {
@@ -1581,52 +1947,21 @@ io.on('connection', (socket) => {
     }
     try {
       const info = createTopicStmt.run(clean, new Date().toISOString(), ip);
-      io.emit('topics', getTopicsPayload());
+      invalidateTopicsCache();
+      io.emit('topics', getTopicsPayload(true));
       socket.emit('topic-created', { id: info.lastInsertRowid, name: clean });
     } catch {
       socket.emit('error', 'Topic already exists');
     }
   });
 
-  function isTopicOwner(topic, userIp) {
-    if (!topic || isSystemTopicName(topic.name)) return false;
-    return !!(topic.creator_ip && topic.creator_ip === userIp);
-  }
-
   socket.on('join-topic', (topicName) => {
-    if (!socket.authenticated) return;
-    const ip = socket.profile.ip;
     const clean = sanitizeTopic(topicName || 'General');
-    const topic = getTopicByName.get(clean) || getTopicByName.get('General');
-    if (!topic) return;
-
-    if (socket.topicId) socket.leave('t:' + socket.topicId);
-    socket.topicId = topic.id;
-    socket.join('t:' + topic.id);
-
-    const rows = getHistory.all(topic.id, HISTORY_PAGE).reverse();
-    const room = io.sockets.adapter.rooms.get('t:' + topic.id);
-    const topicOnline = room ? room.size : 1;
-    const hasMore = rows.length >= HISTORY_PAGE;
-    const owner = isTopicOwner(topic, ip);
-    const members = getTopicMembers(topic.id);
-    socket.emit('joined', {
-      topic: {
-        id: topic.id,
-        name: topic.name,
-        locked: !!topic.locked,
-        lockedBy: topic.locked ? (topic.locked_by === 'moderator' ? 'moderator' : 'user') : null,
-        isOwner: owner,
-        isGeneral: topic.name === 'General',
-        isSystem: isSystemTopicName(topic.name)
-      },
-      topicOnline: members.length,
-      members,
-      hasMore,
-      history: rows.map(mapMsgRow)
-    });
-    io.emit('topics', getTopicsPayload());
-    io.to('t:' + topic.id).emit('topic-online', { online: members.length, members: getTopicMembers(topic.id) });
+    if (!socket.authenticated) {
+      socket.pendingTopic = clean;
+      return;
+    }
+    doJoinTopic(clean);
   });
 
   socket.on('leave-topic', () => {
@@ -1637,8 +1972,6 @@ io.on('connection', (socket) => {
     socket.topicId = null;
     const members = getTopicMembers(tid);
     io.to('t:' + tid).emit('topic-online', { online: members.length, members });
-    io.emit('topics', getTopicsPayload());
-    io.emit('stats', getStats());
   });
 
   socket.on('get-topics', () => {
@@ -1661,7 +1994,8 @@ io.on('connection', (socket) => {
     }
     setTopicLocked.run(1, 'user', topic.id);
     io.to('t:' + topic.id).emit('topic-state', { id: topic.id, locked: true, lockedBy: 'user' });
-    io.emit('topics', getTopicsPayload());
+    invalidateTopicsCache();
+    io.emit('topics', getTopicsPayload(true));
   });
 
   socket.on('topic-unlock', () => {
@@ -1680,7 +2014,8 @@ io.on('connection', (socket) => {
     }
     setTopicLocked.run(0, null, topic.id);
     io.to('t:' + topic.id).emit('topic-state', { id: topic.id, locked: false, lockedBy: null });
-    io.emit('topics', getTopicsPayload());
+    invalidateTopicsCache();
+    io.emit('topics', getTopicsPayload(true));
   });
 
   socket.on('topic-delete', () => {
@@ -1712,7 +2047,8 @@ io.on('connection', (socket) => {
         }
       }
     }
-    io.emit('topics', getTopicsPayload());
+    invalidateTopicsCache();
+    io.emit('topics', getTopicsPayload(true));
   });
 
   // Load older messages (infinite scroll up)
@@ -1748,10 +2084,7 @@ io.on('connection', (socket) => {
     if (!targetId) return;
     try {
       // Fetch target message directly
-      const targetRow = db.prepare(`
-        SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
-        FROM messages WHERE topic_id = ? AND id = ?
-      `).get(socket.topicId, targetId);
+      const targetRow = getTargetMsgStmt.get(socket.topicId, targetId);
 
       if (!targetRow) {
         socket.emit('error', 'Original message no longer exists');
@@ -1760,10 +2093,7 @@ io.on('connection', (socket) => {
 
       // 20 messages before target (exclusive), 20 after target (exclusive)
       const rowsBefore = getHistoryBefore.all(socket.topicId, targetId, 20).reverse();
-      const rowsAfter = db.prepare(`
-        SELECT id, user_id, user_name, user_color, content, image, reply_name, reply_text, reply_msg_id, created_at, avatar, user_uid, video, audio
-        FROM messages WHERE topic_id = ? AND id > ? ORDER BY id ASC LIMIT 20
-      `).all(socket.topicId, targetId);
+      const rowsAfter = getMsgsAfterStmt.all(socket.topicId, targetId, 20);
 
       // Deduplicate and sort chronologically
       const combinedMap = new Map();
@@ -1875,8 +2205,29 @@ io.on('connection', (socket) => {
       replyName, replyText, replyMsgId, time,
       uid
     });
-    io.emit('stats', getStats());
-    io.emit('topics', getTopicsPayload());
+
+    // Fast instant notification broadcast for General channel
+    const isGeneral = (socket.topicId === generalId) || (topicRow && topicRow.name && topicRow.name.toLowerCase() === 'general');
+    if (isGeneral) {
+      let preview = clean ? clean.slice(0, 120) : '';
+      if (!preview) {
+        if (imageUrls.length > 1) preview = '[' + imageUrls.length + ' images]';
+        else if (imageUrls.length === 1) preview = '[Image]';
+        else if (savedVideo) preview = '[Video]';
+        else if (savedAudio) preview = '[Audio]';
+      }
+      io.emit('general-notify', {
+        msgId: info.lastInsertRowid,
+        name: displayName,
+        text: preview,
+        hasMedia: !!(imageUrls.length || savedVideo || savedAudio),
+        time: time,
+        senderId: socket.profile.id,
+        senderUid: uid
+      });
+    }
+
+    scheduleTopicsBroadcast();
   });
 
   socket.on('user-profile', (payload) => {
@@ -1888,16 +2239,16 @@ io.on('connection', (socket) => {
       socket.emit('user-profile', { uid, name: 'Unknown', color: '#666,#999', avatar: null, messages: 0, media: 0, disk: '0 B' });
       return;
     }
-    const msgCount = db.prepare('SELECT COUNT(*) c FROM messages WHERE user_uid = ? OR user_ip = ?').get(uid, u.ip).c;
-    const mediaCount = db.prepare("SELECT COUNT(*) c FROM messages WHERE (user_uid = ? OR user_ip = ?) AND image IS NOT NULL AND image != ''").get(uid, u.ip).c;
+    const msgCount = countUserMsgs.get(uid, u.ip)?.c || 0;
+    const mediaCount = countUserMedia.get(uid, u.ip)?.c || 0;
     const disk = formatBytes(calcUserDisk(uid, u.ip));
     socket.emit('user-profile', {
       uid,
       name: u.name || 'Anon',
       color: u.color || '#666,#999',
       avatar: avatarUrl(u.avatar),
-      messages: msgCount || 0,
-      media: mediaCount || 0,
+      messages: msgCount,
+      media: mediaCount,
       disk
     });
   });
@@ -1916,22 +2267,22 @@ io.on('connection', (socket) => {
 
     if (q) {
       const param = '%' + q + '%';
-      total = db.prepare('SELECT COUNT(*) c FROM posts WHERE title LIKE ? OR body LIKE ?').get(param, param).c;
+      total = countSearchPosts.get(param, param)?.c || 0;
       if (sort === 'latest') {
-        rows = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id DESC LIMIT ? OFFSET ?').all(param, param, limit, offset);
+        rows = searchPostsDesc.all(param, param, limit, offset);
       } else if (sort === 'oldest') {
-        rows = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY id ASC LIMIT ? OFFSET ?').all(param, param, limit, offset);
+        rows = searchPostsAsc.all(param, param, limit, offset);
       } else {
-        rows = db.prepare('SELECT * FROM posts WHERE title LIKE ? OR body LIKE ? ORDER BY (COALESCE(upvotes,0) - COALESCE(downvotes,0) + COALESCE(comments_count,0)*2 + COALESCE(views,0)) DESC, id DESC LIMIT ? OFFSET ?').all(param, param, limit, offset);
+        rows = searchPostsHot.all(param, param, limit, offset);
       }
     } else {
-      total = db.prepare('SELECT COUNT(*) c FROM posts').get().c;
+      total = countAllPosts.get()?.c || 0;
       if (sort === 'latest') {
-        rows = db.prepare('SELECT * FROM posts ORDER BY id DESC LIMIT ? OFFSET ?').all(limit, offset);
+        rows = listPostsDesc.all(limit, offset);
       } else if (sort === 'oldest') {
-        rows = db.prepare('SELECT * FROM posts ORDER BY id ASC LIMIT ? OFFSET ?').all(limit, offset);
+        rows = listPostsAsc.all(limit, offset);
       } else {
-        rows = db.prepare('SELECT * FROM posts ORDER BY (COALESCE(upvotes,0) - COALESCE(downvotes,0) + COALESCE(comments_count,0)*2 + COALESCE(views,0)) DESC, id DESC LIMIT ? OFFSET ?').all(limit, offset);
+        rows = listPostsHot.all(limit, offset);
       }
     }
 
@@ -1965,7 +2316,7 @@ io.on('connection', (socket) => {
     const dayStart = new Date();
     dayStart.setHours(0, 0, 0, 0);
     const dayIso = dayStart.toISOString();
-    const todayCount = db.prepare('SELECT COUNT(*) c FROM posts WHERE ip = ? AND created_at >= ?').get(ip, dayIso).c;
+    const todayCount = countPostsTodayStmt.get(ip, dayIso)?.c || 0;
     if (todayCount >= MAX_POSTS_PER_DAY) {
       socket.emit('error', 'Maximum ' + MAX_POSTS_PER_DAY + ' posts per day reached');
       return;
@@ -1973,9 +2324,7 @@ io.on('connection', (socket) => {
 
     // Identical post within 24h (same title + body by same IP)
     const dupWindow = new Date(Date.now() - DUPLICATE_POST_HOURS * 60 * 60 * 1000).toISOString();
-    const dup = db.prepare(
-      'SELECT id FROM posts WHERE ip = ? AND title = ? AND body = ? AND created_at >= ? LIMIT 1'
-    ).get(ip, title, body, dupWindow);
+    const dup = findDuplicatePostStmt.get(ip, title, body, dupWindow);
     if (dup) {
       socket.emit('error', 'Identical post already exists within 24 hours');
       return;
@@ -1990,9 +2339,7 @@ io.on('connection', (socket) => {
     let videoFile = null;
     if (typeof payload.video === 'string' && payload.video) {
       // Stricter video daily limit (disk)
-      const vidCount = db.prepare(
-        "SELECT COUNT(*) c FROM posts WHERE ip = ? AND created_at >= ? AND video IS NOT NULL AND video != ''"
-      ).get(ip, dayIso).c;
+      const vidCount = countVideosTodayStmt.get(ip, dayIso)?.c || 0;
       if (vidCount >= MAX_VIDEOS_PER_DAY) {
         socket.emit('error', 'Maximum ' + MAX_VIDEOS_PER_DAY + ' videos per day (disk protection)');
         return;
@@ -2037,6 +2384,8 @@ io.on('connection', (socket) => {
         JSON.stringify(saved),
         videoFile,
         audioFile,
+        socket.profile.uid,
+        ip,
         ip,
         time
       );
@@ -2479,7 +2828,8 @@ function startAdminPanel() {
           else {
             const on = cmd === '!recommendatopic' ? 1 : 0;
             setTopicRecommended.run(on, id);
-            io.emit('topics', getTopicsPayload());
+            invalidateTopicsCache();
+            io.emit('topics', getTopicsPayload(true));
             console.log('  Topic #' + id + (on ? ' recommended by moderator' : ' recommendation removed'));
           }
         }
@@ -2494,7 +2844,8 @@ function startAdminPanel() {
             const by = locked ? 'moderator' : null;
             setTopicLocked.run(locked, by, id);
             io.to('t:' + id).emit('topic-state', { id, locked: !!locked, lockedBy: by });
-            io.emit('topics', getTopicsPayload());
+            invalidateTopicsCache();
+            io.emit('topics', getTopicsPayload(true));
             console.log('  Topic #' + id + (locked ? ' locked by moderator' : ' unlocked') + (isSystemTopicName(t.name) ? ' [SYSTEM]' : ''));
           }
         }

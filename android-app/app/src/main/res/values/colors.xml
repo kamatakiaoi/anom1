@@ -31,6 +31,7 @@
     <color name="border_reply">#38BDF8</color>
 
     <!-- Accents & Status -->
+    <color name="accent_primary">#38BDF8</color>
     <color name="accent_white">#F0F0F0</color>
     <color name="accent_pure_white">#FFFFFF</color>
     <color name="accent_black">#0A0A0A</color>
@@ -41,10 +42,10 @@
     <color name="status_rec_cyan">#22D3EE</color>
 
     <!-- Messenger Chat Bubble Colors -->
-    <color name="bubble_me_bg">#181818</color>
-    <color name="bubble_me_border">#2C2C2C</color>
-    <color name="bubble_other_bg">#141414</color>
-    <color name="bubble_other_border">#242424</color>
+    <color name="bubble_me_bg">#2563EB</color>
+    <color name="bubble_me_border">#1D4ED8</color>
+    <color name="bubble_other_bg">#1E1E24</color>
+    <color name="bubble_other_border">#2E2E36</color>
 
     <!-- Overlays -->
     <color name="overlay_black_70">#B3000000</color>

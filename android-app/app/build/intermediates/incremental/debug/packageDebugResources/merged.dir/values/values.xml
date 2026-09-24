@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="accent_black">#0A0A0A</color>
+    <color name="accent_primary">#38BDF8</color>
     <color name="accent_pure_white">#FFFFFF</color>
     <color name="accent_white">#F0F0F0</color>
     <color name="bg_bottom_sheet">#121212</color>
@@ -20,10 +21,10 @@
     <color name="border_rec_badge">#0E4E66</color>
     <color name="border_reply">#38BDF8</color>
     <color name="border_subtle">#1F1F1F</color>
-    <color name="bubble_me_bg">#181818</color>
-    <color name="bubble_me_border">#2C2C2C</color>
-    <color name="bubble_other_bg">#141414</color>
-    <color name="bubble_other_border">#242424</color>
+    <color name="bubble_me_bg">#2563EB</color>
+    <color name="bubble_me_border">#1D4ED8</color>
+    <color name="bubble_other_bg">#1E1E24</color>
+    <color name="bubble_other_border">#2E2E36</color>
     <color name="overlay_black_70">#B3000000</color>
     <color name="overlay_black_90">#E6000000</color>
     <color name="status_blue">#3B82F6</color>
@@ -50,6 +51,7 @@
     <dimen name="chat_media_width">220dp</dimen>
     <dimen name="content_padding">12dp</dimen>
     <dimen name="post_media_height">200dp</dimen>
+    <item name="tag_video_thumb_url" type="id"/>
     <string name="app_name">Anonymous Chat</string>
     <string name="btn_connect">Connect to Server</string>
     <string name="btn_retry">Retry Connection</string>
@@ -84,6 +86,12 @@
     <style name="CustomBottomSheetModalStyle" parent="Widget.Design.BottomSheet.Modal">
         <item name="android:background">@android:color/transparent</item>
     </style>
+    <style name="CustomWindowAnimations">
+        <item name="android:activityOpenEnterAnimation">@anim/slide_in_right</item>
+        <item name="android:activityOpenExitAnimation">@anim/slide_out_left</item>
+        <item name="android:activityCloseEnterAnimation">@anim/slide_in_left</item>
+        <item name="android:activityCloseExitAnimation">@anim/slide_out_right</item>
+    </style>
     <style name="Theme.AnonymousChat" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         
         <item name="colorPrimary">@color/accent_white</item>
@@ -99,6 +107,9 @@
         <item name="android:navigationBarColor">@color/bg_main</item>
         <item name="android:windowBackground">@color/bg_main</item>
         <item name="android:textColorPrimary">@color/text_primary</item>
+
+        
+        <item name="android:windowAnimationStyle">@style/CustomWindowAnimations</item>
 
         
         <item name="bottomSheetDialogTheme">@style/CustomBottomSheetDialogTheme</item>

@@ -7,9 +7,11 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.cardview.widget.CardView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.anonymous.chat.R;
@@ -25,10 +27,19 @@ public final class ItemMessageOtherBinding implements ViewBinding {
   public final ViewAudioPlayerBinding audioPlayerView;
 
   @NonNull
+  public final ImageView btnFullscreenVideo;
+
+  @NonNull
+  public final ImageView btnPlayVideo;
+
+  @NonNull
   public final ImageView btnReplyMsg;
 
   @NonNull
   public final LinearLayout bubbleLayout;
+
+  @NonNull
+  public final CardView cardMsgVideo;
 
   @NonNull
   public final ImageView ivMsgAvatar;
@@ -41,6 +52,12 @@ public final class ItemMessageOtherBinding implements ViewBinding {
 
   @NonNull
   public final FrameLayout msgVideoFrame;
+
+  @NonNull
+  public final ProgressBar pbVideoLoading;
+
+  @NonNull
+  public final FrameLayout playerContainer;
 
   @NonNull
   public final LinearLayout replyQuoteBox;
@@ -61,20 +78,27 @@ public final class ItemMessageOtherBinding implements ViewBinding {
   public final TextView tvQuoteText;
 
   private ItemMessageOtherBinding(@NonNull LinearLayout rootView,
-      @NonNull ViewAudioPlayerBinding audioPlayerView, @NonNull ImageView btnReplyMsg,
-      @NonNull LinearLayout bubbleLayout, @NonNull ImageView ivMsgAvatar,
-      @NonNull ImageView ivMsgVideoThumb, @NonNull LinearLayout mediaContainer,
-      @NonNull FrameLayout msgVideoFrame, @NonNull LinearLayout replyQuoteBox,
-      @NonNull TextView tvMsgBody, @NonNull TextView tvMsgName, @NonNull TextView tvMsgTime,
-      @NonNull TextView tvQuoteName, @NonNull TextView tvQuoteText) {
+      @NonNull ViewAudioPlayerBinding audioPlayerView, @NonNull ImageView btnFullscreenVideo,
+      @NonNull ImageView btnPlayVideo, @NonNull ImageView btnReplyMsg,
+      @NonNull LinearLayout bubbleLayout, @NonNull CardView cardMsgVideo,
+      @NonNull ImageView ivMsgAvatar, @NonNull ImageView ivMsgVideoThumb,
+      @NonNull LinearLayout mediaContainer, @NonNull FrameLayout msgVideoFrame,
+      @NonNull ProgressBar pbVideoLoading, @NonNull FrameLayout playerContainer,
+      @NonNull LinearLayout replyQuoteBox, @NonNull TextView tvMsgBody, @NonNull TextView tvMsgName,
+      @NonNull TextView tvMsgTime, @NonNull TextView tvQuoteName, @NonNull TextView tvQuoteText) {
     this.rootView = rootView;
     this.audioPlayerView = audioPlayerView;
+    this.btnFullscreenVideo = btnFullscreenVideo;
+    this.btnPlayVideo = btnPlayVideo;
     this.btnReplyMsg = btnReplyMsg;
     this.bubbleLayout = bubbleLayout;
+    this.cardMsgVideo = cardMsgVideo;
     this.ivMsgAvatar = ivMsgAvatar;
     this.ivMsgVideoThumb = ivMsgVideoThumb;
     this.mediaContainer = mediaContainer;
     this.msgVideoFrame = msgVideoFrame;
+    this.pbVideoLoading = pbVideoLoading;
+    this.playerContainer = playerContainer;
     this.replyQuoteBox = replyQuoteBox;
     this.tvMsgBody = tvMsgBody;
     this.tvMsgName = tvMsgName;
@@ -117,6 +141,18 @@ public final class ItemMessageOtherBinding implements ViewBinding {
       }
       ViewAudioPlayerBinding binding_audioPlayerView = ViewAudioPlayerBinding.bind(audioPlayerView);
 
+      id = R.id.btnFullscreenVideo;
+      ImageView btnFullscreenVideo = ViewBindings.findChildViewById(rootView, id);
+      if (btnFullscreenVideo == null) {
+        break missingId;
+      }
+
+      id = R.id.btnPlayVideo;
+      ImageView btnPlayVideo = ViewBindings.findChildViewById(rootView, id);
+      if (btnPlayVideo == null) {
+        break missingId;
+      }
+
       id = R.id.btnReplyMsg;
       ImageView btnReplyMsg = ViewBindings.findChildViewById(rootView, id);
       if (btnReplyMsg == null) {
@@ -126,6 +162,12 @@ public final class ItemMessageOtherBinding implements ViewBinding {
       id = R.id.bubbleLayout;
       LinearLayout bubbleLayout = ViewBindings.findChildViewById(rootView, id);
       if (bubbleLayout == null) {
+        break missingId;
+      }
+
+      id = R.id.cardMsgVideo;
+      CardView cardMsgVideo = ViewBindings.findChildViewById(rootView, id);
+      if (cardMsgVideo == null) {
         break missingId;
       }
 
@@ -150,6 +192,18 @@ public final class ItemMessageOtherBinding implements ViewBinding {
       id = R.id.msgVideoFrame;
       FrameLayout msgVideoFrame = ViewBindings.findChildViewById(rootView, id);
       if (msgVideoFrame == null) {
+        break missingId;
+      }
+
+      id = R.id.pbVideoLoading;
+      ProgressBar pbVideoLoading = ViewBindings.findChildViewById(rootView, id);
+      if (pbVideoLoading == null) {
+        break missingId;
+      }
+
+      id = R.id.playerContainer;
+      FrameLayout playerContainer = ViewBindings.findChildViewById(rootView, id);
+      if (playerContainer == null) {
         break missingId;
       }
 
@@ -190,7 +244,8 @@ public final class ItemMessageOtherBinding implements ViewBinding {
       }
 
       return new ItemMessageOtherBinding((LinearLayout) rootView, binding_audioPlayerView,
-          btnReplyMsg, bubbleLayout, ivMsgAvatar, ivMsgVideoThumb, mediaContainer, msgVideoFrame,
+          btnFullscreenVideo, btnPlayVideo, btnReplyMsg, bubbleLayout, cardMsgVideo, ivMsgAvatar,
+          ivMsgVideoThumb, mediaContainer, msgVideoFrame, pbVideoLoading, playerContainer,
           replyQuoteBox, tvMsgBody, tvMsgName, tvMsgTime, tvQuoteName, tvQuoteText);
     }
     String missingId = rootView.getResources().getResourceName(id);

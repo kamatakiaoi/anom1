@@ -1,38 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="horizontal"
-    android:gravity="start"
+    android:gravity="end"
     android:layout_marginTop="2dp"
     android:layout_marginBottom="2dp"
-    android:paddingStart="10dp"
+    android:paddingStart="48dp"
     android:paddingEnd="10dp">
 
-    <!-- Avatar -->
+    <!-- Stub view references to prevent null-pointer in view binding -->
     <ImageView
         android:id="@+id/ivMsgAvatar"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:layout_gravity="top"
-        android:scaleType="centerCrop"
-        android:layout_marginEnd="8dp" />
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvMsgName"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
 
     <LinearLayout
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
         android:orientation="vertical"
-        android:gravity="start">
-
-        <TextView
-            android:id="@+id/tvMsgName"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textColor="@color/text_muted"
-            android:textSize="12sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="2dp" />
+        android:gravity="end">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -40,11 +35,25 @@
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
+            <!-- Reply Button (Left of bubble) -->
+            <ImageView
+                android:id="@+id/btnReplyMsg"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:src="@drawable/ic_reply"
+                android:background="@drawable/bg_btn_circle"
+                android:backgroundTint="#18181B"
+                android:padding="6dp"
+                android:layout_marginEnd="6dp"
+                android:clickable="true"
+                android:focusable="true" />
+
             <!-- Message Bubble -->
             <LinearLayout
                 android:id="@+id/bubbleLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:minWidth="56dp"
                 android:orientation="vertical"
                 android:background="@drawable/bg_bubble_me_only"
                 android:paddingStart="12dp"
@@ -57,10 +66,14 @@
                     android:id="@+id/replyQuoteBox"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:minWidth="140dp"
+                    android:minWidth="130dp"
+                    android:maxWidth="260dp"
                     android:orientation="vertical"
-                    android:background="#141414"
-                    android:padding="6dp"
+                    android:background="@drawable/bg_quote_me"
+                    android:paddingStart="10dp"
+                    android:paddingEnd="10dp"
+                    android:paddingTop="5dp"
+                    android:paddingBottom="5dp"
                     android:layout_marginBottom="6dp"
                     android:visibility="gone">
 
@@ -68,7 +81,8 @@
                         android:id="@+id/tvQuoteName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_quote_name"
+                        android:maxWidth="240dp"
+                        android:textColor="@color/accent_pure_white"
                         android:textSize="12sp"
                         android:textStyle="bold"
                         android:singleLine="true"
@@ -79,9 +93,11 @@
                         android:id="@+id/tvQuoteText"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="@color/text_muted"
+                        android:maxWidth="240dp"
+                        android:textColor="#BFDBFE"
                         android:textSize="12sp"
-                        android:maxLines="2"
+                        android:singleLine="true"
+                        android:maxLines="1"
                         android:ellipsize="end" />
                 </LinearLayout>
 
@@ -90,44 +106,84 @@
                     android:id="@+id/tvMsgBody"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@color/text_primary"
-                    android:textSize="15.5sp"
+                    android:textColor="@color/accent_pure_white"
+                    android:textSize="15sp"
                     android:lineSpacingMultiplier="1.2"
                     android:autoLink="web"
-                    android:textColorLink="@color/text_link" />
+                    android:textColorLink="#93C5FD" />
 
                 <!-- Images Grid / Row -->
                 <LinearLayout
                     android:id="@+id/mediaContainer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:minWidth="200dp"
                     android:orientation="vertical"
                     android:layout_marginTop="4dp"
                     android:visibility="gone" />
 
-                <!-- Video Container -->
-                <FrameLayout
-                    android:id="@+id/msgVideoFrame"
-                    android:layout_width="220dp"
-                    android:layout_height="160dp"
+                <!-- Video Container (Inline playback + fullscreen trigger) -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/cardMsgVideo"
+                    android:layout_width="230dp"
+                    android:layout_height="150dp"
                     android:layout_marginTop="4dp"
-                    android:background="#000000"
+                    app:cardCornerRadius="10dp"
+                    app:cardElevation="0dp"
+                    app:cardBackgroundColor="#000000"
                     android:visibility="gone">
 
-                    <ImageView
-                        android:id="@+id/ivMsgVideoThumb"
+                    <FrameLayout
+                        android:id="@+id/msgVideoFrame"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop" />
+                        android:layout_height="match_parent">
 
-                    <ImageView
-                        android:layout_width="44dp"
-                        android:layout_height="44dp"
-                        android:layout_gravity="center"
-                        android:src="@drawable/ic_play"
-                        android:background="@drawable/bg_btn_circle"
-                        android:padding="10dp" />
-                </FrameLayout>
+                        <ImageView
+                            android:id="@+id/ivMsgVideoThumb"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop" />
+
+                        <FrameLayout
+                            android:id="@+id/playerContainer"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            android:visibility="gone" />
+
+                        <ProgressBar
+                            android:id="@+id/pbVideoLoading"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:indeterminateTint="@color/accent_pure_white"
+                            android:visibility="gone" />
+
+                        <ImageView
+                            android:id="@+id/btnPlayVideo"
+                            android:layout_width="42dp"
+                            android:layout_height="42dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_play"
+                            android:tint="#FFFFFF"
+                            android:background="@drawable/bg_btn_circle"
+                            android:backgroundTint="#B3000000"
+                            android:padding="10dp" />
+
+                        <ImageView
+                            android:id="@+id/btnFullscreenVideo"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="bottom|end"
+                            android:layout_margin="6dp"
+                            android:src="@drawable/ic_fullscreen"
+                            android:tint="#FFFFFF"
+                            android:background="@drawable/bg_btn_circle"
+                            android:backgroundTint="#B3000000"
+                            android:padding="5dp"
+                            android:visibility="gone" />
+                    </FrameLayout>
+                </androidx.cardview.widget.CardView>
 
                 <!-- Audio Container -->
                 <include
@@ -136,19 +192,6 @@
                     android:visibility="gone" />
 
             </LinearLayout>
-
-            <!-- Reply Button -->
-            <ImageView
-                android:id="@+id/btnReplyMsg"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
-                android:src="@drawable/ic_reply"
-                android:background="@drawable/bg_btn_circle"
-                android:backgroundTint="#141414"
-                android:padding="6dp"
-                android:layout_marginStart="6dp"
-                android:clickable="true"
-                android:focusable="true" />
         </LinearLayout>
 
         <!-- Timestamp -->
@@ -158,7 +201,8 @@
             android:layout_height="wrap_content"
             android:textColor="@color/text_dim"
             android:textSize="11sp"
-            android:layout_marginTop="3dp" />
+            android:layout_marginTop="3dp"
+            android:layout_gravity="end" />
 
     </LinearLayout>
 

@@ -41,12 +41,46 @@ public class SocketManager {
     private UserProfile myProfile;
     private ServerStats serverStats;
 
+    // Pending auth action queue (prevents drops/freezes when user logs in or registers before connection finishes)
+    public enum PendingAuthAction {
+        NONE,
+        AUTH,
+        CREATE,
+        RECOVER
+    }
+    private volatile PendingAuthAction pendingAuthAction = PendingAuthAction.NONE;
+    private volatile String pendingAuthData = null;
+    private volatile boolean isAuthenticated = false;
+
+    // Cached topics to prevent empty screen on subsequent launches
+    private final List<Topic> cachedTopics = new java.util.concurrent.CopyOnWriteArrayList<>();
+
     // Ping tracking
     private long pingStartTime = 0;
     private long lastLatencyMs = 0;
+    private boolean isPingPending = false;
+    private boolean isAppForeground = true;
 
-    // Track last seen General message ID to avoid duplicate notifications
-    private int lastSeenGeneralMsgId = 0;
+    private final Runnable pingRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (socket == null || !socket.connected()) {
+                if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                    Log.d(TAG, "Watchdog reconnecting socket to " + currentServerUrl);
+                    connect(currentServerUrl);
+                }
+            } else {
+                if (!isPingPending || (System.currentTimeMillis() - pingStartTime > 12000)) {
+                    startPingMeasurement();
+                }
+            }
+            mainHandler.postDelayed(this, isAppForeground ? 10000 : 15000);
+        }
+    };
+
+    // Track seen General message IDs (bounded cache) to avoid duplicate notifications
+    private final java.util.LinkedHashSet<Integer> seenGeneralMsgIds = new java.util.LinkedHashSet<>();
+    private static final int MAX_SEEN_IDS = 200;
 
     // Listeners
     public interface ConnectionListener {
@@ -130,14 +164,36 @@ public class SocketManager {
         this.appContext = context.getApplicationContext();
     }
 
+    public Context getAppContext() { return appContext; }
+
     public void addConnectionListener(ConnectionListener l) { connectionListeners.add(l); }
     public void removeConnectionListener(ConnectionListener l) { connectionListeners.remove(l); }
 
     public void addAuthListener(AuthListener l) { authListeners.add(l); }
     public void removeAuthListener(AuthListener l) { authListeners.remove(l); }
 
-    public void addTopicListener(TopicListener l) { topicListeners.add(l); }
+    public void addTopicListener(TopicListener l) {
+        topicListeners.add(l);
+        if (!cachedTopics.isEmpty()) {
+            mainHandler.post(() -> l.onTopicsUpdated(new ArrayList<>(cachedTopics)));
+        }
+    }
     public void removeTopicListener(TopicListener l) { topicListeners.remove(l); }
+
+    public List<Topic> getCachedTopics() {
+        return new ArrayList<>(cachedTopics);
+    }
+
+    public void requestTopics() {
+        if (!cachedTopics.isEmpty()) {
+            mainHandler.post(() -> {
+                for (TopicListener l : topicListeners) l.onTopicsUpdated(new ArrayList<>(cachedTopics));
+            });
+        }
+        if (socket != null && socket.connected()) {
+            socket.emit("get-topics");
+        }
+    }
 
     public void addMessageListener(MessageListener l) { messageListeners.add(l); }
     public void removeMessageListener(MessageListener l) { messageListeners.remove(l); }
@@ -154,15 +210,70 @@ public class SocketManager {
     public void addUserProfileListener(UserProfileDialogListener l) { userProfileListeners.add(l); }
     public void removeUserProfileListener(UserProfileDialogListener l) { userProfileListeners.remove(l); }
 
-    public UserProfile getMyProfile() { return myProfile; }
+    public void setAppForeground(boolean foreground) {
+        this.isAppForeground = foreground;
+        mainHandler.removeCallbacks(pingRunnable);
+        mainHandler.post(pingRunnable);
+    }
+
+    public boolean isAppForeground() {
+        return isAppForeground;
+    }
+
+    public boolean isAuthenticated() {
+        return isAuthenticated;
+    }
+
+    public UserProfile getMyProfile() {
+        if (myProfile == null && appContext != null) {
+            PreferenceManager prefs = PreferenceManager.getInstance(appContext);
+            String uid = prefs.getMyUid();
+            String id = prefs.getMyId();
+            String name = prefs.getMyName();
+            String color = prefs.getMyColor();
+            String avatar = prefs.getMyAvatar();
+            if (uid != null || id != null || name != null) {
+                myProfile = new UserProfile();
+                myProfile.setUid(uid);
+                myProfile.setId(id);
+                myProfile.setName(name != null ? name : "Anon");
+                myProfile.setColor(color != null ? color : "#666,#999");
+                myProfile.setAvatar(avatar);
+            }
+        }
+        return myProfile;
+    }
+
     public ServerStats getServerStats() { return serverStats; }
     public boolean isConnected() { return socket != null && socket.connected(); }
     public String getCurrentTopicName() { return currentTopicName; }
 
     public void connect(String serverUrl) {
+        if (serverUrl == null || serverUrl.trim().isEmpty()) return;
+
+        // If already connected to the exact same server, do NOT tear down socket!
+        if (socket != null && serverUrl.equals(currentServerUrl)) {
+            if (socket.connected()) {
+                Log.d(TAG, "Socket already connected to " + serverUrl);
+                mainHandler.post(() -> {
+                    for (ConnectionListener l : connectionListeners) l.onConnected();
+                });
+                requestTopics();
+                return;
+            }
+            try {
+                socket.disconnect();
+                socket.off();
+            } catch (Exception ignored) {}
+            socket = null;
+        }
+
         if (socket != null) {
-            socket.disconnect();
-            socket.off();
+            try {
+                socket.disconnect();
+                socket.off();
+            } catch (Exception ignored) {}
+            socket = null;
         }
 
         this.currentServerUrl = serverUrl;
@@ -176,9 +287,9 @@ public class SocketManager {
                     .setTransports(new String[]{"websocket", "polling"})
                     .setReconnection(true)
                     .setReconnectionAttempts(Integer.MAX_VALUE)
-                    .setReconnectionDelay(300)
+                    .setReconnectionDelay(200)
                     .setReconnectionDelayMax(1500)
-                    .setTimeout(10000)
+                    .setTimeout(8000)
                     .build();
 
             socket = IO.socket(URI.create(serverUrl), options);
@@ -190,7 +301,58 @@ public class SocketManager {
         }
     }
 
+    public void forceReconnect(String serverUrl) {
+        if (socket != null) {
+            try {
+                socket.disconnect();
+                socket.off();
+            } catch (Exception ignored) {}
+            socket = null;
+        }
+        currentServerUrl = null;
+        connect(serverUrl);
+    }
+
+    private void flushPendingAuth() {
+        if (socket == null || !socket.connected()) return;
+
+        if (pendingAuthAction != PendingAuthAction.NONE && pendingAuthData != null) {
+            PendingAuthAction action = pendingAuthAction;
+            String data = pendingAuthData;
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
+
+            switch (action) {
+                case CREATE:
+                    Log.d(TAG, "Flushing pending CREATE action for key");
+                    createKey(data);
+                    return;
+                case RECOVER:
+                    Log.d(TAG, "Flushing pending RECOVER action for recoveryKey");
+                    recoverKey(data);
+                    return;
+                case AUTH:
+                    Log.d(TAG, "Flushing pending AUTH action for key");
+                    authKey(data);
+                    return;
+                case NONE:
+                default:
+                    break;
+            }
+        }
+
+        // Re-authenticate with saved key if user did not request another action
+        if (appContext != null) {
+            PreferenceManager prefs = PreferenceManager.getInstance(appContext);
+            String savedKey = prefs.getAuthKey();
+            if (savedKey != null && !savedKey.isEmpty()) {
+                authKey(savedKey);
+            }
+        }
+    }
+
     public void disconnect() {
+        mainHandler.removeCallbacks(pingRunnable);
         if (socket != null) {
             socket.disconnect();
             socket.off();
@@ -204,26 +366,25 @@ public class SocketManager {
         socket.on(Socket.EVENT_CONNECT, args -> {
             mainHandler.post(() -> {
                 for (ConnectionListener l : connectionListeners) l.onConnected();
-                startPingMeasurement();
+                mainHandler.removeCallbacks(pingRunnable);
+                if (isAppForeground) {
+                    mainHandler.post(pingRunnable);
+                }
             });
 
-            // Re-authenticate and join General room on every connect/reconnect
-            if (appContext != null) {
-                PreferenceManager prefs = PreferenceManager.getInstance(appContext);
-                String savedKey = prefs.getAuthKey();
-                if (savedKey != null && !savedKey.isEmpty()) {
-                    authKey(savedKey);
-                }
-            }
+            flushPendingAuth();
         });
 
         socket.on(Socket.EVENT_DISCONNECT, args -> {
+            isAuthenticated = false;
             mainHandler.post(() -> {
+                mainHandler.removeCallbacks(pingRunnable);
                 for (ConnectionListener l : connectionListeners) l.onDisconnected();
             });
         });
 
         socket.on(Socket.EVENT_CONNECT_ERROR, args -> {
+            isAuthenticated = false;
             String err = (args.length > 0 && args[0] != null) ? args[0].toString() : "Connection Error";
             mainHandler.post(() -> {
                 for (ConnectionListener l : connectionListeners) l.onConnectionError(err);
@@ -232,6 +393,7 @@ public class SocketManager {
 
         // Ping check
         socket.on("pong-check", args -> {
+            isPingPending = false;
             if (pingStartTime > 0) {
                 lastLatencyMs = System.currentTimeMillis() - pingStartTime;
                 pingStartTime = 0;
@@ -243,6 +405,7 @@ public class SocketManager {
 
         // Auth handling
         socket.on("auto-auth", args -> {
+            isAuthenticated = true;
             if (args.length > 0 && args[0] != null && appContext != null) {
                 try {
                     JSONObject obj = (JSONObject) args[0];
@@ -255,22 +418,25 @@ public class SocketManager {
         });
 
         socket.on("require-auth", args -> {
-            if (appContext != null) {
-                PreferenceManager prefs = PreferenceManager.getInstance(appContext);
-                String savedKey = prefs.getAuthKey();
-                if (savedKey != null && !savedKey.isEmpty()) {
-                    authKey(savedKey);
-                }
-            }
+            isAuthenticated = false;
+            flushPendingAuth();
         });
 
         socket.on("auth-error", args -> {
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
+            isAuthenticated = false;
             String msg = (args.length > 0 && args[0] != null) ? args[0].toString() : "Invalid key";
             try {
                 if (args[0] instanceof JSONObject) {
                     msg = ((JSONObject) args[0]).optString("message", msg);
                 }
             } catch (Exception ignored) {}
+            // ONLY clear saved key if the key was invalid on login
+            // NEVER clear saved key if error was "This key is already taken"
+            if ("Invalid key".equalsIgnoreCase(msg) && appContext != null) {
+                PreferenceManager.getInstance(appContext).setAuthKey(null);
+            }
             String finalMsg = msg;
             mainHandler.post(() -> {
                 for (AuthListener l : authListeners) l.onAuthError(finalMsg);
@@ -278,6 +444,9 @@ public class SocketManager {
         });
 
         socket.on("key-created", args -> {
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
+            isAuthenticated = true;
             if (args.length > 0 && args[0] != null && appContext != null) {
                 try {
                     JSONObject obj = (JSONObject) args[0];
@@ -293,6 +462,8 @@ public class SocketManager {
         });
 
         socket.on("key-recovered", args -> {
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
             if (args.length > 0 && args[0] != null && appContext != null) {
                 try {
                     JSONObject obj = (JSONObject) args[0];
@@ -308,14 +479,23 @@ public class SocketManager {
         });
 
         socket.on("profile", args -> {
+            pendingAuthAction = PendingAuthAction.NONE;
+            pendingAuthData = null;
+            isAuthenticated = true;
             if (args.length == 0 || args[0] == null) return;
             try {
                 JSONObject obj = (JSONObject) args[0];
                 myProfile = gson.fromJson(obj.toString(), UserProfile.class);
+                if (appContext != null && myProfile != null) {
+                    PreferenceManager.getInstance(appContext).saveMyProfile(myProfile);
+                }
                 mainHandler.post(() -> {
                     for (ProfileListener l : profileListeners) l.onProfileLoaded(myProfile);
                 });
-                joinTopic("General");
+                String targetTopic = (currentTopicName != null && !currentTopicName.trim().isEmpty())
+                        ? currentTopicName
+                        : "General";
+                joinTopic(targetTopic);
             } catch (Exception e) {
                 Log.e(TAG, "profile error", e);
             }
@@ -326,30 +506,13 @@ public class SocketManager {
             try {
                 JSONArray arr = (JSONArray) args[0];
                 List<Topic> list = gson.fromJson(arr.toString(), new TypeToken<List<Topic>>(){}.getType());
+                if (list != null) {
+                    cachedTopics.clear();
+                    cachedTopics.addAll(list);
+                }
                 mainHandler.post(() -> {
                     for (TopicListener l : topicListeners) l.onTopicsUpdated(list);
                 });
-
-                // Check for new General messages from topics update when not in General
-                if (!"General".equalsIgnoreCase(currentTopicName) && list != null) {
-                    for (Topic t : list) {
-                        if ("General".equalsIgnoreCase(t.getName()) && t.getLastMsg() != null) {
-                            Topic.LastMessage lm = t.getLastMsg();
-                            int msgId = lm.getId() != 0 ? lm.getId() : t.getLastMsgId();
-                            if (msgId > lastSeenGeneralMsgId && lastSeenGeneralMsgId > 0) {
-                                String myName = myProfile != null ? myProfile.getName() : "";
-                                if (lm.getName() != null && !myName.equalsIgnoreCase(lm.getName())) {
-                                    if (appContext != null) {
-                                        NotificationHelper.showGeneralTopicNotification(appContext, lm.getName(), lm.getText());
-                                    }
-                                }
-                            }
-                            if (msgId > lastSeenGeneralMsgId) {
-                                lastSeenGeneralMsgId = msgId;
-                            }
-                        }
-                    }
-                }
             } catch (Exception e) {
                 Log.e(TAG, "topics error", e);
             }
@@ -481,23 +644,86 @@ public class SocketManager {
                 mainHandler.post(() -> {
                     for (MessageListener l : messageListeners) l.onNewMessage(msg);
                 });
-
-                String senderName = msg.getName();
-                String myName = myProfile != null ? myProfile.getName() : "";
-                boolean isMe = (myProfile != null && msg.getId().equals(myProfile.getId())) || myName.equalsIgnoreCase(senderName);
-
-                if (!"General".equalsIgnoreCase(currentTopicName) && !isMe) {
-                    mainHandler.post(() -> {
-                        for (GeneralMessageGlobalListener l : generalGlobalListeners) {
-                            l.onGeneralMessageReceived(msg);
-                        }
-                    });
-                    if (appContext != null) {
-                        NotificationHelper.showGeneralMessageNotification(appContext, msg);
-                    }
-                }
             } catch (Exception e) {
                 Log.e(TAG, "message error", e);
+            }
+        });
+
+        // Fast instant notification broadcast for General channel
+        socket.on("general-notify", args -> {
+            if (args.length == 0 || args[0] == null) return;
+            try {
+                JSONObject obj = (JSONObject) args[0];
+                int msgId = obj.optInt("msgId");
+                String name = obj.optString("name", "Anon");
+                String text = obj.optString("text", "");
+                boolean hasMedia = obj.optBoolean("hasMedia", false);
+                String time = obj.optString("time", "");
+                String senderId = obj.optString("senderId", "");
+                String senderUid = obj.optString("senderUid", "");
+
+                // Filter out self-sent messages
+                UserProfile profile = getMyProfile();
+                String myName = profile != null ? profile.getName() : "";
+                String myId = profile != null ? profile.getId() : "";
+                String myUid = profile != null ? profile.getUid() : "";
+
+                if ((!myId.isEmpty() && myId.equalsIgnoreCase(senderId)) ||
+                    (!myUid.isEmpty() && myUid.equalsIgnoreCase(senderUid)) ||
+                    (!myName.isEmpty() && !"Anon".equalsIgnoreCase(myName) && myName.equalsIgnoreCase(name))) {
+                    return;
+                }
+
+                // Prevent duplicate notifications using bounded set
+                if (msgId > 0) {
+                    synchronized (seenGeneralMsgIds) {
+                        if (seenGeneralMsgIds.contains(msgId)) {
+                            return;
+                        }
+                        seenGeneralMsgIds.add(msgId);
+                        if (seenGeneralMsgIds.size() > MAX_SEEN_IDS) {
+                            java.util.Iterator<Integer> it = seenGeneralMsgIds.iterator();
+                            if (it.hasNext()) {
+                                it.next();
+                                it.remove();
+                            }
+                        }
+                    }
+                }
+
+                // Do not notify on messages sent by myself
+                UserProfile me = getMyProfile();
+                if (me != null) {
+                    if (senderUid != null && !senderUid.isEmpty() && senderUid.equals(me.getUid())) {
+                        return;
+                    }
+                    if (senderId != null && !senderId.isEmpty() && senderId.equals(me.getId())) {
+                        return;
+                    }
+                }
+
+                Message msg = new Message();
+                msg.setMsgId(msgId);
+                msg.setName(name);
+                msg.setText(text);
+                msg.setTime(time);
+                msg.setId(senderId);
+                msg.setUid(senderUid);
+
+                // If user is actively inside General Chat in foreground, do not pop system status bar notifications
+                boolean inGeneral = com.anonymous.chat.ui.chat.ChatActivity.isGeneralActive;
+                if (!inGeneral && appContext != null) {
+                    NotificationHelper.showGeneralTopicNotification(appContext, name, text);
+                }
+
+                // Notify UI listeners (MainActivity, etc.) to show InAppNotificationBanner and update unread badge
+                mainHandler.post(() -> {
+                    for (GeneralMessageGlobalListener l : generalGlobalListeners) {
+                        l.onGeneralMessageReceived(msg);
+                    }
+                });
+            } catch (Exception e) {
+                Log.e(TAG, "general-notify error", e);
             }
         });
 
@@ -734,15 +960,42 @@ public class SocketManager {
 
     public void startPingMeasurement() {
         if (socket == null || !socket.connected()) return;
+        isPingPending = true;
         pingStartTime = System.currentTimeMillis();
         socket.emit("ping-check", pingStartTime);
     }
 
     public void authKey(String key) {
-        if (socket == null || !socket.connected() || key == null) return;
+        if (key == null || key.trim().isEmpty()) return;
+        String cleanKey = key.trim();
+
+        // If socket is already connected and authenticated with our profile, immediately confirm success!
+        if (socket != null && socket.connected() && isAuthenticated && myProfile != null) {
+            String savedKey = appContext != null ? PreferenceManager.getInstance(appContext).getAuthKey() : null;
+            if (cleanKey.equals(savedKey)) {
+                Log.d(TAG, "Already authenticated with key. Dispatching profile immediately.");
+                mainHandler.post(() -> {
+                    for (ProfileListener l : profileListeners) l.onProfileLoaded(myProfile);
+                });
+                return;
+            }
+        }
+
+        if (socket == null || !socket.connected()) {
+            Log.d(TAG, "authKey queued (waiting for socket connection)");
+            pendingAuthAction = PendingAuthAction.AUTH;
+            pendingAuthData = cleanKey;
+            if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                connect(currentServerUrl);
+            } else if (appContext != null) {
+                connect(PreferenceManager.getInstance(appContext).getServerBaseUrl());
+            }
+            return;
+        }
+
         try {
             JSONObject obj = new JSONObject();
-            obj.put("key", key);
+            obj.put("key", cleanKey);
             if (appContext != null) {
                 obj.put("mac", PreferenceManager.getInstance(appContext).getDeviceMac());
             }
@@ -753,16 +1006,30 @@ public class SocketManager {
     }
 
     public void createKey(String key) {
-        if (socket == null || !socket.connected() || key == null) return;
+        if (key == null || key.trim().isEmpty()) return;
+        String cleanKey = key.trim();
+
+        if (socket == null || !socket.connected()) {
+            Log.d(TAG, "createKey queued (waiting for socket connection)");
+            pendingAuthAction = PendingAuthAction.CREATE;
+            pendingAuthData = cleanKey;
+            if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                connect(currentServerUrl);
+            } else if (appContext != null) {
+                connect(PreferenceManager.getInstance(appContext).getServerBaseUrl());
+            }
+            return;
+        }
+
         try {
             JSONObject obj = new JSONObject();
-            obj.put("key", key);
+            obj.put("key", cleanKey);
             if (appContext != null) {
                 obj.put("mac", PreferenceManager.getInstance(appContext).getDeviceMac());
             }
             socket.emit("create-key", obj);
             if (appContext != null) {
-                PreferenceManager.getInstance(appContext).setAuthKey(key);
+                PreferenceManager.getInstance(appContext).setAuthKey(cleanKey);
             }
         } catch (Exception e) {
             Log.e(TAG, "createKey error", e);
@@ -770,10 +1037,24 @@ public class SocketManager {
     }
 
     public void recoverKey(String recoveryKey) {
-        if (socket == null || !socket.connected() || recoveryKey == null) return;
+        if (recoveryKey == null || recoveryKey.trim().isEmpty()) return;
+        String cleanRecovery = recoveryKey.trim();
+
+        if (socket == null || !socket.connected()) {
+            Log.d(TAG, "recoverKey queued (waiting for socket connection)");
+            pendingAuthAction = PendingAuthAction.RECOVER;
+            pendingAuthData = cleanRecovery;
+            if (currentServerUrl != null && !currentServerUrl.isEmpty()) {
+                connect(currentServerUrl);
+            } else if (appContext != null) {
+                connect(PreferenceManager.getInstance(appContext).getServerBaseUrl());
+            }
+            return;
+        }
+
         try {
             JSONObject obj = new JSONObject();
-            obj.put("recoveryKey", recoveryKey);
+            obj.put("recoveryKey", cleanRecovery);
             socket.emit("recover-key", obj);
         } catch (Exception e) {
             Log.e(TAG, "recoverKey error", e);
@@ -781,11 +1062,15 @@ public class SocketManager {
     }
 
     public void logout() {
+        pendingAuthAction = PendingAuthAction.NONE;
+        pendingAuthData = null;
+        isAuthenticated = false;
         if (socket != null && socket.connected()) {
             socket.emit("logout");
         }
         if (appContext != null) {
             PreferenceManager.getInstance(appContext).setAuthKey(null);
+            PreferenceManager.getInstance(appContext).saveMyProfile(null);
         }
         myProfile = null;
     }
@@ -870,10 +1155,16 @@ public class SocketManager {
     }
 
     public void requestUserProfile(String uid) {
-        if (socket == null || !socket.connected() || uid == null) return;
+        requestUserProfile(uid, null, null);
+    }
+
+    public void requestUserProfile(String uid, String name, String id) {
+        if (socket == null || !socket.connected()) return;
         try {
             JSONObject obj = new JSONObject();
-            obj.put("uid", uid);
+            if (uid != null && !uid.isEmpty()) obj.put("uid", uid);
+            if (name != null && !name.isEmpty()) obj.put("name", name);
+            if (id != null && !id.isEmpty()) obj.put("id", id);
             socket.emit("user-profile", obj);
         } catch (Exception e) {
             Log.e(TAG, "requestUserProfile error", e);

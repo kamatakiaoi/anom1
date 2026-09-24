@@ -1,14 +1,18 @@
 package com.anonymous.chat.services;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.SystemClock;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
@@ -21,6 +25,7 @@ public class ChatBackgroundService extends Service {
 
     public static final String CHANNEL_SERVICE = "channel_chat_service";
     private static final int NOTIF_SERVICE_ID = 2001;
+    private PowerManager.WakeLock serviceWakeLock;
 
     public static void start(Context context) {
         if (context == null) return;
@@ -54,6 +59,14 @@ public class ChatBackgroundService extends Service {
             startForeground(NOTIF_SERVICE_ID, notif);
         }
 
+        try {
+            PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+            if (pm != null) {
+                PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "anom:bg_service_start");
+                wl.acquire(3000);
+            }
+        } catch (Exception ignored) {}
+
         // Ensure socket is initialized and connected
         SocketManager sm = SocketManager.getInstance();
         sm.init(getApplicationContext());
@@ -75,6 +88,62 @@ public class ChatBackgroundService extends Service {
         return null;
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        super.onTaskRemoved(rootIntent);
+        PreferenceManager prefs = PreferenceManager.getInstance(this);
+        if (prefs.getAuthKey() != null && !prefs.getAuthKey().isEmpty()) {
+            try {
+                Intent restartServiceIntent = new Intent(getApplicationContext(), ChatBackgroundService.class);
+                restartServiceIntent.setPackage(getPackageName());
+                int flags = PendingIntent.FLAG_ONE_SHOT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    flags |= PendingIntent.FLAG_IMMUTABLE;
+                }
+                PendingIntent restartPendingIntent = PendingIntent.getService(
+                        getApplicationContext(), 1001, restartServiceIntent, flags);
+                AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                if (alarmManager != null) {
+                    alarmManager.set(
+                            AlarmManager.ELAPSED_REALTIME,
+                            SystemClock.elapsedRealtime() + 1000,
+                            restartPendingIntent);
+                }
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (serviceWakeLock != null && serviceWakeLock.isHeld()) {
+            try {
+                serviceWakeLock.release();
+            } catch (Exception ignored) {}
+            serviceWakeLock = null;
+        }
+        PreferenceManager prefs = PreferenceManager.getInstance(this);
+        if (prefs.getAuthKey() != null && !prefs.getAuthKey().isEmpty()) {
+            try {
+                Intent restartServiceIntent = new Intent(getApplicationContext(), ChatBackgroundService.class);
+                restartServiceIntent.setPackage(getPackageName());
+                int flags = PendingIntent.FLAG_ONE_SHOT;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    flags |= PendingIntent.FLAG_IMMUTABLE;
+                }
+                PendingIntent restartPendingIntent = PendingIntent.getService(
+                        getApplicationContext(), 1002, restartServiceIntent, flags);
+                AlarmManager alarmManager = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+                if (alarmManager != null) {
+                    alarmManager.set(
+                            AlarmManager.ELAPSED_REALTIME,
+                            SystemClock.elapsedRealtime() + 1500,
+                            restartPendingIntent);
+                }
+            } catch (Exception ignored) {}
+        }
+    }
+
     private void createServiceNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
@@ -88,7 +157,7 @@ public class ChatBackgroundService extends Service {
             channel.enableVibration(false);
             channel.setSound(null, null);
 
-            NotificationManager manager = getSystemService(NotificationManager.class);
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
             }
@@ -97,7 +166,7 @@ public class ChatBackgroundService extends Service {
 
     private Notification buildServiceNotification() {
         return new NotificationCompat.Builder(this, CHANNEL_SERVICE)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_notification_stat)
                 .setContentTitle("Anonymous Chat")
                 .setContentText("Connected in background")
                 .setPriority(NotificationCompat.PRIORITY_MIN)

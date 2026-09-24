@@ -6,8 +6,11 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
+import android.content.res.ColorStateList;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.PopupMenu;
@@ -35,7 +38,9 @@ import com.bumptech.glide.Glide;
 
 import java.util.List;
 
-public class PostDetailActivity extends AppCompatActivity implements SocketManager.ExploreListener {
+public class PostDetailActivity extends AppCompatActivity implements
+        SocketManager.ExploreListener,
+        SocketManager.UserProfileDialogListener {
 
     public static final String EXTRA_POST_ID = "extra_post_id";
 
@@ -69,6 +74,10 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
         });
 
         binding.rvPostComments.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvPostComments.setItemViewCacheSize(25);
+        if (binding.rvPostComments.getItemAnimator() instanceof androidx.recyclerview.widget.SimpleItemAnimator) {
+            ((androidx.recyclerview.widget.SimpleItemAnimator) binding.rvPostComments.getItemAnimator()).setSupportsChangeAnimations(false);
+        }
         binding.rvPostComments.setAdapter(commentAdapter);
     }
 
@@ -175,6 +184,7 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
 
     private void loadPostData() {
         SocketManager.getInstance().addExploreListener(this);
+        SocketManager.getInstance().addUserProfileListener(this);
         SocketManager.getInstance().getExplorePost(postId);
         SocketManager.getInstance().viewExplorePost(postId);
         SocketManager.getInstance().loadExploreComments(postId);
@@ -187,12 +197,17 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
         GradientDrawable grad = ColorHelper.getAvatarGradient(post.getColor());
         binding.ivDetailAvatar.setBackground(grad);
 
+        View.OnClickListener authorClick = v -> {
+            if (post != null) {
+                SocketManager.getInstance().requestUserProfile(post.getAuthorUid(), post.getAuthorName(), post.getAuthorId());
+            }
+        };
+        binding.ivDetailAvatar.setOnClickListener(authorClick);
+        binding.tvDetailAuthor.setOnClickListener(authorClick);
+
         String serverUrl = PreferenceManager.getInstance(this).getServerBaseUrl();
         if (post.getAvatar() != null && !post.getAvatar().isEmpty()) {
-            Glide.with(this)
-                    .load(ImageUtils.getFullMediaUrl(serverUrl, post.getAvatar()))
-                    .circleCrop()
-                    .into(binding.ivDetailAvatar);
+            ImageUtils.loadAvatar(this, post.getAvatar(), binding.ivDetailAvatar);
         }
 
         String tz = PreferenceManager.getInstance(this).getTimezone();
@@ -227,32 +242,55 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
 
         // Media images and video
         binding.detailMediaContainer.removeAllViews();
+        float density = getResources().getDisplayMetrics().density;
+        int heightPx = (int) (220 * density);
+
         if (post.getVideo() != null && !post.getVideo().isEmpty()) {
-            String fullVideo = ImageUtils.getFullMediaUrl(serverUrl, post.getVideo());
+            String videoUrl = post.getVideo();
+            FrameLayout frame = new FrameLayout(this);
+            LinearLayout.LayoutParams frameLp = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, heightPx);
+            frameLp.setMargins(0, (int) (6 * density), 0, (int) (6 * density));
+            frame.setLayoutParams(frameLp);
+
             ImageView videoThumb = new ImageView(this);
-            videoThumb.setLayoutParams(new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, 500));
+            videoThumb.setLayoutParams(new FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
             videoThumb.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            Glide.with(this).load(fullVideo).into(videoThumb);
-            videoThumb.setOnClickListener(v -> {
+            ImageUtils.loadVideoThumbnail(this, videoUrl, videoThumb, 10);
+            frame.addView(videoThumb);
+
+            ImageView playBtn = new ImageView(this);
+            int btnSize = (int) (52 * density);
+            FrameLayout.LayoutParams playLp = new FrameLayout.LayoutParams(btnSize, btnSize);
+            playLp.gravity = Gravity.CENTER;
+            playBtn.setLayoutParams(playLp);
+            playBtn.setImageResource(R.drawable.ic_play);
+            playBtn.setBackgroundResource(R.drawable.bg_btn_circle);
+            playBtn.setBackgroundTintList(ColorStateList.valueOf(Color.parseColor("#B3000000")));
+            playBtn.setImageTintList(ColorStateList.valueOf(Color.WHITE));
+            int pad = (int) (13 * density);
+            playBtn.setPadding(pad, pad, pad, pad);
+            frame.addView(playBtn);
+
+            frame.setOnClickListener(v -> {
                 Intent intent = new Intent(PostDetailActivity.this, LightboxActivity.class);
-                intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, fullVideo);
+                intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, videoUrl);
                 startActivity(intent);
             });
-            binding.detailMediaContainer.addView(videoThumb);
+            binding.detailMediaContainer.addView(frame);
         } else if (post.getImages() != null && !post.getImages().isEmpty()) {
             for (String img : post.getImages()) {
-                String fullImg = ImageUtils.getFullMediaUrl(serverUrl, img);
                 ImageView iv = new ImageView(this);
                 LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT, 500);
-                lp.setMargins(0, 8, 0, 8);
+                        ViewGroup.LayoutParams.MATCH_PARENT, heightPx);
+                lp.setMargins(0, (int) (4 * density), 0, (int) (4 * density));
                 iv.setLayoutParams(lp);
                 iv.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                Glide.with(this).load(fullImg).into(iv);
+                ImageUtils.loadImage(this, img, iv, 10);
                 iv.setOnClickListener(v -> {
                     Intent intent = new Intent(PostDetailActivity.this, LightboxActivity.class);
-                    intent.putExtra(LightboxActivity.EXTRA_IMAGE_URL, fullImg);
+                    intent.putExtra(LightboxActivity.EXTRA_IMAGE_URL, img);
                     startActivity(intent);
                 });
                 binding.detailMediaContainer.addView(iv);
@@ -416,6 +454,14 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
     }
 
     @Override
+    public void onUserProfileReceived(com.anonymous.chat.models.UserProfile userProfile) {
+        if (!isFinishing() && !isDestroyed() && userProfile != null) {
+            com.anonymous.chat.ui.profile.UserProfileDialog dialog = new com.anonymous.chat.ui.profile.UserProfileDialog(this, userProfile);
+            dialog.show();
+        }
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         AudioPlayerManager.getInstance().pause();
@@ -426,5 +472,6 @@ public class PostDetailActivity extends AppCompatActivity implements SocketManag
         super.onDestroy();
         AudioPlayerManager.getInstance().stop();
         SocketManager.getInstance().removeExploreListener(this);
+        SocketManager.getInstance().removeUserProfileListener(this);
     }
 }

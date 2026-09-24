@@ -10,16 +10,19 @@ import android.media.AudioAttributes;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.PowerManager;
 
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
 import com.anonymous.chat.R;
 import com.anonymous.chat.models.Message;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import com.anonymous.chat.ui.chat.ChatActivity;
 
 public class NotificationHelper {
-    public static final String CHANNEL_GENERAL = "channel_general_chat_v3";
+    public static final String CHANNEL_GENERAL = "channel_general_chat_v6";
     private static int notifCounter = 1000;
 
     public static void createNotificationChannels(Context context) {
@@ -43,7 +46,7 @@ public class NotificationHelper {
             channel.setSound(defaultSoundUri, audioAttributes);
             channel.setVibrationPattern(new long[]{0, 200, 100, 200});
 
-            NotificationManager manager = context.getSystemService(NotificationManager.class);
+            NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             if (manager != null) {
                 manager.createNotificationChannel(channel);
             }
@@ -95,8 +98,13 @@ public class NotificationHelper {
         int notifId = notifCounter++;
         if (notifCounter > 9999) notifCounter = 1000;
 
+        Bitmap largeIcon = null;
+        try {
+            largeIcon = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher);
+        } catch (Exception ignored) {}
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_GENERAL)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_notification_stat)
                 .setContentTitle(sender + " in General")
                 .setContentText(body)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(body))
@@ -109,6 +117,18 @@ public class NotificationHelper {
                 .setVibrate(new long[]{0, 200, 100, 200})
                 .setDefaults(NotificationCompat.DEFAULT_ALL)
                 .setContentIntent(pendingIntent);
+
+        if (largeIcon != null) {
+            builder.setLargeIcon(largeIcon);
+        }
+
+        try {
+            PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+            if (pm != null) {
+                PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "anom:notification_wake");
+                wl.acquire(3000);
+            }
+        } catch (Exception ignored) {}
 
         try {
             NotificationManagerCompat manager = NotificationManagerCompat.from(context);

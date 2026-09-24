@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "com.anonymous.chat.app-mergeDebugResources-32:/values-v23/values-v23.xml",
+            "outputFile": "com.anonymous.chat.app-mergeDebugResources-35:/values-v23/values-v23.xml",
             "map": [
                 {
                     "source": "C:\\Users\\flooxie\\.gradle\\caches\\8.8\\transforms\\75b02aa536b400ba1b17d02da1a781d2\\transformed\\cardview-1.0.0\\res\\values-v23\\values-v23.xml",

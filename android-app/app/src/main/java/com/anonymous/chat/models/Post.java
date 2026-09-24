@@ -38,8 +38,10 @@ public class Post implements Serializable {
     public void setUserId(String userId) { this.userId = userId; }
 
     public String getUid() { return uid != null ? uid : (userId != null ? userId : ""); }
+    public String getAuthorUid() { return getUid(); }
     public void setUid(String uid) { this.uid = uid; }
 
+    public String getAuthorId() { return getUserId(); }
     public String getName() { return name != null ? name : "Anonymous"; }
     public String getAuthorName() { return getName(); }
     public void setName(String name) { this.name = name; }

@@ -1,0 +1,42 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Build Android App (Debug APK)
+        run: |
+          if [ -d "android-app" ]; then
+            cd android-app
+          fi
+          gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Prepare Flat Output Directory
+        run: |
+          mkdir -p output
+          find . -name "*debug*.apk" -o -name "*app*.apk" | head -n 1 | xargs -I {} cp {} output/AnonymousChat-v3.6.13-Android.apk
+          cd output
+          zip -9 AnonymousChat-v3.6.13-Android.zip AnonymousChat-v3.6.13-Android.apk
+
+      - name: Upload APK Artifact (Flat in ZIP)
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnonymousChat-v3.6.13-Android
+          path: output/AnonymousChat-v3.6.13-Android.apk

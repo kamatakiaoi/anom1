@@ -6,13 +6,17 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.VideoView;
+import android.widget.SeekBar;
+import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.media3.ui.PlayerView;
 import androidx.viewbinding.ViewBinding;
 import androidx.viewbinding.ViewBindings;
 import com.anonymous.chat.R;
+import com.anonymous.chat.views.ZoomableImageView;
 import java.lang.NullPointerException;
 import java.lang.Override;
 import java.lang.String;
@@ -28,23 +32,59 @@ public final class ActivityLightboxBinding implements ViewBinding {
   public final ImageView btnLightboxRotate;
 
   @NonNull
-  public final ImageView ivLightboxImage;
+  public final ImageView btnVideoFullscreen;
+
+  @NonNull
+  public final ImageView btnVideoPlayPause;
+
+  @NonNull
+  public final ZoomableImageView ivLightboxImage;
+
+  @NonNull
+  public final ImageView ivVideoCenterPlay;
+
+  @NonNull
+  public final LinearLayout layoutTopControls;
+
+  @NonNull
+  public final LinearLayout layoutVideoControls;
 
   @NonNull
   public final ProgressBar pbLightboxLoading;
 
   @NonNull
-  public final VideoView vvLightboxVideo;
+  public final SeekBar sbVideoProgress;
+
+  @NonNull
+  public final TextView tvVideoCurrentTime;
+
+  @NonNull
+  public final TextView tvVideoDuration;
+
+  @NonNull
+  public final PlayerView vvLightboxVideo;
 
   private ActivityLightboxBinding(@NonNull FrameLayout rootView,
       @NonNull ImageView btnLightboxClose, @NonNull ImageView btnLightboxRotate,
-      @NonNull ImageView ivLightboxImage, @NonNull ProgressBar pbLightboxLoading,
-      @NonNull VideoView vvLightboxVideo) {
+      @NonNull ImageView btnVideoFullscreen, @NonNull ImageView btnVideoPlayPause,
+      @NonNull ZoomableImageView ivLightboxImage, @NonNull ImageView ivVideoCenterPlay,
+      @NonNull LinearLayout layoutTopControls, @NonNull LinearLayout layoutVideoControls,
+      @NonNull ProgressBar pbLightboxLoading, @NonNull SeekBar sbVideoProgress,
+      @NonNull TextView tvVideoCurrentTime, @NonNull TextView tvVideoDuration,
+      @NonNull PlayerView vvLightboxVideo) {
     this.rootView = rootView;
     this.btnLightboxClose = btnLightboxClose;
     this.btnLightboxRotate = btnLightboxRotate;
+    this.btnVideoFullscreen = btnVideoFullscreen;
+    this.btnVideoPlayPause = btnVideoPlayPause;
     this.ivLightboxImage = ivLightboxImage;
+    this.ivVideoCenterPlay = ivVideoCenterPlay;
+    this.layoutTopControls = layoutTopControls;
+    this.layoutVideoControls = layoutVideoControls;
     this.pbLightboxLoading = pbLightboxLoading;
+    this.sbVideoProgress = sbVideoProgress;
+    this.tvVideoCurrentTime = tvVideoCurrentTime;
+    this.tvVideoDuration = tvVideoDuration;
     this.vvLightboxVideo = vvLightboxVideo;
   }
 
@@ -87,9 +127,39 @@ public final class ActivityLightboxBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.btnVideoFullscreen;
+      ImageView btnVideoFullscreen = ViewBindings.findChildViewById(rootView, id);
+      if (btnVideoFullscreen == null) {
+        break missingId;
+      }
+
+      id = R.id.btnVideoPlayPause;
+      ImageView btnVideoPlayPause = ViewBindings.findChildViewById(rootView, id);
+      if (btnVideoPlayPause == null) {
+        break missingId;
+      }
+
       id = R.id.ivLightboxImage;
-      ImageView ivLightboxImage = ViewBindings.findChildViewById(rootView, id);
+      ZoomableImageView ivLightboxImage = ViewBindings.findChildViewById(rootView, id);
       if (ivLightboxImage == null) {
+        break missingId;
+      }
+
+      id = R.id.ivVideoCenterPlay;
+      ImageView ivVideoCenterPlay = ViewBindings.findChildViewById(rootView, id);
+      if (ivVideoCenterPlay == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutTopControls;
+      LinearLayout layoutTopControls = ViewBindings.findChildViewById(rootView, id);
+      if (layoutTopControls == null) {
+        break missingId;
+      }
+
+      id = R.id.layoutVideoControls;
+      LinearLayout layoutVideoControls = ViewBindings.findChildViewById(rootView, id);
+      if (layoutVideoControls == null) {
         break missingId;
       }
 
@@ -99,14 +169,34 @@ public final class ActivityLightboxBinding implements ViewBinding {
         break missingId;
       }
 
+      id = R.id.sbVideoProgress;
+      SeekBar sbVideoProgress = ViewBindings.findChildViewById(rootView, id);
+      if (sbVideoProgress == null) {
+        break missingId;
+      }
+
+      id = R.id.tvVideoCurrentTime;
+      TextView tvVideoCurrentTime = ViewBindings.findChildViewById(rootView, id);
+      if (tvVideoCurrentTime == null) {
+        break missingId;
+      }
+
+      id = R.id.tvVideoDuration;
+      TextView tvVideoDuration = ViewBindings.findChildViewById(rootView, id);
+      if (tvVideoDuration == null) {
+        break missingId;
+      }
+
       id = R.id.vvLightboxVideo;
-      VideoView vvLightboxVideo = ViewBindings.findChildViewById(rootView, id);
+      PlayerView vvLightboxVideo = ViewBindings.findChildViewById(rootView, id);
       if (vvLightboxVideo == null) {
         break missingId;
       }
 
       return new ActivityLightboxBinding((FrameLayout) rootView, btnLightboxClose,
-          btnLightboxRotate, ivLightboxImage, pbLightboxLoading, vvLightboxVideo);
+          btnLightboxRotate, btnVideoFullscreen, btnVideoPlayPause, ivLightboxImage,
+          ivVideoCenterPlay, layoutTopControls, layoutVideoControls, pbLightboxLoading,
+          sbVideoProgress, tvVideoCurrentTime, tvVideoDuration, vvLightboxVideo);
     }
     String missingId = rootView.getResources().getResourceName(id);
     throw new NullPointerException("Missing required view with ID: ".concat(missingId));

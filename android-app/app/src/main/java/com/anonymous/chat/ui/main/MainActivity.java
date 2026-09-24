@@ -55,6 +55,7 @@ public class MainActivity extends AppCompatActivity implements
         SocketManager.TopicListener,
         SocketManager.ExploreListener,
         SocketManager.ProfileListener,
+        SocketManager.UserProfileDialogListener,
         SocketManager.GeneralMessageGlobalListener {
 
     private ActivityMainBinding binding;
@@ -99,8 +100,14 @@ public class MainActivity extends AppCompatActivity implements
         setupListeners();
         setupSocket();
         checkNotificationPermission();
-        checkBatteryOptimizations();
         com.anonymous.chat.services.ChatBackgroundService.start(this);
+
+        // Immediate fetch of topics and explore feed
+        SocketManager.getInstance().requestTopics();
+        SocketManager.getInstance().loadExploreFeed(1, currentExploreSort, "");
+        if (SocketManager.getInstance().isConnected()) {
+            SocketManager.getInstance().joinTopic("General");
+        }
     }
 
     private void checkNotificationPermission() {
@@ -108,19 +115,6 @@ public class MainActivity extends AppCompatActivity implements
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
             }
-        }
-    }
-
-    private void checkBatteryOptimizations() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            try {
-                android.os.PowerManager pm = (android.os.PowerManager) getSystemService(POWER_SERVICE);
-                if (pm != null && !pm.isIgnoringBatteryOptimizations(getPackageName())) {
-                    Intent intent = new Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                    intent.setData(android.net.Uri.parse("package:" + getPackageName()));
-                    startActivity(intent);
-                }
-            } catch (Exception ignored) {}
         }
     }
 
@@ -214,9 +208,20 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
+    private long lastNavigationClickTime = 0;
+    private boolean canNavigate() {
+        long now = android.os.SystemClock.elapsedRealtime();
+        if (now - lastNavigationClickTime < 500) {
+            return false;
+        }
+        lastNavigationClickTime = now;
+        return true;
+    }
+
     private void setupUI() {
         // Topics Adapter
         topicAdapter = new TopicAdapter(topic -> {
+            if (!canNavigate()) return;
             if ("patch notes".equalsIgnoreCase(topic.getName())) {
                 startActivity(new Intent(MainActivity.this, PatchNotesActivity.class));
             } else {
@@ -227,12 +232,17 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
         binding.rvTopics.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvTopics.setItemViewCacheSize(25);
+        if (binding.rvTopics.getItemAnimator() instanceof androidx.recyclerview.widget.SimpleItemAnimator) {
+            ((androidx.recyclerview.widget.SimpleItemAnimator) binding.rvTopics.getItemAnimator()).setSupportsChangeAnimations(false);
+        }
         binding.rvTopics.setAdapter(topicAdapter);
 
         // Explore Feed Adapter
         postAdapter = new PostFeedAdapter(new PostFeedAdapter.PostInteractionListener() {
             @Override
             public void onPostClicked(Post post) {
+                if (!canNavigate()) return;
                 Intent intent = new Intent(MainActivity.this, PostDetailActivity.class);
                 intent.putExtra(PostDetailActivity.EXTRA_POST_ID, post.getId());
                 startActivity(intent);
@@ -250,6 +260,7 @@ public class MainActivity extends AppCompatActivity implements
 
             @Override
             public void onMediaClicked(String mediaUrl, boolean isVideo) {
+                if (!canNavigate()) return;
                 Intent intent = new Intent(MainActivity.this, LightboxActivity.class);
                 if (isVideo) {
                     intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, mediaUrl);
@@ -265,6 +276,10 @@ public class MainActivity extends AppCompatActivity implements
             }
         });
         binding.rvExploreFeed.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvExploreFeed.setItemViewCacheSize(25);
+        if (binding.rvExploreFeed.getItemAnimator() instanceof androidx.recyclerview.widget.SimpleItemAnimator) {
+            ((androidx.recyclerview.widget.SimpleItemAnimator) binding.rvExploreFeed.getItemAnimator()).setSupportsChangeAnimations(false);
+        }
         binding.rvExploreFeed.setAdapter(postAdapter);
     }
 
@@ -450,24 +465,34 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void switchLobbyMode(String mode) {
+        if (mode.equals(currentLobbyMode)) return;
         currentLobbyMode = mode;
         if ("topics".equals(mode)) {
             setActiveButton(binding.btnTabTopics, binding.btnTabExplore);
-            binding.swipeTopics.setVisibility(View.VISIBLE);
             binding.swipeExplore.setVisibility(View.GONE);
+            binding.swipeTopics.setAlpha(0f);
+            binding.swipeTopics.setVisibility(View.VISIBLE);
+            binding.swipeTopics.animate().alpha(1f).setDuration(160).start();
             binding.toolbarTopics.setVisibility(View.VISIBLE);
             binding.toolbarExplore.setVisibility(View.GONE);
         } else {
             setActiveButton(binding.btnTabExplore, binding.btnTabTopics);
             binding.swipeTopics.setVisibility(View.GONE);
+            binding.swipeExplore.setAlpha(0f);
             binding.swipeExplore.setVisibility(View.VISIBLE);
+            binding.swipeExplore.animate().alpha(1f).setDuration(160).start();
             binding.toolbarTopics.setVisibility(View.GONE);
             binding.toolbarExplore.setVisibility(View.VISIBLE);
-            switchSort("latest");
+            if (postAdapter.getItemCount() == 0) {
+                switchSort("latest");
+            }
         }
     }
 
     private void switchSort(String sort) {
+        if (sort.equals(currentExploreSort) && postAdapter.getItemCount() > 0) {
+            return;
+        }
         currentExploreSort = sort;
         if ("hot".equals(sort)) {
             binding.btnSortHot.setBackgroundResource(R.drawable.bg_btn_primary);
@@ -586,6 +611,7 @@ public class MainActivity extends AppCompatActivity implements
         sm.addTopicListener(this);
         sm.addExploreListener(this);
         sm.addProfileListener(this);
+        sm.addUserProfileListener(this);
         sm.addGeneralGlobalListener(this);
 
         sm.connect(prefs.getServerBaseUrl());
@@ -594,6 +620,9 @@ public class MainActivity extends AppCompatActivity implements
     // General Chat In-App Notification (Messenger style)
     @Override
     public void onGeneralMessageReceived(Message message) {
+        if (topicAdapter != null && message != null) {
+            topicAdapter.updateGeneralLastMessage(message.getName(), message.getText());
+        }
         InAppNotificationBanner.show(this, message, msg -> {
             Intent intent = new Intent(MainActivity.this, ChatActivity.class);
             intent.putExtra(ChatActivity.EXTRA_TOPIC_NAME, "General");
@@ -654,10 +683,28 @@ public class MainActivity extends AppCompatActivity implements
     @Override public void onPostSharesUpdated(int postId, int shares) {}
     @Override public void onPostDeleted(int postId) {}
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SocketManager sm = SocketManager.getInstance();
+        sm.requestTopics();
+        if (topicAdapter != null && topicAdapter.getItemCount() == 0 && !sm.getCachedTopics().isEmpty()) {
+            topicAdapter.setTopics(sm.getCachedTopics());
+        }
+        if (postAdapter != null && postAdapter.getItemCount() == 0) {
+            sm.loadExploreFeed(1, currentExploreSort, "");
+        }
+    }
+
     // Socket Connection
     @Override
     public void onConnected() {
-        SocketManager.getInstance().joinTopic("General");
+        SocketManager sm = SocketManager.getInstance();
+        sm.joinTopic("General");
+        sm.requestTopics();
+        if (postAdapter != null && postAdapter.getItemCount() == 0) {
+            sm.loadExploreFeed(1, currentExploreSort, "");
+        }
     }
 
     @Override public void onDisconnected() {}
@@ -677,6 +724,20 @@ public class MainActivity extends AppCompatActivity implements
     @Override public void onNameChanged(String newName) {}
     @Override public void onAvatarChanged(String newAvatarUrl) {}
 
+    private com.anonymous.chat.ui.profile.UserProfileDialog activeProfileDialog;
+
+    @Override
+    public void onUserProfileReceived(UserProfile userProfile) {
+        if (!isFinishing() && !isDestroyed() && userProfile != null) {
+            if (activeProfileDialog != null && activeProfileDialog.isShowing()) {
+                activeProfileDialog.updateProfile(userProfile);
+            } else {
+                activeProfileDialog = new com.anonymous.chat.ui.profile.UserProfileDialog(this, userProfile);
+                activeProfileDialog.show();
+            }
+        }
+    }
+
     public void onError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
@@ -690,6 +751,7 @@ public class MainActivity extends AppCompatActivity implements
         sm.removeTopicListener(this);
         sm.removeExploreListener(this);
         sm.removeProfileListener(this);
+        sm.removeUserProfileListener(this);
         sm.removeGeneralGlobalListener(this);
     }
 }

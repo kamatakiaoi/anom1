@@ -1,326 +1,350 @@
 [
     {
-        "merged": "com.anonymous.chat.app-debug-34:/raw_pop.wav.flat",
-        "source": "com.anonymous.chat.app-main-36:/raw/pop.wav"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_users.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_users.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_rotate.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_rotate.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_segment_active.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_segment_active.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_activity_auth.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/activity_auth.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_bottom_sheet_profile.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/bottom_sheet_profile.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_item_topic.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/item_topic.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_attach.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_attach.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_view_messenger_banner.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/view_messenger_banner.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-hdpi_ic_launcher.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-hdpi/ic_launcher.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_btn_primary.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_btn_primary.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_segment.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_segment.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_dialog_user_profile.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/dialog_user_profile.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bubble_other_only.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bubble_other_only.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_other_first.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_other_first.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_activity_chat.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/activity_chat.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_back.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_back.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_notification_stat.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_notification_stat.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_item_online_member.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/item_online_member.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_card_topic.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_card_topic.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-mdpi_ic_launcher.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-mdpi/ic_launcher.png"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_pause.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_pause.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-mdpi_ic_launcher_round.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-mdpi/ic_launcher_round.png"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_verified.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_verified.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-xxxhdpi_ic_launcher.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-xxxhdpi/ic_launcher.png"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_activity_server_connect.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/activity_server_connect.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_me_first.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_me_first.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_input_box.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_input_box.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_attach.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_attach.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-xxhdpi_ic_launcher_round.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-xxhdpi/ic_launcher_round.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_other_last.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_other_last.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_item_online_member.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/item_online_member.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_activity_post_detail.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/activity_post_detail.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_launcher_foreground.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_launcher_foreground.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_pagination_container.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_pagination_container.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_activity_auth.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/activity_auth.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_input_box.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_input_box.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bubble_other_first.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bubble_other_first.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_item_image_preview_thumb.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/item_image_preview_thumb.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-xhdpi_ic_launcher_round.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-xhdpi/ic_launcher_round.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_activity_chat.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/activity_chat.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_thumb_down.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_thumb_down.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-xhdpi_ic_launcher_round.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-xhdpi/ic_launcher_round.png"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_back.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_back.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_messenger_banner.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_messenger_banner.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_bottom_sheet_media_picker.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/bottom_sheet_media_picker.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_logo.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/logo.png"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_close.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_close.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_item_message_me.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/item_message_me.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_video_bottom_gradient.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_video_bottom_gradient.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_reply.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_reply.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_activity_patch_notes.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/activity_patch_notes.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-xxhdpi_ic_launcher.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-xxhdpi/ic_launcher.png"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_btn_primary.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_btn_primary.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_view_audio_player.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/view_audio_player.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bubble_me_only.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bubble_me_only.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_item_patch_card.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/item_patch_card.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_view_messenger_banner.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/view_messenger_banner.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_activity_main.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/activity_main.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_activity_main.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/activity_main.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/raw_click.wav.flat",
-        "source": "com.anonymous.chat.app-main-36:/raw/click.wav"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_item_message_other.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/item_message_other.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-xhdpi_ic_launcher.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-xhdpi/ic_launcher.png"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bubble_me_last.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bubble_me_last.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_thumb_down.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_thumb_down.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_logo.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/logo.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_dialog_online_members.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/dialog_online_members.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_sound_on.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_sound_on.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_verified.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_verified.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-xhdpi_ic_launcher.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-xhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_send.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_send.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_sound_off.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_sound_off.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/anim_slide_in_right.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/anim/slide_in_right.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_item_topic.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/item_topic.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_item_comment.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/item_comment.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-mdpi_ic_launcher.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-mdpi/ic_launcher.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_comment.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_comment.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_pagination_container.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_pagination_container.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_sound_on.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_sound_on.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_quote_me.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_quote_me.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_msgs.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_msgs.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_msgs.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_msgs.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_search_box.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_search_box.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bubble_me_first.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bubble_me_first.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_launcher_foreground.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_launcher_foreground.png"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_messenger_banner.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_messenger_banner.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_activity_patch_notes.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/activity_patch_notes.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_rec_badge.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_rec_badge.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_bottom_sheet_profile.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/bottom_sheet_profile.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_dialog_user_profile.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/dialog_user_profile.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_activity_lightbox.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/activity_lightbox.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/anim_slide_out_left.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/anim/slide_out_left.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_segment_active.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_segment_active.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_view_audio_player.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/view_audio_player.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_item_message_other.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/item_message_other.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_fullscreen.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_fullscreen.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-xxhdpi_ic_launcher_round.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-xxhdpi/ic_launcher_round.png"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_dialog_online_members.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/dialog_online_members.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_btn_green.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_btn_green.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_view.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_view.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_card_topic.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_card_topic.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_card_pinned.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_card_pinned.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_btn_circle.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_btn_circle.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_reply.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_reply.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_me_mid.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_me_mid.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_pagination_active.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_pagination_active.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_other_only.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_other_only.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bottom_sheet.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bottom_sheet.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_thumb_up.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_thumb_up.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bubble_other_last.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bubble_other_last.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_users.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_users.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-xxxhdpi_ic_launcher.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-xxxhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_more.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_more.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_activity_post_detail.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/activity_post_detail.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_item_post_card.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/item_post_card.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_send.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_send.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bottom_sheet.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bottom_sheet.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-mdpi_ic_launcher_round.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-mdpi/ic_launcher_round.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-hdpi_ic_launcher_round.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-hdpi/ic_launcher_round.png"
+        "merged": "com.anonymous.chat.app-debug-37:/anim_slide_in_right.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/anim/slide_in_right.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-anydpi-v26_ic_launcher.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-anydpi-v26/ic_launcher.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_more.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_more.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_card_pinned.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_card_pinned.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_btn_green.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_btn_green.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_play.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_play.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_thumb_up.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_thumb_up.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_sound_off.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_sound_off.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_comment.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_comment.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_me_only.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_me_only.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_item_message_me.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/item_message_me.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_bottom_sheet_media_picker.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/bottom_sheet_media_picker.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_play.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_play.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/anim_slide_in_left.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/anim/slide_in_left.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_quote_other.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_quote_other.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/anim_slide_out_left.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/anim/slide_out_left.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-hdpi_ic_launcher_round.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-hdpi/ic_launcher_round.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_pause.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_pause.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_activity_lightbox.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/activity_lightbox.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-xxxhdpi/ic_launcher_round.png"
+        "merged": "com.anonymous.chat.app-debug-37:/raw_pop.wav.flat",
+        "source": "com.anonymous.chat.app-main-39:/raw/pop.wav"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_online_dot.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_online_dot.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bubble_other_mid.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bubble_other_mid.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_pagination_active.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_pagination_active.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/raw_click.wav.flat",
+        "source": "com.anonymous.chat.app-main-39:/raw/click.wav"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/layout_activity_server_connect.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/layout/activity_server_connect.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_item_post_card.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/item_post_card.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_me_last.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_me_last.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_online_dot.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_online_dot.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-anydpi-v26/ic_launcher_round.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_item_comment.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/item_comment.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_ic_view.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/ic_view.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/layout_item_patch_card.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/item_patch_card.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_rec_badge.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_rec_badge.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-xxhdpi_ic_launcher.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-xxhdpi/ic_launcher.png"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_bubble_other_mid.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_bubble_other_mid.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/anim_slide_out_right.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/anim/slide_out_right.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/drawable_bg_segment.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/drawable/bg_segment.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-anydpi-v26/ic_launcher_round.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/anim_slide_out_right.xml.flat",
-        "source": "com.anonymous.chat.app-main-36:/anim/slide_out_right.xml"
+        "merged": "com.anonymous.chat.app-debug-37:/anim_slide_in_left.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/anim/slide_in_left.xml"
     },
     {
-        "merged": "com.anonymous.chat.app-debug-34:/mipmap-hdpi_ic_launcher.png.flat",
-        "source": "com.anonymous.chat.app-main-36:/mipmap-hdpi/ic_launcher.png"
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_search_box.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_search_box.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_ic_rotate.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/ic_rotate.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-xxxhdpi_ic_launcher_round.png.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-xxxhdpi/ic_launcher_round.png"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_bubble_me_mid.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_bubble_me_mid.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-37:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-37:/layout_item_image_preview_thumb.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/layout/item_image_preview_thumb.xml"
+    },
+    {
+        "merged": "com.anonymous.chat.app-debug-37:/drawable_bg_btn_circle.xml.flat",
+        "source": "com.anonymous.chat.app-main-39:/drawable/bg_btn_circle.xml"
     }
 ]

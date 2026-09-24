@@ -190,10 +190,17 @@ public class ChatActivity extends AppCompatActivity implements
             }
 
             @Override
-            public void onAvatarClicked(String uid) {
-                if (uid != null && !uid.isEmpty()) {
-                    SocketManager.getInstance().requestUserProfile(uid);
+            public void onAvatarClicked(String uid, String name, String id) {
+                UserProfile preview = new UserProfile();
+                preview.setUid(uid != null ? uid : "");
+                preview.setName(name != null ? name : "Anon");
+                preview.setId(id != null ? id : "");
+                if (activeProfileDialog != null && activeProfileDialog.isShowing()) {
+                    activeProfileDialog.dismiss();
                 }
+                activeProfileDialog = new UserProfileDialog(ChatActivity.this, preview);
+                activeProfileDialog.show();
+                SocketManager.getInstance().requestUserProfile(uid, name, id);
             }
 
             @Override
@@ -204,6 +211,14 @@ public class ChatActivity extends AppCompatActivity implements
                 } else {
                     intent.putExtra(LightboxActivity.EXTRA_IMAGE_URL, mediaUrl);
                 }
+                startActivity(intent);
+            }
+
+            @Override
+            public void onVideoClickedWithPosition(String mediaUrl, int positionMs) {
+                Intent intent = new Intent(ChatActivity.this, LightboxActivity.class);
+                intent.putExtra(LightboxActivity.EXTRA_VIDEO_URL, mediaUrl);
+                intent.putExtra(LightboxActivity.EXTRA_VIDEO_POSITION, positionMs);
                 startActivity(intent);
             }
 
@@ -224,6 +239,17 @@ public class ChatActivity extends AppCompatActivity implements
         LinearLayoutManager layoutManager = new LinearLayoutManager(this);
         layoutManager.setStackFromEnd(true);
         binding.rvChatMessages.setLayoutManager(layoutManager);
+        binding.rvChatMessages.setItemViewCacheSize(30);
+        binding.rvChatMessages.setHasFixedSize(false);
+
+        androidx.recyclerview.widget.DefaultItemAnimator animator = new androidx.recyclerview.widget.DefaultItemAnimator();
+        animator.setAddDuration(200);
+        animator.setRemoveDuration(200);
+        animator.setMoveDuration(200);
+        animator.setChangeDuration(200);
+        animator.setSupportsChangeAnimations(false);
+        binding.rvChatMessages.setItemAnimator(animator);
+
         binding.rvChatMessages.setAdapter(messageAdapter);
 
         binding.rvChatMessages.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -245,8 +271,8 @@ public class ChatActivity extends AppCompatActivity implements
         // Online members presence
         binding.tvChatOnlineCount.setOnClickListener(v -> {
             OnlineMembersDialog dialog = new OnlineMembersDialog(this, currentMembers, member -> {
-                if (member.getUid() != null) {
-                    SocketManager.getInstance().requestUserProfile(member.getUid());
+                if (member != null) {
+                    SocketManager.getInstance().requestUserProfile(member.getUid(), member.getName(), member.getId());
                 }
             });
             dialog.show();
@@ -352,6 +378,11 @@ public class ChatActivity extends AppCompatActivity implements
         messageAdapter.setMessages(history);
         if (messageAdapter.getItemCount() > 0) {
             binding.rvChatMessages.scrollToPosition(messageAdapter.getItemCount() - 1);
+            binding.rvChatMessages.post(() -> {
+                if (messageAdapter != null && messageAdapter.getItemCount() > 0) {
+                    binding.rvChatMessages.scrollToPosition(messageAdapter.getItemCount() - 1);
+                }
+            });
         }
     }
 
@@ -386,8 +417,11 @@ public class ChatActivity extends AppCompatActivity implements
 
     @Override
     public void onNewMessage(Message message) {
+        boolean isAtBottom = !binding.rvChatMessages.canScrollVertically(1);
         messageAdapter.addMessage(message);
-        binding.rvChatMessages.smoothScrollToPosition(messageAdapter.getItemCount() - 1);
+        if (isAtBottom || (messageAdapter.getItemCount() > 0 && messageAdapter.getItemViewType(messageAdapter.getItemCount() - 1) == 1)) {
+            binding.rvChatMessages.scrollToPosition(messageAdapter.getItemCount() - 1);
+        }
     }
 
     @Override
@@ -395,10 +429,18 @@ public class ChatActivity extends AppCompatActivity implements
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
     }
 
+    private UserProfileDialog activeProfileDialog;
+
     @Override
     public void onUserProfileReceived(UserProfile userProfile) {
-        UserProfileDialog dialog = new UserProfileDialog(this, userProfile);
-        dialog.show();
+        if (!isFinishing() && !isDestroyed() && userProfile != null) {
+            if (activeProfileDialog != null && activeProfileDialog.isShowing()) {
+                activeProfileDialog.updateProfile(userProfile);
+            } else {
+                activeProfileDialog = new UserProfileDialog(this, userProfile);
+                activeProfileDialog.show();
+            }
+        }
     }
 
     @Override
@@ -448,6 +490,9 @@ public class ChatActivity extends AppCompatActivity implements
         sm.removeMessageListener(this);
         sm.removeUserProfileListener(this);
         sm.removeGeneralGlobalListener(this);
+        if (messageAdapter != null) {
+            messageAdapter.cleanup();
+        }
         com.anonymous.chat.services.ChatBackgroundService.start(this);
     }
 }

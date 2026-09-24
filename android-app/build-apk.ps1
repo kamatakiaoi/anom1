@@ -12,7 +12,7 @@ $env:PATH = "$jdkDir\bin;$gradleDir\bin;$sdkDir\platform-tools;$env:PATH"
 
 Write-Host "=========================================="
 Write-Host " Building Anonymous Chat Native Android APK"
-Write-Host " Version: 3.6.6 (Build 366)"
+Write-Host " Version: 3.6.16 (Build 3616)"
 Write-Host "=========================================="
 Write-Host "JAVA_HOME   : $env:JAVA_HOME"
 Write-Host "ANDROID_HOME: $env:ANDROID_HOME"
@@ -20,7 +20,16 @@ Write-Host "ANDROID_HOME: $env:ANDROID_HOME"
 $appDir = "c:\Users\flooxie\Downloads\Compressed\code2\android-app"
 Set-Location $appDir
 
-& "$gradleDir\bin\gradle.bat" assembleDebug --stacktrace
+& "$gradleDir\bin\gradle.bat" --stop
+Start-Sleep -Seconds 1
+if (Test-Path "$appDir\app\build\intermediates\desugar_graph") {
+    Remove-Item -Recurse -Force "$appDir\app\build\intermediates\desugar_graph" -ErrorAction SilentlyContinue
+}
+& "$gradleDir\bin\gradle.bat" assembleDebug --no-daemon --stacktrace
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "Gradle build failed with exit code $LASTEXITCODE" -ForegroundColor Red
+    exit 1
+}
 
 $apkPath = "$appDir\app\build\outputs\apk\debug\app-debug.apk"
 $destApkPath = "c:\Users\flooxie\Downloads\Compressed\code2\AnonymousChat.apk"
@@ -35,4 +44,5 @@ if (Test-Path $apkPath) {
     Write-Host "------------------------------------------"
 } else {
     Write-Host "Build finished but APK not found at $apkPath" -ForegroundColor Red
+    exit 1
 }
