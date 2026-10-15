@@ -40,9 +40,9 @@ public class VideoThumbnailManager {
     private static volatile VideoThumbnailManager instance;
 
     private final LruCache<String, Bitmap> memoryCache;
-    private final ExecutorService executor = Executors.newFixedThreadPool(2, r -> {
+    private final ExecutorService executor = Executors.newFixedThreadPool(4, r -> {
         Thread t = new Thread(r, "video-thumb-worker");
-        t.setPriority(Thread.MIN_PRIORITY + 1);
+        t.setPriority(Thread.NORM_PRIORITY);
         t.setDaemon(true);
         return t;
     });
@@ -211,8 +211,8 @@ public class VideoThumbnailManager {
                     .build();
             Request request = new Request.Builder()
                     .url(fullUrl)
-                    .header("User-Agent", "AnonymousChat-Android/3.6.16")
-                    .header("Range", "bytes=0-393215") // Fast 384KB header probe
+                    .header("User-Agent", "AnonymousChat-Android/3.6.17")
+                    .header("Range", "bytes=0-1048575") // Fast 1MB header probe
                     .build();
             try (Response response = client.newCall(request).execute()) {
                 ResponseBody body = response.body();
@@ -247,7 +247,7 @@ public class VideoThumbnailManager {
         MediaMetadataRetriever retriever = new MediaMetadataRetriever();
         try {
             Map<String, String> headers = new HashMap<>();
-            headers.put("User-Agent", "AnonymousChat-Android/3.6.16");
+            headers.put("User-Agent", "AnonymousChat-Android/3.6.17");
             headers.put("Accept-Ranges", "bytes");
             retriever.setDataSource(fullUrl, headers);
 

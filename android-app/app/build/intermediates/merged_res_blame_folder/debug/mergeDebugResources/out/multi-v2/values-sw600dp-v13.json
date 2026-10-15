@@ -33,7 +33,7 @@
                     }
                 },
                 {
-                    "source": "C:\\Users\\flooxie\\Downloads\\Compressed\\code2\\android-app\\app\\src\\main\\res\\values-sw600dp\\dimens.xml",
+                    "source": "C:\\anom1\\android-app\\app\\src\\main\\res\\values-sw600dp\\dimens.xml",
                     "from": {
                         "startLines": "9,7,6,5,8,10,3,4,11,12,2,13",
                         "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4",

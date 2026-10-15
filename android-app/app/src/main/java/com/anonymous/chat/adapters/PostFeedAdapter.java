@@ -381,7 +381,7 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
             }
         });
 
-        AudioPlayerManager.getInstance().setListener(new AudioPlayerManager.OnAudioStateChangeListener() {
+        AudioPlayerManager.OnAudioStateChangeListener audioListener = new AudioPlayerManager.OnAudioStateChangeListener() {
             @Override
             public void onPlay(String url) {
                 if (url.equals(audioUrl)) btnPlay.setImageResource(R.drawable.ic_pause);
@@ -417,7 +417,14 @@ public class PostFeedAdapter extends RecyclerView.Adapter<PostFeedAdapter.PostVi
                     btnPlay.setImageResource(R.drawable.ic_play);
                 }
             }
-        });
+        };
+
+        Object oldListener = view.getTag(R.id.tag_audio_listener);
+        if (oldListener instanceof AudioPlayerManager.OnAudioStateChangeListener) {
+            AudioPlayerManager.getInstance().removeListener((AudioPlayerManager.OnAudioStateChangeListener) oldListener);
+        }
+        view.setTag(R.id.tag_audio_listener, audioListener);
+        AudioPlayerManager.getInstance().addListener(audioListener);
     }
 
     private static String formatDuration(int ms) {

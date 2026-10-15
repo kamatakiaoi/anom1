@@ -31,9 +31,9 @@ com.anonymous.chat.app-jetified-media3-ui-1.4.1-29 C:\Users\flooxie\.gradle\cach
 com.anonymous.chat.app-jetified-appcompat-resources-1.7.0-30 C:\Users\flooxie\.gradle\caches\8.8\transforms\dcaca2e11dad7e017c34ae86d8e2229a\transformed\jetified-appcompat-resources-1.7.0\res
 com.anonymous.chat.app-jetified-core-ktx-1.13.0-31 C:\Users\flooxie\.gradle\caches\8.8\transforms\f751ee5df679d06022c548c9680e7627\transformed\jetified-core-ktx-1.13.0\res
 com.anonymous.chat.app-lifecycle-livedata-2.6.2-32 C:\Users\flooxie\.gradle\caches\8.8\transforms\fd0c7cc84f5dee76bfba7897a84880ad\transformed\lifecycle-livedata-2.6.2\res
-com.anonymous.chat.app-resValues-33 C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\build\generated\res\resValues\debug
-com.anonymous.chat.app-packageDebugResources-34 C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
-com.anonymous.chat.app-packageDebugResources-35 C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
-com.anonymous.chat.app-debug-36 C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\build\intermediates\merged_res\debug\mergeDebugResources
-com.anonymous.chat.app-debug-37 C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\debug\res
-com.anonymous.chat.app-main-38 C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\res
+com.anonymous.chat.app-resValues-33 C:\anom1\android-app\app\build\generated\res\resValues\debug
+com.anonymous.chat.app-packageDebugResources-34 C:\anom1\android-app\app\build\intermediates\incremental\debug\packageDebugResources\merged.dir
+com.anonymous.chat.app-packageDebugResources-35 C:\anom1\android-app\app\build\intermediates\incremental\debug\packageDebugResources\stripped.dir
+com.anonymous.chat.app-debug-36 C:\anom1\android-app\app\build\intermediates\merged_res\debug\mergeDebugResources
+com.anonymous.chat.app-debug-37 C:\anom1\android-app\app\src\debug\res
+com.anonymous.chat.app-main-38 C:\anom1\android-app\app\src\main\res

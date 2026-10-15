@@ -1,5 +1,18 @@
 [
   {
+    "version": "3.6.17",
+    "date": "2026-10-15",
+    "title": "Core Stability & Performance Polish",
+    "items": [
+      "Migrated audio and video playback pipelines to Media3 ExoPlayer with progressive chunk streaming",
+      "Optimized video thumbnail decoding with multi-threaded worker pool and fast header range probing",
+      "Fixed post deletion and user profile tracking across dynamic IP addresses",
+      "Resolved audio listener contention between Chat and Explore feed",
+      "Polished UI/UX and aspect ratios for all device DPIs and screen dimensions",
+      "Enhanced background service reliability and battery efficiency on Android 8 through 14"
+    ]
+  },
+  {
     "version": "1.4.13",
     "date": "2026-09-24",
     "title": "GUI Polish & High-Performance Media",

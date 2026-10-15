@@ -12,12 +12,12 @@ $env:PATH = "$jdkDir\bin;$gradleDir\bin;$sdkDir\platform-tools;$env:PATH"
 
 Write-Host "=========================================="
 Write-Host " Building Anonymous Chat Native Android APK"
-Write-Host " Version: 3.6.16 (Build 3616)"
+Write-Host " Version: 3.6.17 (Build 3617)"
 Write-Host "=========================================="
 Write-Host "JAVA_HOME   : $env:JAVA_HOME"
 Write-Host "ANDROID_HOME: $env:ANDROID_HOME"
 
-$appDir = "c:\Users\flooxie\Downloads\Compressed\code2\android-app"
+$appDir = $PSScriptRoot
 Set-Location $appDir
 
 & "$gradleDir\bin\gradle.bat" --stop
@@ -32,10 +32,12 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 $apkPath = "$appDir\app\build\outputs\apk\debug\app-debug.apk"
-$destApkPath = "c:\Users\flooxie\Downloads\Compressed\code2\AnonymousChat.apk"
+$destApkPath = "$appDir\AnonymousChat.apk"
+$parentDest = "$appDir\..\AnonymousChat.apk"
 
 if (Test-Path $apkPath) {
     Copy-Item -Path $apkPath -Destination $destApkPath -Force
+    Copy-Item -Path $apkPath -Destination $parentDest -Force -ErrorAction SilentlyContinue
     $apkSize = (Get-Item $destApkPath).Length / 1MB
     Write-Host "------------------------------------------"
     Write-Host " BUILD SUCCESSFUL!" -ForegroundColor Green

@@ -1,52 +1,52 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 3    package="com.anonymous.chat"
-4    android:versionCode="3616"
-5    android:versionName="3.6.16" >
+4    android:versionCode="3617"
+5    android:versionName="3.6.17" >
 6
 7    <uses-sdk
 8        android:minSdkVersion="26"
 9        android:targetSdkVersion="34" />
 10
 11    <uses-permission android:name="android.permission.INTERNET" />
-11-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:5:5-67
-11-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:5:22-64
+11-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:5:5-67
+11-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:5:22-64
 12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-12-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:6:5-79
-12-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:6:22-76
+12-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:6:5-79
+12-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:6:22-76
 13    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-13-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:7:5-77
-13-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:7:22-74
+13-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:7:5-77
+13-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:7:22-74
 14    <uses-permission android:name="android.permission.VIBRATE" />
-14-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:8:5-66
-14-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:8:22-63
+14-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:8:5-66
+14-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:8:22-63
 15    <uses-permission android:name="android.permission.WAKE_LOCK" />
-15-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:9:5-68
-15-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:9:22-65
+15-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:9:5-68
+15-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:9:22-65
 16    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-16-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:10:5-77
-16-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:10:22-74
+16-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:10:5-77
+16-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:10:22-74
 17    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
-17-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:11:5-87
-17-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:11:22-84
+17-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:11:5-87
+17-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:11:22-84
 18    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-18-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:12:5-95
-18-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:12:22-92
+18-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:12:5-95
+18-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:12:22-92
 19    <uses-permission
-19-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:13:5-107
+19-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:13:5-107
 20        android:name="android.permission.READ_EXTERNAL_STORAGE"
-20-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:13:22-77
+20-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:13:22-77
 21        android:maxSdkVersion="32" />
-21-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:13:78-104
+21-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:13:78-104
 22    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
-22-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:14:5-76
-22-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:14:22-73
+22-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:14:5-76
+22-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:14:22-73
 23    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
-23-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:15:5-75
-23-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:15:22-72
+23-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:15:5-75
+23-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:15:22-72
 24    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
-24-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:16:5-75
-24-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:16:22-72
+24-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:16:5-75
+24-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:16:22-72
 25
 26    <permission
 26-->[androidx.core:core:1.13.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\a895f6753216848fc635099897bcb5e6\transformed\core-1.13.0\AndroidManifest.xml:22:5-24:47
@@ -60,118 +60,118 @@
 30-->[androidx.core:core:1.13.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\a895f6753216848fc635099897bcb5e6\transformed\core-1.13.0\AndroidManifest.xml:26:22-94
 31
 32    <application
-32-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:18:5-81:19
+32-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:18:5-81:19
 33        android:name="com.anonymous.chat.AnonymousChatApp"
-33-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:19:9-41
+33-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:19:9-41
 34        android:allowBackup="true"
-34-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:20:9-35
+34-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:20:9-35
 35        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 35-->[androidx.core:core:1.13.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\a895f6753216848fc635099897bcb5e6\transformed\core-1.13.0\AndroidManifest.xml:28:18-86
 36        android:debuggable="true"
 37        android:extractNativeLibs="false"
 38        android:icon="@mipmap/ic_launcher"
-38-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:21:9-43
+38-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:21:9-43
 39        android:label="@string/app_name"
-39-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:23:9-41
+39-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:23:9-41
 40        android:roundIcon="@mipmap/ic_launcher_round"
-40-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:22:9-54
+40-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:22:9-54
 41        android:supportsRtl="true"
-41-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:24:9-35
+41-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:24:9-35
 42        android:theme="@style/Theme.AnonymousChat"
-42-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:25:9-51
+42-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:25:9-51
 43        android:usesCleartextTraffic="true" >
-43-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:26:9-44
+43-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:26:9-44
 44
 45        <!-- Background Sync Service for Realtime Notifications -->
 46        <service
-46-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:30:9-34:56
+46-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:30:9-34:56
 47            android:name="com.anonymous.chat.services.ChatBackgroundService"
-47-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:31:13-59
+47-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:31:13-59
 48            android:enabled="true"
-48-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:32:13-35
+48-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:32:13-35
 49            android:exported="false"
-49-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:33:13-37
+49-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:33:13-37
 50            android:foregroundServiceType="dataSync" />
-50-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:34:13-53
+50-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:34:13-53
 51
 52        <!-- Auth Activity (Launcher) matching original web auth & server config -->
 53        <activity
-53-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:37:9-46:20
+53-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:37:9-46:20
 54            android:name="com.anonymous.chat.ui.auth.AuthActivity"
-54-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:38:13-49
+54-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:38:13-49
 55            android:exported="true"
-55-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:39:13-36
+55-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:39:13-36
 56            android:launchMode="singleTop"
-56-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:40:13-43
+56-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:40:13-43
 57            android:windowSoftInputMode="adjustResize" >
-57-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:41:13-55
+57-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:41:13-55
 58            <intent-filter>
-58-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:42:13-45:29
+58-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:42:13-45:29
 59                <action android:name="android.intent.action.MAIN" />
-59-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:43:17-69
-59-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:43:25-66
+59-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:43:17-69
+59-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:43:25-66
 60
 61                <category android:name="android.intent.category.LAUNCHER" />
-61-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:44:17-77
-61-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:44:27-74
+61-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:44:17-77
+61-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:44:27-74
 62            </intent-filter>
 63        </activity>
 64
 65        <!-- Main Lobby Activity -->
 66        <activity
-66-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:49:9-53:58
+66-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:49:9-53:58
 67            android:name="com.anonymous.chat.ui.main.MainActivity"
-67-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:50:13-49
+67-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:50:13-49
 68            android:exported="false"
-68-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:51:13-37
+68-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:51:13-37
 69            android:launchMode="singleTask"
-69-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:52:13-44
+69-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:52:13-44
 70            android:windowSoftInputMode="adjustResize" />
-70-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:53:13-55
+70-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:53:13-55
 71
 72        <!-- Chat Activity (Topic Room) -->
 73        <activity
-73-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:56:9-60:58
+73-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:56:9-60:58
 74            android:name="com.anonymous.chat.ui.chat.ChatActivity"
-74-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:57:13-49
+74-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:57:13-49
 75            android:exported="false"
-75-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:58:13-37
+75-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:58:13-37
 76            android:launchMode="singleTop"
-76-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:59:13-43
+76-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:59:13-43
 77            android:windowSoftInputMode="adjustResize" />
-77-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:60:13-55
+77-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:60:13-55
 78
 79        <!-- Post Detail Activity (Explore Post & Threaded Comments) -->
 80        <activity
-80-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:63:9-67:58
+80-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:63:9-67:58
 81            android:name="com.anonymous.chat.ui.post.PostDetailActivity"
-81-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:64:13-55
+81-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:64:13-55
 82            android:exported="false"
-82-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:65:13-37
+82-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:65:13-37
 83            android:launchMode="singleTop"
-83-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:66:13-43
+83-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:66:13-43
 84            android:windowSoftInputMode="adjustResize" />
-84-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:67:13-55
+84-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:67:13-55
 85
 86        <!-- Patch Notes Activity -->
 87        <activity
-87-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:70:9-72:40
+87-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:70:9-72:40
 88            android:name="com.anonymous.chat.ui.patchnotes.PatchNotesActivity"
-88-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:71:13-61
+88-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:71:13-61
 89            android:exported="false" />
-89-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:72:13-37
+89-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:72:13-37
 90
 91        <!-- Fullscreen Media Lightbox Viewer -->
 92        <activity
-92-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:75:9-79:58
+92-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:75:9-79:58
 93            android:name="com.anonymous.chat.ui.viewer.LightboxActivity"
-93-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:76:13-55
+93-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:76:13-55
 94            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|smallestScreenSize"
-94-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:78:13-106
+94-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:78:13-106
 95            android:exported="false"
-95-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:77:13-37
+95-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:77:13-37
 96            android:theme="@style/Theme.AnonymousChat" />
-96-->C:\Users\flooxie\Downloads\Compressed\code2\android-app\app\src\main\AndroidManifest.xml:79:13-55
+96-->C:\anom1\android-app\app\src\main\AndroidManifest.xml:79:13-55
 97
 98        <provider
 98-->[androidx.emoji2:emoji2:1.3.0] C:\Users\flooxie\.gradle\caches\8.8\transforms\8d2be3e85376171cf4b6e0097e20e026\transformed\jetified-emoji2-1.3.0\AndroidManifest.xml:24:9-32:20

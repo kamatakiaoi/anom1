@@ -787,6 +787,14 @@ public class MessageAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 btnPlay.setVisibility(View.VISIBLE);
                 thumb.setVisibility(View.VISIBLE);
                 vv.setVisibility(View.GONE);
+                try {
+                    player.stop();
+                    player.release();
+                } catch (Exception ignored) {}
+                if (activePlayingPlayer == player) {
+                    activePlayingPlayer = null;
+                    activePlayingView = null;
+                }
             }
         });
     }

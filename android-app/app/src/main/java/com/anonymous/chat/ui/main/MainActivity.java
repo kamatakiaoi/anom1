@@ -688,6 +688,9 @@ public class MainActivity extends AppCompatActivity implements
         super.onResume();
         SocketManager sm = SocketManager.getInstance();
         sm.requestTopics();
+        if (sm.isConnected()) {
+            sm.joinTopic("General");
+        }
         if (topicAdapter != null && topicAdapter.getItemCount() == 0 && !sm.getCachedTopics().isEmpty()) {
             topicAdapter.setTopics(sm.getCachedTopics());
         }

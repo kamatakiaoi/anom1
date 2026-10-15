@@ -51,6 +51,7 @@ public class PostDetailActivity extends AppCompatActivity implements
     private int postId = 0;
     private Post currentPost;
     private Comment replyingToComment = null;
+    private AudioPlayerManager.OnAudioStateChangeListener detailAudioListener = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -347,7 +348,10 @@ public class PostDetailActivity extends AppCompatActivity implements
             }
         });
 
-        AudioPlayerManager.getInstance().setListener(new AudioPlayerManager.OnAudioStateChangeListener() {
+        if (detailAudioListener != null) {
+            AudioPlayerManager.getInstance().removeListener(detailAudioListener);
+        }
+        detailAudioListener = new AudioPlayerManager.OnAudioStateChangeListener() {
             @Override
             public void onPlay(String url) {
                 if (url.equals(audioUrl)) btnPlay.setImageResource(R.drawable.ic_pause);
@@ -383,7 +387,8 @@ public class PostDetailActivity extends AppCompatActivity implements
             public void onError(String url, String error) {
                 if (url.equals(audioUrl)) btnPlay.setImageResource(R.drawable.ic_play);
             }
-        });
+        };
+        AudioPlayerManager.getInstance().addListener(detailAudioListener);
     }
 
     private static String formatDuration(int ms) {
@@ -470,6 +475,10 @@ public class PostDetailActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (detailAudioListener != null) {
+            AudioPlayerManager.getInstance().removeListener(detailAudioListener);
+            detailAudioListener = null;
+        }
         AudioPlayerManager.getInstance().stop();
         SocketManager.getInstance().removeExploreListener(this);
         SocketManager.getInstance().removeUserProfileListener(this);

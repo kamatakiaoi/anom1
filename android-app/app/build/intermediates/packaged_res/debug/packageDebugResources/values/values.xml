@@ -51,6 +51,7 @@
     <dimen name="chat_media_width">220dp</dimen>
     <dimen name="content_padding">12dp</dimen>
     <dimen name="post_media_height">200dp</dimen>
+    <item name="tag_audio_listener" type="id"/>
     <item name="tag_video_thumb_url" type="id"/>
     <string name="app_name">Anonymous Chat</string>
     <string name="btn_connect">Connect to Server</string>

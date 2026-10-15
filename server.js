@@ -1524,15 +1524,19 @@ function deletePostMedia(post) {
   if (!post) return 0;
   let n = 0;
   const tryUnlink = (name) => {
-    if (!name) return;
     const base = path.basename(String(name).replace(/^\/uploads\//, ''));
     if (!base || base.includes('..')) return;
     const full = path.join(UPLOADS, base);
     try {
       if (fs.existsSync(full)) {
-        fs.unlinkSync(full);
-        n++;
-        console.log('Deleted media file:', base);
+        const usedInMsgs = db.prepare("SELECT 1 FROM messages WHERE image LIKE ? OR video = ? OR audio = ? LIMIT 1").get('%' + base + '%', base, base);
+        const usedInPosts = db.prepare("SELECT 1 FROM posts WHERE id != ? AND (images LIKE ? OR video = ? OR audio = ?) LIMIT 1").get(post.id || 0, '%' + base + '%', base, base);
+        if (!usedInMsgs && !usedInPosts) {
+          fs.unlinkSync(full);
+          try { db.prepare("DELETE FROM file_hashes WHERE filename = ?").run(base); } catch {}
+          n++;
+          console.log('Deleted media file:', base);
+        }
       }
     } catch (e) {
       console.error('Failed to delete media:', base, e.message);
@@ -1613,7 +1617,7 @@ function parseJsonArr(raw, max) {
   } catch { return []; }
 }
 
-function mapPost(row, ip) {
+function mapPost(row, ip, uid) {
   const images = parseJsonArr(row.images, 5).map(f =>
     String(f).startsWith('/') || String(f).startsWith('http') ? f : '/uploads/' + f
   );
@@ -1626,9 +1630,14 @@ function mapPost(row, ip) {
   }
   const up = row.upvotes != null ? row.upvotes : (row.likes_count || 0);
   const down = row.downvotes || 0;
+  const isOwner = Boolean(
+    (uid && row.user_uid && row.user_uid === uid) ||
+    (ip && (row.ip === ip || row.user_ip === ip))
+  );
   return {
     id: row.id,
     userId: row.user_id || '',
+    uid: row.user_uid || '',
     name: row.user_name || 'Anon',
     color: row.user_color || '#666,#999',
     avatar: row.avatar
@@ -1655,7 +1664,7 @@ function mapPost(row, ip) {
     liked: myVote === 1,
     myVote,
     time: row.created_at || '',
-    isOwner: ip ? row.ip === ip : false
+    isOwner
   };
 }
 
@@ -2286,6 +2295,7 @@ io.on('connection', (socket) => {
       }
     }
 
+    const uid = socket.profile ? socket.profile.uid : null;
     const totalPages = Math.max(1, Math.ceil(total / limit));
     socket.emit('explore-feed', {
       page,
@@ -2293,7 +2303,7 @@ io.on('connection', (socket) => {
       total,
       totalPages,
       hasMore: offset + rows.length < total,
-      posts: rows.map(r => mapPost(r, ip))
+      posts: rows.map(r => mapPost(r, ip, uid))
     });
   });
 
@@ -2390,7 +2400,7 @@ io.on('connection', (socket) => {
         time
       );
       const row = getPost.get(info.lastInsertRowid);
-      const post = mapPost(row, ip);
+      const post = mapPost(row, ip, socket.profile.uid);
       io.emit('explore-post', post);
       socket.emit('explore-created', post);
     } catch (e) {
@@ -2441,11 +2451,12 @@ io.on('connection', (socket) => {
 
   socket.on('explore-get', (postId) => {
     const ip = socket.profile ? socket.profile.ip : clientIp;
+    const uid = socket.profile ? socket.profile.uid : null;
     const id = parseInt(postId, 10);
     if (!id) return;
     const row = getPost.get(id);
     if (!row) { socket.emit('error', 'Post not found'); return; }
-    socket.emit('explore-get', mapPost(row, ip));
+    socket.emit('explore-get', mapPost(row, ip, uid));
   });
 
   socket.on('explore-share', (postId) => {
@@ -2580,10 +2591,19 @@ io.on('connection', (socket) => {
       socket.emit('error', 'Post not found');
       return;
     }
-    // Only owner (same IP) can delete
-    const info = deletePostStmt.run(id, ip);
+    // Only owner (matching UID or IP) can delete
+    const isOwner = Boolean(
+      (post.user_uid && socket.profile && socket.profile.uid && post.user_uid === socket.profile.uid) ||
+      (post.ip === ip) ||
+      (post.user_ip === ip)
+    );
+    if (!isOwner) {
+      socket.emit('error', 'Cannot delete this post');
+      return;
+    }
+    const info = deletePostByIdStmt.run(id);
     if (info.changes) {
-      deletePostMedia(post); // also remove files from disk
+      deletePostMedia(post); // safely remove files from disk if unused elsewhere
       try { deletePostLikes.run(id); } catch {}
       try { deletePostVotes.run(id); } catch {}
       deletePostComments.run(id);

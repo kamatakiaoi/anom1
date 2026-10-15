@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.anonymous.chat"
-    android:versionCode="3616"
-    android:versionName="3.6.16" >
+    android:versionCode="3617"
+    android:versionName="3.6.17" >
 
     <uses-sdk
         android:minSdkVersion="26"
